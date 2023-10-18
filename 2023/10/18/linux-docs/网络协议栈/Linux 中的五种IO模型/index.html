@@ -1,0 +1,1054 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><title>Blog | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#f7f9fe"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-touch-fullscreen" content="yes"><meta name="apple-mobile-web-app-title" content="Blog"><meta name="application-name" content="Blog"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="#f7f9fe"><meta property="og:type" content="article"><meta property="og:title" content="Blog"><meta property="og:url" content="https://vcloud.ysme.top/2023/10/18/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%20%E4%B8%AD%E7%9A%84%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/index.html"><meta property="og:site_name" content="Blog"><meta property="og:description" content="IO模型的选择在Linux网络编程中十分重要，在Unix&amp;#x2F;Linux环境中主要提供了五种不同的IO模型，分别是阻塞式IO、非阻塞式IO、IO多路复用、信号驱动式IO和异步IO。 通常一个输入操作包含两个不同阶段：  等待数据准备好 从内核向进程复制数据   例如，对于一个网络套接字上的输入"><meta property="og:locale" content="zh-CN"><meta property="og:image" content="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><meta property="article:author" content="ysme"><meta property="article:tag"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><link rel="shortcut icon" href="/favicon.ico"><link rel="canonical" href="https://vcloud.ysme.top/2023/10/18/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%20%E4%B8%AD%E7%9A%84%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/"><link rel="preconnect" href="//npm.elemecdn.com"/><link rel="preconnect" href="//npm.onmicrosoft.cn"/><meta name="google-site-verification" content="xxx"/><meta name="baidu-site-verification" content="code-xxx"/><meta name="msvalidate.01" content="xxx"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.cbd.int/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.cbd.int/@fancyapps/ui@5.0.20/dist/fancybox/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  preloader: {"source":3},
+  friends_vue_info: undefined,
+  navMusic: true,
+  mainTone: undefined,
+  authorStatus: {"skills":["🤖️ 数码科技爱好者","🔍 分享与热心帮助","🏠 智能家居小能手","🔨 设计开发一条龙","🤝 专修交互与设计","🏃 脚踏实地行动派","🧱 团队小组发动机","💢 壮汉人狠话不多"]},
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"简","rightMenuMsgToTraditionalChinese":"转为繁体","rightMenuMsgToSimplifiedChinese":"转为简体"},
+  noticeOutdate: {"limitDay":365,"position":"top","messagePrev":"It has been","messageNext":"days since the last update, the content of the article may be outdated."},
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":330},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    simplehomepage: true,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"你已切换为繁体","cht_to_chs":"你已切换为简体","day_to_night":"你已切换为深色模式","night_to_day":"你已切换为浅色模式","bgLight":"#3b70fc","bgDark":"#1f1f1f","position":"top-center"},
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.cbd.int/flickr-justified-gallery@2.1.2/dist/fjGallery.min.js',
+      css: 'https://cdn.cbd.int/flickr-justified-gallery@2.1.2/dist/fjGallery.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false,
+  shortcutKey: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Blog',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-10-18 11:12:33',
+  postMainColor: '',
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#18171d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f7f9fe')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+          const isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches
+          const isNotSpecified = window.matchMedia('(prefers-color-scheme: no-preference)').matches
+          const hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+          if (t === undefined) {
+            if (isLightMode) activateLightMode()
+            else if (isDarkMode) activateDarkMode()
+            else if (isNotSpecified || hasNoSupport) {
+              const now = new Date()
+              const hour = now.getHours()
+              const isNight = hour <= 6 || hour >= 18
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addListener(function (e) {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else if (t === 'light') activateLightMode()
+          else activateDarkMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body data-type="anzhiyu"><div id="web_bg"></div><div id="an_music_bg"></div><div id="loading-box" onclick="document.getElementById(&quot;loading-box&quot;).classList.add(&quot;loaded&quot;)"><div class="loading-bg"><img class="loading-img nolazyload" alt="加载头像" src="data:image/jpeg;base64,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"/><div class="loading-image-dot"></div><div id="loading-percentage">0%</div></div></div><script>if (GLOBAL_CONFIG.preloader.source == "2" || GLOBAL_CONFIG.preloader.source == "3") {
+  const loadingPercentage = document.getElementById("loading-percentage");
+  let loadingPercentageTimer = setInterval(function() {
+    var progressBar = document.querySelector(".pace-progress");
+    if (!progressBar) return
+    var currentValue = progressBar.getAttribute("data-progress-text");
+    if (currentValue !== loadingPercentage.textContent) {
+      loadingPercentage.textContent = currentValue;
+      if (currentValue === "100%") {
+        clearInterval(loadingPercentageTimer);
+      }
+    }
+  }, 100);
+}
+
+const preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded");
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
+  }
+}
+window.addEventListener('load',()=> { preloader.endLoading() })
+setTimeout(function(){preloader.endLoading();},10000)
+
+if (true) {
+  document.addEventListener('pjax:send', () => { preloader.initLoading() })
+  document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+}</script><link rel="stylesheet" href="https://cdn.cbd.int/anzhiyu-theme-static@1.0.0/progress_bar/progress_bar.css"/><script async="async" src="https://cdn.cbd.int/pace-js@1.2.4/pace.min.js" data-pace-options="{ &quot;restartOnRequestAfter&quot;:false,&quot;eventLag&quot;:false}"></script><div id="web_box"><div id="web_container"><div id="menu-mask"></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><div id="nav-group"><span id="blog_name"><a id="site-name" href="/" accesskey="h"><div class="title">Blog</div><i class="anzhiyufont anzhiyu-icon-house-chimney"></i></a></span><div class="mask-name-container"><div id="name-container"><a id="page-name" href="javascript:anzhiyu.scrollToDest(0, 500)">PAGE_NAME</a></div></div><div id="menus"></div><div id="nav-right"><div class="nav-button" id="randomPost_button"><a class="site-page" onclick="toRandomPost()" title="随机前往一个文章" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-dice"></i></a></div><div class="nav-button" id="search-button"><a class="site-page social-icon search" href="javascript:void(0);" title="搜索🔍" accesskey="s"><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i><span> 搜索</span></a></div><input id="center-console" type="checkbox"/><label class="widget" for="center-console" title="中控台" onclick="anzhiyu.switchConsole();"><i class="left"></i><i class="widget center"></i><i class="widget right"></i></label><div id="console"><div class="console-card-group-reward"><ul class="reward-all console-card"><li class="reward-item"><a href="/img/qrcode-weichat.png" target="_blank"><img class="post-qr-code-img" alt="wechat" src="/img/qrcode-weichat.png"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/qrcode-alipay.png" target="_blank"><img class="post-qr-code-img" alt="alipay" src="/img/qrcode-alipay.png"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div><div class="console-card-group"><div class="console-card-group-left"><div class="console-card" id="card-newest-comments"><div class="card-content"><div class="author-content-item-tips">互动</div><span class="author-content-item-title"> <span>最新评论</span></span></div><div class="aside-list"><span>正在加载中...</span></div></div></div><div class="console-card-group-right"><div class="console-card tags"><div class="card-content"><div class="author-content-item-tips">兴趣点</div><span class="author-content-item-title">寻找你感兴趣的领域</span><div class="card-tags"><div class="item-headline"></div><div class="card-tag-cloud"><a href="/tags/Git-%E5%B7%A5%E5%85%B7/" style="font-size: 1.05rem;">Git 工具<sup>1</sup></a><a href="/tags/Linux%E5%BC%80%E5%8F%91/" style="font-size: 1.05rem;">Linux开发<sup>2</sup></a></div></div><hr/></div></div><div class="console-card history"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-box-archiv"></i><span>文章</span></div><div class="card-archives"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/10/"><span class="card-archive-list-date">十月 2023</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">73</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/03/"><span class="card-archive-list-date">三月 2023</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">1</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/01/"><span class="card-archive-list-date">一月 2023</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">2</span><span>篇</span></div></a></li></ul></div><hr/></div></div></div><div class="button-group"><div class="console-btn-item"><a class="darkmode_switchbutton" onclick="anzhiyu.switchDarkMode()" title="显示模式切换" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-moon"></i></a></div><div class="console-btn-item" id="consoleHideAside" onclick="anzhiyu.hideAsideBtn()" title="边栏显示控制"><a class="asideSwitch"><i class="anzhiyufont anzhiyu-icon-arrows-left-right"></i></a></div><div class="console-btn-item on" id="consoleCommentBarrage" onclick="anzhiyu.switchCommentBarrage()" title="热评开关"><a class="commentBarrage"><i class="anzhiyufont anzhiyu-icon-message"></i></a></div><div class="console-btn-item" id="consoleMusic" onclick="anzhiyu.musicToggle()" title="音乐开关"><a class="music-switch"><i class="anzhiyufont anzhiyu-icon-music"></i></a></div></div><div class="console-mask" onclick="anzhiyu.hideConsole()" href="javascript:void(0);"></div></div><div class="nav-button" id="nav-totop"><a class="totopbtn" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-arrow-up"></i><span id="percent" onclick="anzhiyu.scrollToDest(0,500)">0</span></a></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);" title="切换"><i class="anzhiyufont anzhiyu-icon-bars"></i></a></div></div></div></nav><div id="post-info"><div id="post-firstinfo"><div class="meta-firstline"><a class="post-meta-original">原创</a><span class="article-meta tags"></span></div></div><h1 class="post-title">无题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="anzhiyufont anzhiyu-icon-calendar-days post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-10-18T03:12:33.600Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time><span class="post-meta-separator"></span><i class="anzhiyufont anzhiyu-icon-history post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-10-18T03:12:33.600Z" title="更新于 2023-10-18 11:12:33">2023-10-18</time></span></div><div class="meta-secondline"><span class="post-meta-separator">       </span><span class="post-meta-position" title="作者IP属地为嘉兴"><i class="anzhiyufont anzhiyu-icon-location-dot"></i>嘉兴</span></div></div></div><section class="main-hero-waves-area waves-area"><svg class="waves-svg" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto"><defs><path id="gentle-wave" d="M -160 44 c 30 0 58 -18 88 -18 s 58 18 88 18 s 58 -18 88 -18 s 58 18 88 18 v 44 h -352 Z"></path></defs><g class="parallax"><use href="#gentle-wave" x="48" y="0"></use><use href="#gentle-wave" x="48" y="3"></use><use href="#gentle-wave" x="48" y="5"></use><use href="#gentle-wave" x="48" y="7"></use></g></svg></section><div id="post-top-cover"><img class="nolazyload" id="post-top-bg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>IO模型的选择在Linux网络编程中十分重要，在Unix&#x2F;Linux环境中主要提供了五种不同的IO模型，分别是阻塞式IO、非阻塞式IO、IO多路复用、信号驱动式IO和异步IO。</p>
+<p>通常一个输入操作包含两个不同阶段：</p>
+<ol>
+<li>等待数据准备好<br></li>
+<li>从内核向进程复制数据<br></li>
+</ol>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://user-images.githubusercontent.com/87457873/127826956-daff612a-711e-4f92-bcb3-89000b17d6a2.png" alt="image"></p>
+<p>例如，对于一个网络套接字上的输入操作，第一步通常涉及到发生系统调用，用户态切换到内核态并等待数据从网络中到达，当所有等待分组到达时，数据被复制到内核中的某个缓冲区。第二步则是将数据从内核缓冲区复制到应用进程缓冲区。</p>
+<blockquote>
+<p>磁盘文件的IO比较特殊，内核采用缓冲区cache加速磁盘IO请求。因而一旦请求的数据到达内核缓冲区cache，对磁盘的write()操作立即返回，而不用等待将数据写入磁盘后再返回（除非在打开文件时指定了O_SYNC标志）。与之相对应的read()操作将数据从内核缓冲区cache移动到用户的缓冲区中，如果请求的数据不在内核缓冲区cache中，内核会让进程休眠，同时执行对磁盘的读操作。所以实际上在磁盘IO中，等待阶段是不存在的，因为磁盘文件并不像网络IO那样，需要等待远程传输数据。</p>
+</blockquote>
+<h2 id="阻塞式I-O模型"><a href="#阻塞式I-O模型" class="headerlink" title="阻塞式I&#x2F;O模型"></a>阻塞式I&#x2F;O模型</h2><p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://user-images.githubusercontent.com/87457873/127827045-ba456dab-4e96-4c38-a572-e6337824e476.png" alt="image"></p>
+<p>Linux中，默认情况下所有的socket都是阻塞的。这里有必要辨析以下阻塞和非阻塞这两个概念，这两个概念描述的是用户线程调用内核I&#x2F;O操作的方式，其中阻塞是指I&#x2F;O操作需要彻底完成后才返回到用户空间；而非阻塞则是指I&#x2F;O操作被调用后立即返回给用户一个状态值，不需要等到I&#x2F;O操作彻底完成。</p>
+<p>除非特别指定，几乎所有的I&#x2F;O接口都是阻塞型的，即系统调用时不返回调用结果，只有当该系统调用获得结果或者超时出错才返回。这样的机制给网络编程带来了较大的影响，当线程因处理数据而处于阻塞状态时，线程将无法执行任何运算或者相应任何网络请求。</p>
+<ul>
+<li>改进方案</li>
+</ul>
+<p>在服务器端使用阻塞I&#x2F;O模型时结合多进程&#x2F;多线程技术。让每一个连接都拥有独立的进程&#x2F;线程，任何一个连接的阻塞都不会影响到其他连接。（选择多进程还是多线程并无统一标准，因为进程的开销远大于线程，所以在连接数较大的情况下推荐使用多线程。而进程相较于线程具有更高的安全性，所以如果单个服务执行体需要消耗较多的CPU资源，如需要进行大规模或长时间的数据运算或文件访问推荐使用多进程）。</p>
+<p>当连接数规模继续增大，无论使用多线程还是多进程都会严重占据系统资源，降低系统对外界的响应效率，线程或者进程本身也更容易陷入假死。此时可以采用“线程池”或“连接池”来降低创建和销毁进程&#x2F;线程的频率，减少系统开销。</p>
+<h2 id="非阻塞式I-O模型"><a href="#非阻塞式I-O模型" class="headerlink" title="非阻塞式I&#x2F;O模型"></a>非阻塞式I&#x2F;O模型</h2><p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://user-images.githubusercontent.com/87457873/127827107-819785fd-e73d-4a88-a018-80179575931f.png" alt="image"></p>
+<p>进程把一个套接字设置成非阻塞是在通知内核：当请求的I&#x2F;O操作非得把本进程投入睡眠才能完成时，不要把本进程投入睡眠，而是返回一个错误。 因此如果在打开文件时设定了O_NONBLOCK标志，则会以非阻塞方式打开文件。如果I&#x2F;O系统调用不能立即完成，则会返回错误而不是阻塞进程。非阻塞式I&#x2F;O可以实现周期性检查（轮询）某个文件描述符是否可执行I&#x2F;O操作。比如，设定一个输入文件描述符为非阻塞式的，然后周期性的执行非阻塞式读操作。如果需要同时检测多个文件描述符，则将其都设为非阻塞，然后一次轮询。但是这种轮询的效率不高，在轮询频率不高的情况下，程序响应I&#x2F;O事件的延迟将难以接受。换句话说，在一个紧凑的循环中做轮询就是在浪费CPU时间，因为多数时间调用会立即出错并返回。</p>
+<blockquote>
+<p>对于不能满足非阻塞式I&#x2F;O操作，System V会返回EAGAIN错误而源于Berkeley的4.3BSD返回EWOULDBLOCK。如今大多数系统都把这两个错误码定义为相同的值。（可查看&lt;sys&#x2F;errno.h&gt;）</p>
+</blockquote>
+<p>如果不希望进程在对文件描述符执行I&#x2F;O操作时被阻塞，则可以结合使用多进程&#x2F;多线程技术，创建一个新的进程来执行I&#x2F;O操作，而父进程则可以去做其他工作，子进程将阻塞到I&#x2F;O操作完成。当有多个文件描述符进行I&#x2F;O操作时，就需要创建多个子进程。当子进程收到文件结束符，那么该子进程将会终止，父进程收到SIGCHLD信号，但是当父进程终止，那么父进程应通知子进程停止，为此可以使用一个信号如SUGUSR1，这使得这种方法的开销将十分昂贵且复杂。使用多线程而不是多进程的方式将减少资源的占用，并有效简化程序设计。但线程之间仍然需要处理同步的问题，当面对大量并发客户线程时，但是这也使得程序编写十分复杂。</p>
+<h2 id="I-O多路复用模型"><a href="#I-O多路复用模型" class="headerlink" title="I&#x2F;O多路复用模型"></a>I&#x2F;O多路复用模型</h2><p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://user-images.githubusercontent.com/87457873/127828345-ca062966-dfd9-4c80-86c0-539e723ddb7f.png" alt="image"></p>
+<p>I&#x2F;O多路复用（也叫做事件驱动I&#x2F;O）通过系统调用select()、poll、或者epoll()实现进程同时检查多个文件描述符，以找出其中任何一个是否可执行I&#x2F;O操作。通过上图可以看出I&#x2F;O多路复用与阻塞I&#x2F;O模型差别并不大，事实上还要差一些，因为这里使用了两个系统调用而阻塞I&#x2F;O只是用了一个系统调用。但是I&#x2F;O多路复用的优势是其可以同时处理多个连接。因此如果处理的连接数不是特别多的情况下使用I&#x2F;O多路复用模型的web server不一定比使用多线程技术的阻塞I&#x2F;O模型好。</p>
+<p>select()和poll()的原理基本相同：<br></p>
+<ol>
+<li>注册待侦听的fd(这里的fd创建时最好使用非阻塞)<br></li>
+<li>每次调用都去检查这些fd的状态，当有一个或者多个fd就绪的时候返回<br></li>
+<li>返回结果中包括已就绪和未就绪的fd<br></li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">select</span> <span class="params">(<span class="type">int</span> maxfdp, fd_set *readfds, fd_set *writefds, fd_set *errorfds, <span class="keyword">struct</span> timeval *timeout)</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="select"><a href="#select" class="headerlink" title="select"></a>select</h3><ul>
+<li>maxfdp 指集合中所有文件描述符的范围，即所有文件描述符的最大值+1</li>
+<li>readfds、writefds、errorfds 指向文件描述符集合的指针，分别检测输入、输出是否就绪和异常情况是否发生</li>
+<li>timeout 时select()的超时时间，控制着select()的阻塞行为</li>
+</ul>
+<blockquote>
+<p>readfds、writefds、errorfds所指结构体都是保存结果的地方，在调用select()之前，这些参数指向的结构体必须初始化以包含我们所感兴趣的文件描述符集合。之后select()会修改这些结构体，当其返回时他们包含的就是处于就绪态的文件描述符集合。</p>
+</blockquote>
+<p>当timeout设为NULL或者其指向的结构体字段非零时，select()将阻塞到有下列事件发生<br></p>
+<ol>
+<li>readfds、writefds、errorfds 中指定的文件描述符中至少有一个成为就绪态（NULL）<br></li>
+<li>该调用被信号处理程序中断<br></li>
+<li>timeout中指定的时间上限已超时<br></li>
+</ol>
+<p>select()的返回值<br><br>当select()函数返回-1表示出错，错误码包括EBADF表示存在非法文件描述符，EINTR表示该调用被信号处理程序中断了（select不会自动恢复）。返回0表示超时，此时每个文件描述符集合都会被清空。返回一个正整数表示准备就绪的文件描述符个数，如果同一个文件描述符在返回的描述符集中出现多次，select会将其统计多次。</p>
+<blockquote>
+<p>一个文件描述符是否阻塞并不影响select()是否阻塞，也就是说如果希望读一个非阻塞文件描述符，并且以5s为超时值调用select()，则select()最多阻塞5s。同理若是指定超时值为NULL，则在该描述符就绪或者捕捉到一个信号之前select()会一直阻塞。</p>
+</blockquote>
+<p>所有关于文件描述符集合的操作都是通过以下四个宏完成，除此之外，常量FD_SETSIZE规定了文件描述符的最大容量。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/select.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">FD_ZERO</span><span class="params">(fd_set *fdset)</span>; <span class="comment">//将fdset所指集合初始化为空</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">FD_SET</span><span class="params">(<span class="type">int</span> fd, fd_set *fdset)</span>; <span class="comment">//将文件描述符fd添加到由fdset指向的集合中</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">FD_CLR</span><span class="params">(<span class="type">int</span> fd, fd_set *fdset)</span>; <span class="comment">//将文件描述符fd从fdset所指集合中移出</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">FD_ISSET</span><span class="params">(<span class="type">int</span> fd, fd_set *fdset)</span>; <span class="comment">//检测fd是否是fdset所指集合成员</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;poll.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">poll</span> <span class="params">(<span class="keyword">struct</span> pollfd fds[], <span class="type">nfds_t</span> nfds, <span class="type">int</span> timeout)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>poll和select的任务很相似，主要区别在于我们如何指定待检查的文件描述符（程序接口不同）。poll不为每个条件构造一个描述符集合，而是构造了一个pollfd结构的数组，每个数组元素指定一个描述符编号以及我们对该描述符感兴趣的条件。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> &#123;</span></span><br><span class="line">  <span class="type">int</span> fd; <span class="comment">//文件描述符</span></span><br><span class="line">  <span class="type">short</span> events; <span class="comment">//等待的事件</span></span><br><span class="line">  <span class="type">short</span> revents; <span class="comment">//实际发生了的事件</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>每个pollfd结构体指定了一个被监视的文件描述符，可以传递多个结构体，指示poll()监视多个文件描述符。每个结构体的events域是监视该文件描述符的事件掩码，由用户来设置这个域的属性。revents域是文件描述符的操作结果事件掩码，内核在调用返回时设置这个域，并且events中请求的任何事件都可能在revents中返回。</p>
+<p>参数timeout的设置与select()中有所不同（poll的timeout参数是一个整型而select是一个结构体）。</p>
+<p>1、当timeout等于-1时，表示无限超时。poll会一直阻塞到fds数组中列出的文件描述符有一个达到就绪态（定义在对应的events字段中）或者捕捉到一个信号<br><br>2、当timeout等于0时，poll不会阻塞——只执行一次检查看看哪个文件描述符已经就绪<br><br>3、当timeout大于0时，poll至多阻塞timeout毫秒数，无论IO是否准备好，poll都会返回<br></p>
+<p>poll的返回值<br><br>当poll()函数返回-1表示出错，错误码包括EBADF表示存在非法文件描述符，EINTR表示该调用被信号处理程序中断了（poll不会自动恢复）。返回0表示超时。返回一个正整数表示准备就绪的文件描述符个数，与select不同，poll返回的就是就绪文件描述符的个数每个文件描述符只统计一次。</p>
+<h3 id="select-和poll-的区别"><a href="#select-和poll-的区别" class="headerlink" title="select()和poll()的区别"></a>select()和poll()的区别</h3><p>Linux实现层面</p>
+<p>select()和poll()都使用了相同的内核轮询（poll）程序集合，与系统调用poll()本身不同，内核的每个poll例程都返回有关单个文件描述符就绪的信息，这个信息以位掩码的形式返回，其值同poll()系统调用返回的revent字段中的比特值相关。poll()系统调用的实现包括为每个文件描述符调用内核poll例程，并将结果信息填入到对应的revents字段中。对于系统调用select()则可以使用一组宏将内核poll例程返回的信息转化为由select()返回的与之对应的事件集合。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> POLLIN_SET (POLLIN | POLLRDNORM | POLLRDBAND | POLLHUP | POLLERR) <span class="comment">/*读就绪*/</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> POLLOUT_SET (POLLOUT | POLLWRNORM | POLLWRBAND | POLLERR) <span class="comment">/*写就绪*/</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> POLLEX_SET (POLLPRI) <span class="comment">/*异常*/</span></span></span><br></pre></td></tr></table></figure>
+<p>以上宏定义展现了select()和poll()返回信息间的语义关系，唯一一点不同是如果被检查的文件描述符中有一个关闭了，poll()在revent字段中返回POLLNVAL，而select()返回-1并把错误码置为EBADF。</p>
+<p>API设计层面</p>
+<p>1、select()使用的数据类型fd_set对于被检查的文件描述数量有一个上限（FD_SETSIZE）。相对也较小（1024&#x2F;2048），如果要修改这个默认值需要重新编译内核。与之相反，poll()没有对于被检查文件描述符的数量限制。<br><br>2、由于select()的参数fd_set同时也是保存结果的地方，在select()返回之后会发生变化，所以每当在下一次进入select()之前需要重新初始化fd_set。poll()通过两个独立的字段events和revents将监控的输入输出分开，允许被监控的文件数组被复用而不需要重新初始化。<br><br>3、select()提供的超时精度（微妙）比poll()提供的超时精度（毫秒）高。<br><br>4、select()的超时参数在返回时也是未定义的，考虑到可移植性，每次在超时之后在下一次进入到select()之前都需要重新设置超时参数。<br><br>5、poll()不要求开发者计算最大文件描述符时进行+1操作<br></p>
+<p>性能层面</p>
+<p>在待检查文件描述符范围较小（最大文件描述符较低），或者有大量文件描述符待检查，但是其分布比较密集时poll()和select()性能相似。<br><br>在被检查文件描述符集合很稀疏的情况，poll()要优于select()。</p>
+<h3 id="select-和poll-的不足"><a href="#select-和poll-的不足" class="headerlink" title="select()和poll()的不足"></a>select()和poll()的不足</h3><p>1、IO效率随着文件描述符的数量增加而线性下降。每次调用select()或poll()内核都要检查所有的被指定的文件描述符的状态（但是实际上只有部分的文件描述符会是活跃的），当有文件描述符集合增大时，IO的效率也随之下降。<br><br>2、当检查大量文件描述符时，用户空间和内核空间消息传递速度较慢。每次调用select()或poll()时，程序都必须传递一个表示所有需要被检查的文件描述符的数据结构到内核，在内核完成检查之后，修个这个数据结构并返回给程序。（此外select()每次调用之前还需要初始化该数据结构）对于poll()调用需要将用户传入的pollfd数组拷贝到内核空间，这是一个O(n)的操作。当事件发生后，poll()将获得的数据传送到用户空间，并执行释放内存和剥离等待队列等工作同样是O(n)的操作。因此随着文件描述符的增加消息传递速度会逐步下降。对于select()来说，传递的数据结构大小固定为FD_SETSIZE，与待检查的文件描述符数量无关。<br><br>3、select()或poll()调用完成之后，程序必须检查返回的数据结构中每个元素，已确定那个文件描述符处于就绪态<br><br>4、select()对一个进程打开的文件描述符数目有上限值，而且较少（1024&#x2F;2048）。<br></p>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>epoll API是Linux专有的特性，相较于select和poll，epoll更加灵活且没有描述符限制。epoll设计也与select和poll不同，主要包含以下三个接口：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/epoll.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">epoll_create</span><span class="params">(<span class="type">int</span> size)</span>; <span class="comment">//创建一个epoll句柄</span></span><br></pre></td></tr></table></figure>
+
+<p>参数size指定内核需要监听的文件描述符个数，但该参数与select中的maxfdp不同，并非一个上限（Linux 2.6.8以后该参数被忽略不用）。此外函数返回代表新创建的epoll句柄的文件描述符（在Linux下查看&#x2F;proc&#x2F;进程的id&#x2F;fd&#x2F;可看到该fd的值），因此当不再使用该文件描述符时应该通过close()关闭，当所用与epoll句柄相关的文件描述符都关闭时，该句柄被销毁并被系统回收其资源。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/epoll.h&gt;</span><br><span class="line"></span><br><span class="line">int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev); //修改兴趣列表（事件注册函数）</span><br></pre></td></tr></table></figure>
+
+<p>与select()的在监听事件时告诉内核需要监听的事件类型不同，epoll()需要先注册要监听的事件类型。参数op表示要执行的动作通过三个宏表示：1.EPOLL_CTL_ADD注册新的fd到epfd中；1.EPOLL_CTL_MOD修改已经注册的fd的监听事件；3.EPOLL_CTL_DEL从epfd中删除一个fd。参数fd表示需要监听的fd。最后一个参数ev指向结构体epoll_event则是告诉内核需要监听的事件类型，定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> &#123;</span></span><br><span class="line">  <span class="type">uint32_t</span> events; <span class="comment">//epoll events (bit mask)</span></span><br><span class="line">  <span class="type">epoll_data_t</span> data; <span class="comment">//user data variable</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中data的类型为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">union</span> <span class="title">epoll_data</span> &#123;</span></span><br><span class="line">  <span class="type">void</span>    *ptr; <span class="comment">//pointer to user defined data</span></span><br><span class="line">  <span class="type">int</span>     fd; <span class="comment">//file descriptor</span></span><br><span class="line">  uint_32 u32; <span class="comment">//32-bit integer</span></span><br><span class="line">  uint_64 u64; <span class="comment">//64-bit integer</span></span><br><span class="line">&#125; <span class="type">epoll_data_t</span>;</span><br></pre></td></tr></table></figure>
+<p>其中字段event表示事件掩码指定待监听的文件描述符fd上所感兴趣的事件集合，除了增加了一个前缀E外，这些掩码的名称与poll中对应名称相同（两个例外EPOLLET表示设置为边缘触发、EPOLLONESHOT表示只监听一次）。data字段是一个联合体，当描述符fd就绪后，联合体成员可以用来指定传回给调用进程的信息。data字段是唯一可以获知同这个事件相关的文件描述符的途径，因此调用epoll_ctl()将文件描述符添加到兴趣列表中时，应该要么将ev.data.fd设为文件描述符，要么将ev.data.ptr设为指向包含该文件描述的结构体。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/epoll.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">epoll_wait</span><span class="params">(<span class="type">int</span> epfd, <span class="keyword">struct</span> epoll_event *evlist, <span class="type">int</span> maxevents, <span class="type">int</span> timeout)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>等待事件的产生，参数evlist所指向的结构体数组中返回就需文件描述的信息，数组evlist的空间由调用者负责申请，所包含的元素个数由参数maxevents指定。</p>
+<h3 id="epoll的实现原理（以网络socket监听为例）"><a href="#epoll的实现原理（以网络socket监听为例）" class="headerlink" title="epoll的实现原理（以网络socket监听为例）"></a>epoll的实现原理（以网络socket监听为例）</h3><p>在linux，一切皆文件．所以当调用epoll_create时，内核给这个epoll分配一个文件描述符，但是这个不是普通的文件，而是只服务于epoll．</p>
+<p>所以当内核初始化epoll时，会开辟一块内核高速cache区，用于安置我们监听的socket，这些socket会以红黑树的形式保存在内核的cache里，以支持快速的查找，插入，删除．同时，建立了一个list链表，用于存储准备就绪的事件．所以调用epoll_wait时，在timeout时间内，只是简单的观察这个list链表是否有数据，如果没有，则睡眠至超时时间到返回；如果有数据，则在超时时间到，拷贝至用户态events数组中．</p>
+<p>那么，这个准备就绪list链表是怎么维护的呢？<br><br>当我们执行epoll_ctl()时，除了把socket放到epoll文件系统里file对象对应的红黑树上之外，还会给内核中断处理程序注册一个回调函数，告诉内核，如果这个句柄的中断到了，就把它放到准备就绪list链表里。所以，当一个socket上有数据到了，内核在把网卡上的数据copy到内核中后就来把socket插入到准备就绪链表里了。</p>
+<p>epoll支持两种模式LT(水平触发)和ET(边缘触发)，LT模式下，主要缓冲区数据一次没有处理完，那么下次epoll_wait返回时，还会返回这个句柄；而ET模式下，缓冲区数据一次没处理结束，那么下次是不会再通知了，只在第一次返回．所以在ET模式下，一般是通过while循环，一次性读完全部数据．epoll默认使用的是LT．</p>
+<p>这件事怎么做到的呢？当一个socket句柄上有事件时，内核会把该句柄插入上面所说的准备就绪list链表，这时我们调用epoll_wait，会把准备就绪的socket拷贝到用户态内存，然后清空准备就绪list链表，最后，epoll_wait干了件事，就是检查这些socket，如果不是ET模式（就是LT模式的句柄了），并且这些socket上确实有未处理的事件时，又把该句柄放回到刚刚清空的准备就绪链表了。所以，非ET的句柄，只要它上面还有事件，epoll_wait每次都会返回。而ET模式的句柄，除非有新中断到，即使socket上的事件没有处理完，也是不会次次从epoll_wait返回的．</p>
+<p>经常看到比较ET和LT模式到底哪个效率高的问题．有一个回答是说ET模式下减少epoll系统调用．这话没错，也可以理解，但是在ET模式下，为了避免数据饿死问题，用户态必须用一个循环，将所有的数据一次性处理结束．所以在ET模式下下，虽然epoll系统调用减少了，但是用户态的逻辑复杂了，write&#x2F;read调用增多了．所以这不好判断，要看用户的性能瓶颈在哪．</p>
+<h3 id="epoll设计的特点"><a href="#epoll设计的特点" class="headerlink" title="epoll设计的特点"></a>epoll设计的特点</h3><p>1、功能分离<br><br>socket低效的原因之一便是将“维护等待队列”和“阻塞进程”两个功能不加分离，每次调用 select 都需要这两步操作，然而大多数应用场景中，需要监视的 socket 相对固定，并不需要每次都修改。epoll 将这两个操作分开，先用epoll_ctl()维护等待队列，再调用 epoll_wait 阻塞进程。显而易见地，效率就能得到提升。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://user-images.githubusercontent.com/87457873/127828408-034ea5dc-b86f-4014-8291-10cc05d025f3.png" alt="image"></p>
+<p>而epoll则是实现了功能分离，通过epoll_create()创建一个 epoll 对象 epfd，再通过epoll_ctl()将需要监视的 socket 添加到 epfd 中，最后调用 epoll_wait() 等待数据使得epoll有了优化的可能。</p>
+<p>2、就绪列表<br><br>select 低效的另一个原因在于程序不知道哪些 socket 收到数据，只能一个个遍历。如果内核维护一个“就绪列表”，引用收到数据的 socket，就能避免遍历。如下图所示，计算机共有三个 socket，收到数据的 sock2 和 sock3 被就绪列表 rdlist 所引用。当进程被唤醒后，只要获取 rdlist 的内容，就能够知道哪些 socket 收到数据。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://user-images.githubusercontent.com/87457873/127828469-df0914b1-dff1-4f43-907a-225ac483bb03.png" alt="image"></p>
+<h3 id="epoll的实现细节"><a href="#epoll的实现细节" class="headerlink" title="epoll的实现细节"></a>epoll的实现细节</h3><p>epoll主要由两个结构体：eventpoll与epitem。epitem是每一个IO所对应的的事件。比如 epoll_ctl()的EPOLL_CTL_ADD操作的时候，就需要创建一个epitem。eventpoll是每一个epoll所对应的。比如epoll_create就是创建一个eventpoll。如下图所示，eventpoll 包含了 lock、mtx、wq（等待队列）与 rdlist 等成员，其中 rdlist 和 rbr 是我们所关心的。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://user-images.githubusercontent.com/87457873/127828664-517706d2-58b9-4a11-bea7-59b0a2d84234.png" alt="image"></p>
+<ul>
+<li>就绪列表的数据结构（rdlist）<br>就绪列表引用着就绪的 socket，所以它应能够快速的插入数据。</li>
+</ul>
+<p>程序可能随时调用 epoll_ctl() 添加监视 socket，也可能随时删除。当删除时，若该 socket 已经存放在就绪列表中，它也应该被移除。所以就绪列表应是一种能够快速插入和删除的数据结构。</p>
+<p>双向链表就是这样一种数据结构，epoll 使用双向链表来实现就绪队列。</p>
+<ul>
+<li>索引结构（rbr)<br>既然 epoll 将“维护监视队列”和“进程阻塞”分离，也意味着需要有个数据结构来保存监视的 socket，至少要方便地添加和移除，还要便于搜索，以避免重复添加。红黑树是一种自平衡二叉查找树，搜索、插入和删除时间复杂度都是O(log(N))，效率较好，epoll 使用了红黑树作为索引结构（对应上图的 rbr）。</li>
+</ul>
+<p>注：因为操作系统要兼顾多种功能，以及由更多需要保存的数据，rdlist 并非直接引用 socket，而是通过 epitem 间接引用，红黑树的节点也是 epitem 对象。同样，文件系统也并非直接引用着 socket。为方便理解，本文中省略了一些间接结构。</p>
+<h3 id="epoll的优点"><a href="#epoll的优点" class="headerlink" title="epoll的优点"></a>epoll的优点</h3><p>1、没有最大打开文件描述符限制<br><br>epoll支持的最大打开文件数与系统内存相关，可通<br>过cat &#x2F;proc&#x2F;sys&#x2F;fs&#x2F;file-max查看具体数目<br><br>2、IO效率不随文件描述符数目增加而线性下降<br><br>传统的select&#x2F;poll在拥有较大的一个socket集合时，不过由于网络延迟，任意时间只有部分socket是活跃的，但是select&#x2F;poll每次调用都会线性扫描全部的集合，导致效率呈线性下降。而epoll通过在内核中实现的根据每个文件描述符上的回调函数callback函数实现了每次只对“活跃的”的socket进行操作，从而使epoll实现了一个伪AIO，使其效率不会随文件描述符的增加而先行下降。<br><br>3、使用mmap加速内核与用户空间的消息传递<br><br>select、poll和epoll都需要内核把fd消息通知给用户空间，但是epoll采用了内核与用户空间mmap处于同一块内存来实现，具有较高的效率。<br></p>
+<h2 id="信号驱动式I-O模型"><a href="#信号驱动式I-O模型" class="headerlink" title="信号驱动式I&#x2F;O模型"></a>信号驱动式I&#x2F;O模型</h2><p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://user-images.githubusercontent.com/87457873/127829018-be125f77-6a05-497b-ab7d-a7d3927a1e33.png" alt="image"></p>
+<p>信号驱动I&#x2F;O中，当文件描述符上可执行I&#x2F;O操作时，进程请求内核为自己发送一个信号，之后进程可以执行其他任务直到I&#x2F;O就绪为止，此时内核会发送信号给进程。建立一个针对套接字的信号驱动式I&#x2F;O需要进程执行以下三个步骤：</p>
+<ol>
+<li>建立SIGIO信号处理函数 2. 设置该套接字的属主，通常使用fcntl的F_SETOWN命令设置 3. 开启该套接字的信号驱动式I&#x2F;O，通常通过使用fcnt的F_SETFL命令打开O_ASYNC标志完成</li>
+</ol>
+<p>使用信号驱动式I&#x2F;O模型的主要优点是在等待数据到达期间，进程不会被阻塞。</p>
+<h3 id="信号驱动式I-O的应用"><a href="#信号驱动式I-O的应用" class="headerlink" title="信号驱动式I&#x2F;O的应用"></a>信号驱动式I&#x2F;O的应用</h3><ul>
+<li>对于UDP上的使用比较简单，SIGIO信号只有在数据报到达套接字或者套接字发生异步错误时产生。因此当捕获对于某个UDP套接字的SIGIO信号时，我们调用recvfrom或者读入到达的数据报或者获取发生的异步错误。</li>
+<li>信号驱动式I&#x2F;O对于TCP套接字几乎无用，主要原因是SIGIO信号产生会过于频繁，并且其出现并没有告知我们发生了什么事件。比如，当一个进程既读又写一个TCP套接字时，当有数据到达或者当前写出的数据得到确认时，SIGIO信号都会产生，而信号处理函数无法区分这两种情况。 &gt; 应该只考虑对监听TCP套接字使用SIGIO，因为对于监听TCP套接字产生SIGIO的唯一条件是某个新连接的完成。</li>
+</ul>
+<p>实际上I&#x2F;O多路复用、信号驱动I&#x2F;O以及epoll都是用来实现同一个目标的技术——同时检查多个文件描述符是否准备好执行I&#x2F;O操作（准确的说是看I&#x2F;O系统调用是否可以非阻塞地执行）。文件描述符就绪状态的转化是通过一些I&#x2F;O事件来触发的，如输入数据到达、套接字连接建立完成或者是之前满载的套接字发送缓冲区在TCP将队列中的数据传送到对端之后有了剩余空间。但是以上这三种技术都不会实际执行I&#x2F;O操作，只会告诉我们某个文件描述符已经处于就绪状态，此时我们还需要调用其他系统调用来实际完成I&#x2F;O操作。AIO技术是POSIX异步I&#x2F;O，其允许进程将I&#x2F;O操作排列到一个文件中，当操作完成后得到通知，其优点是最初的I&#x2F;O调用会立刻返回，进程不会一直等待数据传达到内核或者等待操作完成。这使得进程可以同I&#x2F;O操作一起并行处理其他任务。</p>
+<h2 id="I-O模型的技术选择"><a href="#I-O模型的技术选择" class="headerlink" title="I&#x2F;O模型的技术选择"></a>I&#x2F;O模型的技术选择</h2><ul>
+<li>select()和poll()可移植性高但是当同时检查大量的文件描述符时性能延展性不佳。</li>
+<li>epoll()关键优势是可以高效的检查大量文件描述符，但是可移植性差属于只能用于Linux的API。</li>
+<li>信号驱动I&#x2F;O和epoll一样可以高效的检查大量文件描述符，但是epool具有许多信号驱动i&#x2F;O不具备的优势。<ul>
+<li>避免了处理信号的复杂性</li>
+<li>可以指定想要检查的事件类型（读就绪或者写就绪）</li>
+<li>可以选择水平触发或者边缘触发的形式来通知进程。</li>
+<li>如要用到信号驱动I&#x2F;O的优点需要用到不可移植的Linux的专有特性，如此其可移植性也不会优于epoll。<blockquote>
+<p>通过以上总结可知，select和poll具有良好的可移植性而epoll和信号驱动I&#x2F;O具有更好的性能，因此通过一个软件抽象层来检查文件描述符事件，从而可移植程序就能在提供epoll API系统上使用epoll而在其他系统使用select或poll了。如Libevent的底层机制能够使用以上四种机制中的任意一种。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="文件描述符准备就绪的通知方式"><a href="#文件描述符准备就绪的通知方式" class="headerlink" title="文件描述符准备就绪的通知方式"></a>文件描述符准备就绪的通知方式</h2><ul>
+<li>水平触发通知：如果文件描述符上可以非阻塞地执行I&#x2F;O系统调用，此时认为其已经就绪。</li>
+<li>边缘触发通知：如果文件描述符自上次状态检查以来有了新的I&#x2F;O活动（如新的输入），此时需要触发通知。</li>
+</ul>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://user-images.githubusercontent.com/87457873/127829103-223bdb2c-b788-4ccb-841e-025f4ef73601.png" alt="image"></p>
+<p>通过上表可知，epoll与其他模式的区别在于其同时支持水平触发（默认）与边缘触发。</p>
+<h3 id="触发方式对程序设计的影响"><a href="#触发方式对程序设计的影响" class="headerlink" title="触发方式对程序设计的影响"></a>触发方式对程序设计的影响</h3><ul>
+<li><p>水平触发 当采用水平触发时，我们可以在任意时刻检查文件描述符的就绪状态。当确定其就绪状态后就可以对其进行I&#x2F;O操作，然后重复检查文件描述符，已确定是否仍然处于就绪状态，此时就可以执行更多的I&#x2F;O。也就是说，因为水平触发允许我们在任意时刻重复检查I&#x2F;O状态，也就没有必要每次文件描述符就绪后就尽可能多地执行I&#x2F;O（尽可能多地读取字节，亦或是不去执行I&#x2F;O）。</p>
+</li>
+<li><p>边缘触发 当采用边缘触发时，只有当I&#x2F;O事件发生时才会得到通知。在另一个I&#x2F;O时间到来之前我们不会收到任何新的通知。此外当文件描述符收到I&#x2F;O事件通知时，我们并不知道要处理多少I&#x2F;O（有多少数据可读）。因此采用边缘触发通知的程序应该在接收到一个I&#x2F;O事件通知后，程序在某个时刻（在有些时候我们确定文件描述符是就绪态时，此时不适合大量的I&#x2F;O操作。因为如果我们仅对一个文件描述符执行大量I&#x2F;O操作，可能会让其他文件描述符处于饥饿状态）应该在相应的文件描述符上尽可能多地执行I&#x2F;O（尽可能多地读取字节，与水平触发相反）。但是若是程序如此设计，就可能失去执行I&#x2F;O的机会。因为知道产生另一个I&#x2F;O事件为止，在此之前程序都不会在接收到通知了，也就不知道何时执行I&#x2F;O了。这也将导致数据丢失或者程序中出现阻塞。</p>
+</li>
+</ul>
+<p>如果程序采用循环来对文件描述符执行尽可能多的I&#x2F;O，而文件描述符又被置为可阻塞的，那么最终当没有更多文件可执行时，I&#x2F;O系统调用就会阻塞。因此，每个被检查的文件描述符通常都应该被设为非阻塞模式。在得到I&#x2F;O事件通知后会重复执行I&#x2F;O操作，直到相应的系统调用 (如read()、write()) 以错误码EAGAIN或EWOULDBLOCK的形式失败。</p>
+<h2 id="异步I-O模型"><a href="#异步I-O模型" class="headerlink" title="异步I&#x2F;O模型"></a>异步I&#x2F;O模型</h2><p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/" alt="Uploading image.png…"></p>
+<p>对于I&#x2F;O操作主要有两种分别是异步I&#x2F;O和同步I&#x2F;O，对于同步I&#x2F;O会导致请求进程阻塞，直到I&#x2F;O操作完成，即必须等待I&#x2F;O操作完成以后控制权才返回给用户进程；而异步I&#x2F;O不会导致请求进程阻塞，即无需等待I&#x2F;O操作完成就将控制权返回给用户进程。</p>
+<ul>
+<li><p>异步I&#x2F;O模型的工作机制 告知内核启动某个操作，并让内核在整个操作（包括将数据从内核复制到进程缓冲区）完成后通知我们。主要方式是调用aio_read函数向内核传递描述符、缓冲区指针、缓冲区大小（与read相同的三个参数）和文件偏移，并告知内核当整个操作完成时如何通知用户进程。该系统调用立即返回，在等待I&#x2F;O完成期间进程不被阻塞。</p>
+</li>
+<li><p>与信号驱动式I&#x2F;O模型的区别<br><br>信号驱动式I&#x2F;O是由内核告诉我们何时可以启动一个I&#x2F;O操作，而异步I&#x2F;O模型则是由内核通知我们I&#x2F;O操作何时完成。</p>
+</li>
+</ul>
+</article><div class="post-copyright"><div class="copyright-cc-box"><i class="anzhiyufont anzhiyu-icon-copyright"></i></div><div class="post-copyright__author_box"><a class="post-copyright__author_img" href="/" title="头像"><img class="post-copyright__author_img_back" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/avatar.jpg" title="头像" alt="头像"><img class="post-copyright__author_img_front" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/avatar.jpg" title="头像" alt="头像"></a><div class="post-copyright__author_name">ysme</div><div class="post-copyright__author_desc"></div></div><div class="post-copyright__post__info"><a class="post-copyright__original" title="该文章为原创文章，注意版权协议" href="https://vcloud.ysme.top/2023/10/18/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%20%E4%B8%AD%E7%9A%84%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/">原创</a><a class="post-copyright-title"><span onclick="rm.copyPageUrl('https://vcloud.ysme.top/2023/10/18/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%20%E4%B8%AD%E7%9A%84%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/')">Blog</span></a></div><div class="post-tools" id="post-tools"><div class="post-tools-left"><div class="rewardLeftButton"><div class="post-reward" onclick="anzhiyu.addRewardMask()"><div class="reward-button button--animated" title="赞赏作者"><i class="anzhiyufont anzhiyu-icon-hand-heart-fill"></i>打赏作者</div><div class="reward-main"><div class="reward-all"><span class="reward-title">感谢你赐予我前进的力量</span><ul class="reward-group"><li class="reward-item"><a href="/img/qrcode-weichat.png" target="_blank"><img class="post-qr-code-img" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/qrcode-weichat.png" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/qrcode-alipay.png" target="_blank"><img class="post-qr-code-img" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/qrcode-alipay.png" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul><a class="reward-main-btn" href="/about/#about-reward" target="_blank"><div class="reward-text">赞赏者名单</div><div class="reward-dec">因为你们的支持让我意识到写文章的价值🙏</div></a></div></div></div><div id="quit-box" onclick="anzhiyu.removeRewardMask()" style="display: none"></div></div><div class="shareRight"><div class="share-link mobile"><div class="share-qrcode"><div class="share-button" title="使用手机访问这篇文章"><i class="anzhiyufont anzhiyu-icon-qrcode"></i></div><div class="share-main"><div class="share-main-all"><div id="qrcode" title="https://vcloud.ysme.top/2023/10/18/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%20%E4%B8%AD%E7%9A%84%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/"></div><div class="reward-dec">使用手机访问这篇文章</div></div></div></div></div><div class="share-link weibo"><a class="share-button" target="_blank" href="https://service.weibo.com/share/share.php?title=Blog&amp;url=https://vcloud.ysme.top/2023/10/18/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%20%E4%B8%AD%E7%9A%84%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/&amp;pic=data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" rel="external nofollow noreferrer noopener"><i class="anzhiyufont anzhiyu-icon-weibo"></i></a></div><div class="share-link copyurl"><div class="share-button" id="post-share-url" title="复制链接" onclick="rm.copyPageUrl()"><i class="anzhiyufont anzhiyu-icon-link"></i></div></div></div></div></div><div class="post-copyright__notice"><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="post-tools-right"><div class="tag_share"><div class="post-meta__box"><div class="post-meta__box__tag-list"></div></div></div><div class="post_share"><div class="social-share" data-image="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.cbd.int/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"/><script src="https://cdn.cbd.int/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer="defer"></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/10/18/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E4%B9%8Bepoll%E6%A8%A1%E5%9E%8B/"><img class="prev-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info"></div></div></a></div><div class="next-post pull-right"><a href="/2023/10/18/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E8%99%9A%E6%8B%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"><img class="next-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info"></div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-content"><div class="author-info__sayhi" id="author-info__sayhi" onclick="anzhiyu.changeSayHelloText()"></div><div class="author-info-top" title="点击展开"><div class="card-info-avatar"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-status-box"><div class="author-status"><g-emoji class="g-emoji" alias="writing_hand" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/270d.png">✍️</g-emoji><span>on Studying</span></div></div></div></div><div class="author-info__description"><div style="line-height:1.38;margin:0.6rem 0;text-align:justify;color:rgba(255, 255, 255, 0.8);">这有关于<b style="color:#fff">产品、设计、开发</b>相关的问题和看法，还有<b style="color:#fff">文章翻译</b>和<b style="color:#fff">分享</b>。</div><div style="line-height:1.38;margin:0.6rem 0;text-align:justify;color:rgba(255, 255, 255, 0.8);">相信你可以在这里找到对你有用的<b style="color:#fff">知识</b>和<b style="color:#fff">教程</b>。</div></div></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-bars"></i><span>文章目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%98%BB%E5%A1%9E%E5%BC%8FI-O%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.</span> <span class="toc-text">阻塞式I&#x2F;O模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8FI-O%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">非阻塞式I&#x2F;O模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I-O%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.</span> <span class="toc-text">I&#x2F;O多路复用模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#select"><span class="toc-number">3.1.</span> <span class="toc-text">select</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#poll"><span class="toc-number">3.2.</span> <span class="toc-text">poll</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#select-%E5%92%8Cpoll-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">3.3.</span> <span class="toc-text">select()和poll()的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#select-%E5%92%8Cpoll-%E7%9A%84%E4%B8%8D%E8%B6%B3"><span class="toc-number">3.4.</span> <span class="toc-text">select()和poll()的不足</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll"><span class="toc-number">3.5.</span> <span class="toc-text">epoll</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%EF%BC%88%E4%BB%A5%E7%BD%91%E7%BB%9Csocket%E7%9B%91%E5%90%AC%E4%B8%BA%E4%BE%8B%EF%BC%89"><span class="toc-number">3.6.</span> <span class="toc-text">epoll的实现原理（以网络socket监听为例）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%89%B9%E7%82%B9"><span class="toc-number">3.7.</span> <span class="toc-text">epoll设计的特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll%E7%9A%84%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82"><span class="toc-number">3.8.</span> <span class="toc-text">epoll的实现细节</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll%E7%9A%84%E4%BC%98%E7%82%B9"><span class="toc-number">3.9.</span> <span class="toc-text">epoll的优点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8%E5%BC%8FI-O%E6%A8%A1%E5%9E%8B"><span class="toc-number">4.</span> <span class="toc-text">信号驱动式I&#x2F;O模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8%E5%BC%8FI-O%E7%9A%84%E5%BA%94%E7%94%A8"><span class="toc-number">4.1.</span> <span class="toc-text">信号驱动式I&#x2F;O的应用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I-O%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E6%8B%A9"><span class="toc-number">5.</span> <span class="toc-text">I&#x2F;O模型的技术选择</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%E5%87%86%E5%A4%87%E5%B0%B1%E7%BB%AA%E7%9A%84%E9%80%9A%E7%9F%A5%E6%96%B9%E5%BC%8F"><span class="toc-number">6.</span> <span class="toc-text">文件描述符准备就绪的通知方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A6%E5%8F%91%E6%96%B9%E5%BC%8F%E5%AF%B9%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-number">6.1.</span> <span class="toc-text">触发方式对程序设计的影响</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%82%E6%AD%A5I-O%E6%A8%A1%E5%9E%8B"><span class="toc-number">7.</span> <span class="toc-text">异步I&#x2F;O模型</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%EF%BC%8C%E7%AE%A1%E9%81%93%EF%BC%8Csocket%EF%BC%8CXSI(System%20V)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%EF%BC%8C%E7%AE%A1%E9%81%93%EF%BC%8Csocket%EF%BC%8CXSI(System%20V)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.612Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.608Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.608Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.608Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.608Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"></div><div id="footer-bar"><div class="footer-bar-links"><div class="footer-bar-left"><div id="footer-bar-tips"><div class="copyright">&copy;2020 - 2023 By <a class="footer-bar-link" href="/" title="ysme" target="_blank">ysme</a></div></div><div id="footer-type-tips"></div><div class="js-pjax"><script>function subtitleType () {
+  fetch('https://v1.hitokoto.cn')
+    .then(response => response.json())
+    .then(data => {
+      if (true) {
+        const from = '出自 ' + data.from
+        const sub = []
+        sub.unshift(data.hitokoto, from)
+        window.typed = new Typed('#footer-type-tips', {
+          strings: sub,
+          startDelay: 300,
+          typeSpeed: 150,
+          loop: true,
+          backSpeed: 50,
+        })
+      } else {
+        document.getElementById('footer-type-tips').innerHTML = data.hitokoto
+      }
+    })
+}
+
+if (true) {
+  if (typeof Typed === 'function') {
+    subtitleType()
+  } else {
+    getScript('https://cdn.cbd.int/typed.js@2.0.15/dist/typed.umd.js').then(subtitleType)
+  }
+} else {
+  subtitleType()
+}
+</script></div></div><div class="footer-bar-right"><a class="footer-bar-link" target="_blank" rel="noopener" href="https://github.com/anzhiyu-c/hexo-theme-anzhiyu" title="主题">主题</a></div></div></div></footer></div></div></div><div id="sidebar"><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/" title="archive"><div class="headline">文章</div><div class="length-num">76</div></a><a href="/tags/" title="tag"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/" title="category"><div class="headline">分类</div><div class="length-num">7</div></a></div></div></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="anzhiyufont anzhiyu-icon-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="anzhiyufont anzhiyu-icon-circle-half-stroke"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="anzhiyufont anzhiyu-icon-arrows-left-right"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="anzhiyufont anzhiyu-icon-gear"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="anzhiyufont anzhiyu-icon-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></button></div></div><div id="nav-music"><a id="nav-music-hoverTips" onclick="anzhiyu.musicToggle()" accesskey="m">播放音乐</a><div id="console-music-bg"></div><meting-js id="8152976493" server="netease" type="playlist" mutex="true" preload="none" theme="var(--anzhiyu-main)" data-lrctype="0" order="random"></meting-js></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="anzhiyufont anzhiyu-icon-xmark"></i></button></nav><div class="is-center" id="loading-database"><i class="anzhiyufont anzhiyu-icon-spinner anzhiyu-pulse-icon"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div id="rightMenu"><div class="rightMenu-group rightMenu-small"><div class="rightMenu-item" id="menu-backward"><i class="anzhiyufont anzhiyu-icon-arrow-left"></i></div><div class="rightMenu-item" id="menu-forward"><i class="anzhiyufont anzhiyu-icon-arrow-right"></i></div><div class="rightMenu-item" id="menu-refresh"><i class="anzhiyufont anzhiyu-icon-arrow-rotate-right" style="font-size: 1rem;"></i></div><div class="rightMenu-item" id="menu-top"><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></div></div><div class="rightMenu-group rightMenu-line rightMenuPlugin"><div class="rightMenu-item" id="menu-copytext"><i class="anzhiyufont anzhiyu-icon-copy"></i><span>复制选中文本</span></div><div class="rightMenu-item" id="menu-pastetext"><i class="anzhiyufont anzhiyu-icon-paste"></i><span>粘贴文本</span></div><a class="rightMenu-item" id="menu-commenttext"><i class="anzhiyufont anzhiyu-icon-comment-medical"></i><span>引用到评论</span></a><div class="rightMenu-item" id="menu-newwindow"><i class="anzhiyufont anzhiyu-icon-window-restore"></i><span>新窗口打开</span></div><div class="rightMenu-item" id="menu-copylink"><i class="anzhiyufont anzhiyu-icon-link"></i><span>复制链接地址</span></div><div class="rightMenu-item" id="menu-copyimg"><i class="anzhiyufont anzhiyu-icon-images"></i><span>复制此图片</span></div><div class="rightMenu-item" id="menu-downloadimg"><i class="anzhiyufont anzhiyu-icon-download"></i><span>下载此图片</span></div><div class="rightMenu-item" id="menu-newwindowimg"><i class="anzhiyufont anzhiyu-icon-window-restore"></i><span>新窗口打开图片</span></div><div class="rightMenu-item" id="menu-search"><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i><span>站内搜索</span></div><div class="rightMenu-item" id="menu-searchBaidu"><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i><span>百度搜索</span></div><div class="rightMenu-item" id="menu-music-toggle"><i class="anzhiyufont anzhiyu-icon-play"></i><span>播放音乐</span></div><div class="rightMenu-item" id="menu-music-back"><i class="anzhiyufont anzhiyu-icon-backward"></i><span>切换到上一首</span></div><div class="rightMenu-item" id="menu-music-forward"><i class="anzhiyufont anzhiyu-icon-forward"></i><span>切换到下一首</span></div><div class="rightMenu-item" id="menu-music-playlist" onclick="window.open(&quot;https://y.qq.com/n/ryqq/playlist/8802438608&quot;, &quot;_blank&quot;);" style="display: none;"><i class="anzhiyufont anzhiyu-icon-radio"></i><span>查看所有歌曲</span></div><div class="rightMenu-item" id="menu-music-copyMusicName"><i class="anzhiyufont anzhiyu-icon-copy"></i><span>复制歌名</span></div></div><div class="rightMenu-group rightMenu-line rightMenuOther"><a class="rightMenu-item menu-link" id="menu-randomPost"><i class="anzhiyufont anzhiyu-icon-shuffle"></i><span>随便逛逛</span></a><a class="rightMenu-item menu-link" href="/categories/"><i class="anzhiyufont anzhiyu-icon-cube"></i><span>博客分类</span></a><a class="rightMenu-item menu-link" href="/tags/"><i class="anzhiyufont anzhiyu-icon-tags"></i><span>文章标签</span></a></div><div class="rightMenu-group rightMenu-line rightMenuOther"><a class="rightMenu-item" id="menu-copy" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-copy"></i><span>复制地址</span></a><a class="rightMenu-item" id="menu-commentBarrage" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-message"></i><span class="menu-commentBarrage-text">关闭热评</span></a><a class="rightMenu-item" id="menu-darkmode" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-circle-half-stroke"></i><span class="menu-darkmode-text">深色模式</span></a><a class="rightMenu-item" id="menu-translate" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-language"></i><span>轉為繁體</span></a></div></div><div id="rightmenu-mask"></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.cbd.int/@fancyapps/ui@5.0.20/dist/fancybox/fancybox.umd.js"></script><script src="https://cdn.cbd.int/instant.page@5.2.0/instantpage.js" type="module"></script><script src="https://cdn.cbd.int/vanilla-lazyload@17.3.1/dist/lazyload.iife.min.js"></script><script src="https://cdn.cbd.int/node-snackbar@0.1.16/dist/snackbar.min.js"></script><canvas id="universe"></canvas><script async src="https://npm.elemecdn.com/anzhiyu-theme-static@1.0.0/dark/dark.js"></script><script>// 消除控制台打印
+var HoldLog = console.log;
+console.log = function () {};
+let now1 = new Date();
+queueMicrotask(() => {
+  const Log = function () {
+    HoldLog.apply(console, arguments);
+  }; //在恢复前输出日志
+  const grt = new Date("04/01/2021 00:00:00"); //此处修改你的建站时间或者网站上线时间
+  now1.setTime(now1.getTime() + 250);
+  const days = (now1 - grt) / 1000 / 60 / 60 / 24;
+  const dnum = Math.floor(days);
+  const ascll = [
+    `欢迎使用安知鱼!`,
+    `生活明朗, 万物可爱`,
+    `
+        
+       █████╗ ███╗   ██╗███████╗██╗  ██╗██╗██╗   ██╗██╗   ██╗
+      ██╔══██╗████╗  ██║╚══███╔╝██║  ██║██║╚██╗ ██╔╝██║   ██║
+      ███████║██╔██╗ ██║  ███╔╝ ███████║██║ ╚████╔╝ ██║   ██║
+      ██╔══██║██║╚██╗██║ ███╔╝  ██╔══██║██║  ╚██╔╝  ██║   ██║
+      ██║  ██║██║ ╚████║███████╗██║  ██║██║   ██║   ╚██████╔╝
+      ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝    ╚═════╝
+        
+        `,
+    "已上线",
+    dnum,
+    "天",
+    "©2020 By 安知鱼 V1.5.4",
+  ];
+  const ascll2 = [`NCC2-036`, `调用前置摄像头拍照成功，识别为【小笨蛋】.`, `Photo captured: `, `🤪`];
+
+  setTimeout(
+    Log.bind(
+      console,
+      `\n%c${ascll[0]} %c ${ascll[1]} %c ${ascll[2]} %c${ascll[3]}%c ${ascll[4]}%c ${ascll[5]}\n\n%c ${ascll[6]}\n`,
+      "color:#3b70fc",
+      "",
+      "color:#3b70fc",
+      "color:#3b70fc",
+      "",
+      "color:#3b70fc",
+      ""
+    )
+  );
+  setTimeout(
+    Log.bind(
+      console,
+      `%c ${ascll2[0]} %c ${ascll2[1]} %c \n${ascll2[2]} %c\n${ascll2[3]}\n`,
+      "color:white; background-color:#4fd953",
+      "",
+      "",
+      'background:url("https://npm.elemecdn.com/anzhiyu-blog@1.1.6/img/post/common/tinggge.gif") no-repeat;font-size:450%'
+    )
+  );
+
+  setTimeout(Log.bind(console, "%c WELCOME %c 你好，小笨蛋.", "color:white; background-color:#4f90d9", ""));
+
+  setTimeout(
+    console.warn.bind(
+      console,
+      "%c ⚡ Powered by 安知鱼 %c 你正在访问 ysme 的博客.",
+      "color:white; background-color:#f0ad4e",
+      ""
+    )
+  );
+
+  setTimeout(Log.bind(console, "%c W23-12 %c 你已打开控制台.", "color:white; background-color:#4f90d9", ""));
+
+  setTimeout(
+    console.warn.bind(console, "%c S013-782 %c 你现在正处于监控中.", "color:white; background-color:#d9534f", "")
+  );
+});</script><script async src="/anzhiyu/random.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"><input type="hidden" name="page-type" id="page-type" value="post"></div><script>var visitorMail = "visitor@anheyu.com";</script><script>//动态标题
+let leaveTitle = 'w(ﾟДﾟ)w 不要走！再看看嘛！';
+let backTitle = '♪(^∇^*)欢迎肥来！';
+let OriginTitile = document.title
+let titleTime
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) {
+    //离开当前页面时标签显示内容
+    document.title = leaveTitle
+    clearTimeout(titleTime)
+  } else {
+    //返回当前页面时标签显示内容
+    document.title = backTitle + OriginTitile
+    //两秒后变回正常标题
+    titleTime = setTimeout(function () {
+      document.title = OriginTitile
+    }, 2000)
+  }
+})</script><script async data-pjax src="https://cdn.cbd.int/anzhiyu-theme-static@1.0.0/waterfall/waterfall.js"></script><script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/qrcodejs/1.0.0/qrcode.min.js"></script><script>// 初始化函数
+let rm = {};
+
+//禁止图片与超链接拖拽
+let aElements = document.getElementsByTagName("a");
+for (let i = 0; i < aElements.length; i++) {
+  aElements[i].setAttribute("draggable", "false");
+  let imgElements = aElements[i].getElementsByTagName("img");
+  for (let j = 0; j < imgElements.length; j++) {
+    imgElements[j].setAttribute("draggable", "false");
+  }
+}
+
+// 显示菜单
+rm.showRightMenu = function (isTrue, x = 0, y = 0) {
+  console.info(x, y)
+  let rightMenu = document.getElementById("rightMenu");
+  rightMenu.style.top = x + "px";
+  rightMenu.style.left = y + "px";
+  if (isTrue) {
+    rightMenu.style.display = "block";
+    stopMaskScroll();
+  } else {
+    rightMenu.style.display = "none";
+  }
+};
+
+// 隐藏菜单
+rm.hideRightMenu = function () {
+  rm.showRightMenu(false);
+  let rightMenuMask = document.querySelector("#rightmenu-mask");
+  rightMenuMask.style.display = "none";
+};
+
+// 尺寸
+let rmWidth = document.getElementById("rightMenu").offsetWidth;
+let rmHeight = document.getElementById("rightMenu").offsetHeight;
+
+// 重新定义尺寸
+rm.reloadrmSize = function () {
+  rightMenu.style.visibility = "hidden";
+  rightMenu.style.display = "block";
+  // 获取宽度和高度
+  rmWidth = document.getElementById("rightMenu").offsetWidth;
+  rmHeight = document.getElementById("rightMenu").offsetHeight;
+  rightMenu.style.visibility = "visible";
+};
+
+// 获取点击的href
+let domhref = "";
+let domImgSrc = "";
+let globalEvent = null;
+
+var oncontextmenuFunction = function (event) {
+  if (document.body.clientWidth > 768) {
+    let pageX = event.clientX + 10; //加10是为了防止显示时鼠标遮在菜单上
+    let pageY = event.clientY;
+
+    //其他额外菜单
+    const $rightMenuOther = document.querySelector(".rightMenuOther");
+    const $rightMenuPlugin = document.querySelector(".rightMenuPlugin");
+    const $rightMenuCopyText = document.querySelector("#menu-copytext");
+    const $rightMenuPasteText = document.querySelector("#menu-pastetext");
+    const $rightMenuCommentText = document.querySelector("#menu-commenttext");
+    const $rightMenuNewWindow = document.querySelector("#menu-newwindow");
+    const $rightMenuNewWindowImg = document.querySelector("#menu-newwindowimg");
+    const $rightMenuCopyLink = document.querySelector("#menu-copylink");
+    const $rightMenuCopyImg = document.querySelector("#menu-copyimg");
+    const $rightMenuDownloadImg = document.querySelector("#menu-downloadimg");
+    const $rightMenuSearch = document.querySelector("#menu-search");
+    const $rightMenuSearchBaidu = document.querySelector("#menu-searchBaidu");
+    const $rightMenuMusicToggle = document.querySelector("#menu-music-toggle");
+    const $rightMenuMusicBack = document.querySelector("#menu-music-back");
+    const $rightMenuMusicForward = document.querySelector("#menu-music-forward");
+    const $rightMenuMusicPlaylist = document.querySelector("#menu-music-playlist");
+    const $rightMenuMusicCopyMusicName = document.querySelector("#menu-music-copyMusicName");
+
+    let href = event.target.href;
+    let imgsrc = event.target.currentSrc;
+
+    // 判断模式 扩展模式为有事件
+    let pluginMode = false;
+    $rightMenuOther.style.display = "block";
+    globalEvent = event;
+
+    // 检查是否需要复制 是否有选中文本
+    if (selectTextNow && window.getSelection()) {
+      pluginMode = true;
+      $rightMenuCopyText.style.display = "block";
+      $rightMenuCommentText.style.display = "block";
+      $rightMenuSearch.style.display = "block";
+      $rightMenuSearchBaidu.style.display = "block";
+    } else {
+      $rightMenuCopyText.style.display = "none";
+      $rightMenuCommentText.style.display = "none";
+      $rightMenuSearchBaidu.style.display = "none";
+      $rightMenuSearch.style.display = "none";
+    }
+
+    //检查是否右键点击了链接a标签
+    if (href) {
+      pluginMode = true;
+      $rightMenuNewWindow.style.display = "block";
+      $rightMenuCopyLink.style.display = "block";
+      domhref = href;
+    } else {
+      $rightMenuNewWindow.style.display = "none";
+      $rightMenuCopyLink.style.display = "none";
+    }
+
+    //检查是否需要复制图片
+    if (imgsrc) {
+      pluginMode = true;
+      $rightMenuCopyImg.style.display = "block";
+      $rightMenuDownloadImg.style.display = "block";
+      $rightMenuNewWindowImg.style.display = "block";
+      document.getElementById("rightMenu").style.width="12rem"
+      domImgSrc = imgsrc;
+    } else {
+      $rightMenuCopyImg.style.display = "none";
+      $rightMenuDownloadImg.style.display = "none";
+      $rightMenuNewWindowImg.style.display = "none";
+    }
+
+    // 判断是否为输入框
+    if (event.target.tagName.toLowerCase() === "input" || event.target.tagName.toLowerCase() === "textarea") {
+      pluginMode = true;
+      $rightMenuPasteText.style.display = "block";
+    } else {
+      $rightMenuPasteText.style.display = "none";
+    }
+    const navMusicEl = document.querySelector("#nav-music");
+    //判断是否是音乐
+    if (navMusicEl && navMusicEl.contains(event.target)) {
+      pluginMode = true;
+      $rightMenuMusicToggle.style.display = "block";
+      $rightMenuMusicBack.style.display = "block";
+      $rightMenuMusicForward.style.display = "block";
+      $rightMenuMusicPlaylist.style.display = "block";
+      $rightMenuMusicCopyMusicName.style.display = "block";
+    } else {
+      $rightMenuMusicToggle.style.display = "none";
+      $rightMenuMusicBack.style.display = "none";
+      $rightMenuMusicForward.style.display = "none";
+      $rightMenuMusicPlaylist.style.display = "none";
+      $rightMenuMusicCopyMusicName.style.display = "none";
+    }
+
+    // 如果不是扩展模式则隐藏扩展模块
+    if (pluginMode) {
+      $rightMenuOther.style.display = "none";
+      $rightMenuPlugin.style.display = "block";
+    } else {
+      $rightMenuPlugin.style.display = "none";
+    }
+
+    rm.reloadrmSize();
+
+    // 鼠标默认显示在鼠标右下方，当鼠标靠右或靠下时，将菜单显示在鼠标左方\上方
+    if (pageX + rmWidth > window.innerWidth) {
+      pageX -= rmWidth + 10;
+    }
+    if (pageY + rmHeight > window.innerHeight) {
+      pageY -= pageY + rmHeight - window.innerHeight;
+    }
+
+    rm.showRightMenu(true, pageY, pageX);
+    document.getElementById("rightmenu-mask").style.display = "flex";
+    return false;
+  }
+};
+
+// 监听右键初始化
+window.oncontextmenu = oncontextmenuFunction
+
+// 下载图片状态
+rm.downloadimging = false;
+
+// 复制图片到剪贴板
+rm.writeClipImg = function (imgsrc) {
+  console.log("按下复制");
+  rm.hideRightMenu();
+  anzhiyu.snackbarShow("正在下载中，请稍后", false, 10000);
+  if (rm.downloadimging == false) {
+    rm.downloadimging = true;
+    setTimeout(function () {
+      copyImage(imgsrc);
+      anzhiyu.snackbarShow("复制成功！图片已添加盲水印，请遵守版权协议");
+      rm.downloadimging = false;
+    }, "10000");
+  }
+};
+
+function imageToBlob(imageURL) {
+  const img = new Image();
+  const c = document.createElement("canvas");
+  const ctx = c.getContext("2d");
+  img.crossOrigin = "";
+  img.src = imageURL;
+  return new Promise(resolve => {
+    img.onload = function () {
+      c.width = this.naturalWidth;
+      c.height = this.naturalHeight;
+      ctx.drawImage(this, 0, 0);
+      c.toBlob(
+        blob => {
+          // here the image is a blob
+          resolve(blob);
+        },
+        "image/png",
+        0.75
+      );
+    };
+  });
+}
+
+async function copyImage(imageURL) {
+  const blob = await imageToBlob(imageURL);
+  const item = new ClipboardItem({ "image/png": blob });
+  navigator.clipboard.write([item]);
+}
+
+rm.copyUrl = function (id) {
+  const input = document.createElement("input"); // Create a new <input> element
+  input.id = "copyVal"; // Set the id of the new element to "copyVal"
+  document.body.appendChild(input); // Append the new element to the end of the <body> element
+  
+  const text = id;
+  input.value = text;
+  input.select();
+  input.setSelectionRange(0, input.value.length);
+  document.execCommand("copy");
+  
+  input.remove(); // Remove the <input> element from the DOM
+};
+
+function stopMaskScroll() {
+  if (document.getElementById("rightmenu-mask")) {
+    let xscroll = document.getElementById("rightmenu-mask");
+    xscroll.addEventListener(
+      "mousewheel",
+      function (e) {
+        //阻止浏览器默认方法
+        rm.hideRightMenu();
+        // e.preventDefault();
+      },
+      { passive: true }
+    );
+  }
+  if (document.getElementById("rightMenu")) {
+    let xscroll = document.getElementById("rightMenu");
+    xscroll.addEventListener(
+      "mousewheel",
+      function (e) {
+        //阻止浏览器默认方法
+        rm.hideRightMenu();
+        // e.preventDefault();
+      },
+      { passive: true }
+    );
+  }
+}
+
+rm.rightmenuCopyText = function (txt) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt);
+  }
+  rm.hideRightMenu();
+};
+
+rm.copyPageUrl = function (url) {
+  if (!url) {
+    url = window.location.href;
+  }
+  rm.copyUrl(url);
+  anzhiyu.snackbarShow("复制链接地址成功", false, 2000);
+  rm.hideRightMenu();
+};
+
+rm.sharePage = function () {
+  var content = window.location.href;
+  rm.copyUrl(url);
+  anzhiyu.snackbarShow("复制链接地址成功", false, 2000);
+  rm.hideRightMenu();
+};
+
+// 复制当前选中文本
+var selectTextNow = "";
+document.onmouseup = document.ondblclick = selceText;
+
+function selceText() {
+  var txt;
+  if (document.selection) {
+    txt = document.selection.createRange().text;
+  } else {
+    txt = window.getSelection().toString();
+  }
+  selectTextNow = txt !== "" ? txt : "";
+}
+
+// 读取剪切板
+rm.readClipboard = function () {
+  if (navigator.clipboard) {
+    navigator.clipboard.readText().then(clipText => rm.insertAtCaret(globalEvent.target, clipText));
+  }
+};
+
+// 粘贴文本到焦点
+rm.insertAtCaret = function (elemt, value) {
+  const startPos = elemt.selectionStart,
+    endPos = elemt.selectionEnd;
+  if (document.selection) {
+    elemt.focus();
+    var sel = document.selection.createRange();
+    sel.text = value;
+    elemt.focus();
+  } else {
+    if (startPos || startPos == "0") {
+      var scrollTop = elemt.scrollTop;
+      elemt.value = elemt.value.substring(0, startPos) + value + elemt.value.substring(endPos, elemt.value.length);
+      elemt.focus();
+      elemt.selectionStart = startPos + value.length;
+      elemt.selectionEnd = startPos + value.length;
+      elemt.scrollTop = scrollTop;
+    } else {
+      elemt.value += value;
+      elemt.focus();
+    }
+  }
+};
+
+//粘贴文本
+rm.pasteText = function () {
+  const result = rm.readClipboard() || "";
+  rm.hideRightMenu();
+};
+
+//引用到评论
+rm.rightMenuCommentText = function (txt) {
+  rm.hideRightMenu();
+  const postCommentDom = document.getElementById("post-comment");
+  var domTop = postCommentDom.offsetTop;
+  window.scrollTo(0, domTop - 80);
+  if (txt == "undefined" || txt == "null") txt = "好棒！";
+  function setText() {
+    setTimeout(() => {
+      var input = document.getElementsByClassName("el-textarea__inner")[0];
+      if (!input) setText();
+      let evt = document.createEvent("HTMLEvents");
+      evt.initEvent("input", true, true);
+      let inputValue = replaceAll(txt, "\n", "\n> ");
+      input.value = "> " + inputValue + "\n\n";
+      input.dispatchEvent(evt);
+      input.focus();
+      input.setSelectionRange(-1, -1);
+      if (document.getElementById("comment-tips")) {
+        document.getElementById("comment-tips").classList.add("show");
+      }
+    }, 100);
+  }
+  setText();
+};
+
+//替换所有内容
+function replaceAll(string, search, replace) {
+  return string.split(search).join(replace);
+}
+
+// 百度搜索
+rm.searchBaidu = function () {
+  anzhiyu.snackbarShow("即将跳转到百度搜索", false, 2000);
+  setTimeout(function () {
+    window.open("https://www.baidu.com/s?wd=" + selectTextNow);
+  }, "2000");
+  rm.hideRightMenu();
+};
+
+//分享链接
+rm.copyLink = function () {
+  rm.rightmenuCopyText(domhref);
+  anzhiyu.snackbarShow("已复制链接地址");
+};
+
+function addRightMenuClickEvent() {
+  // 添加点击事件
+  document.getElementById("menu-backward").addEventListener("click", function () {
+  window.history.back();
+    rm.hideRightMenu();
+  });
+
+  document.getElementById("menu-forward").addEventListener("click", function () {
+    window.history.forward();
+    rm.hideRightMenu();
+  });
+
+  document.getElementById("menu-refresh").addEventListener("click", function () {
+    window.location.reload();
+  });
+
+  document.getElementById("menu-top").addEventListener("click", function () {
+    anzhiyu.scrollToDest(0, 500);
+    rm.hideRightMenu();
+  });
+
+  const menuLinks = document.querySelectorAll(".menu-link");
+  menuLinks.forEach(function (link) {
+    link.addEventListener("click", rm.hideRightMenu);
+  });
+
+  document.getElementById("menu-darkmode").addEventListener("click", anzhiyu.switchDarkMode);
+
+  document.getElementById("menu-home") && document.getElementById("menu-home").addEventListener("click", function () {
+    window.location.href = window.location.origin;
+  });
+
+  document.getElementById("menu-randomPost").addEventListener("click", function () {
+    toRandomPost();
+  });
+
+  document.getElementById("menu-commentBarrage").addEventListener("click", anzhiyu.switchCommentBarrage);
+
+  document.getElementById("rightmenu-mask").addEventListener("click", rm.hideRightMenu);
+
+  document.getElementById("rightmenu-mask").addEventListener("contextmenu", function (event) {
+    rm.hideRightMenu();
+    event.preventDefault(); // Prevent the default context menu from appearing
+  });
+
+  document.getElementById("menu-copy").addEventListener("click", rm.copyPageUrl);
+
+  document.getElementById("menu-pastetext").addEventListener("click", rm.pasteText);
+
+  document.getElementById("menu-copytext").addEventListener("click", function () {
+    rm.rightmenuCopyText(selectTextNow);
+    anzhiyu.snackbarShow("复制成功，复制和转载请标注本文地址");
+  });
+
+  document.getElementById("menu-commenttext").addEventListener("click", function () {
+    rm.rightMenuCommentText(selectTextNow);
+  });
+
+  document.getElementById("menu-newwindow").addEventListener("click", function () {
+    window.open(domhref, "_blank");
+    rm.hideRightMenu();
+  });
+
+  document.getElementById("menu-copylink").addEventListener("click", rm.copyLink);
+
+  document.getElementById("menu-downloadimg").addEventListener("click", function () {
+    anzhiyu.downloadImage(domImgSrc, "anzhiyu");
+  });
+
+  document.getElementById("menu-newwindowimg").addEventListener("click", function () {
+    window.open(domImgSrc, "_blank");
+    rm.hideRightMenu();
+  });
+
+  document.getElementById("menu-copyimg").addEventListener("click", function () {
+    rm.writeClipImg(domImgSrc);
+  });
+
+  document.getElementById("menu-searchBaidu").addEventListener("click", rm.searchBaidu);
+
+  //音乐
+  document.getElementById("menu-music-toggle").addEventListener("click", anzhiyu.musicToggle);
+
+  document.getElementById("menu-music-back").addEventListener("click", anzhiyu.musicSkipBack);
+
+  document.getElementById("menu-music-forward").addEventListener("click", anzhiyu.musicSkipForward);
+
+  document.getElementById("menu-music-copyMusicName").addEventListener("click", function () {
+    rm.rightmenuCopyText(anzhiyu.musicGetName());
+    anzhiyu.snackbarShow("复制歌曲名称成功", false, 3000);
+  });
+
+}
+
+addRightMenuClickEvent();</script><script data-pjax>var themeColorMeta = document.querySelector('meta[name="theme-color"]');
+var pageHeaderEl = document.getElementById("page-header");
+var navMusicEl = document.getElementById("nav-music");
+var consoleEl = document.getElementById("console");
+// 已随机的歌曲
+var selectRandomSong = [];
+// 音乐默认声音大小
+var musicVolume = 0.8;
+// 是否切换了周杰伦音乐列表
+var changeMusicListFlag = false;
+// 当前默认播放列表
+var defaultPlayMusicList = [];
+
+document.getElementById("page-name").innerText = document.title.split(" | Blog")[0];
+anzhiyu.initIndexEssay();
+anzhiyu.changeTimeInEssay();
+anzhiyu.removeBodyPaceClass();
+anzhiyu.qrcodeCreate();
+anzhiyu.changeTimeInAlbumDetail();
+anzhiyu.reflashEssayWaterFall();
+anzhiyu.sayhi();
+anzhiyu.stopImgRightDrag();
+anzhiyu.addNavBackgroundInit();
+anzhiyu.setValueToBodyType();
+anzhiyu.catalogActive();
+anzhiyu.tagsPageActive();
+anzhiyu.categoriesBarActive();
+anzhiyu.topCategoriesBarScroll();
+anzhiyu.switchRightClickMenuHotReview();
+anzhiyu.getCustomPlayList();
+anzhiyu.addEventListenerConsoleMusicList(false);
+setTimeout(() => {if (typeof addFriendLinksInFooter === "function") {addFriendLinksInFooter();}}, 200)</script><link rel="stylesheet" href="https://cdn.cbd.int/anzhiyu-theme-static@1.1.9/icon/ali_iconfont_css.css"><link rel="stylesheet" href="https://cdn.cbd.int/anzhiyu-theme-static@1.0.0/aplayer/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.cbd.int/anzhiyu-blog-static@1.0.1/js/APlayer.min.js"></script><script src="https://cdn.cbd.int/hexo-anzhiyu-music@1.0.1/assets/js/Meting2.min.js"></script><script src="https://cdn.cbd.int/pjax@0.2.8/pjax.min.js"></script><script>let pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+  // removeEventListener scroll 
+  window.tocScrollFn && window.removeEventListener('scroll', window.tocScrollFn)
+  window.scrollCollect && window.removeEventListener('scroll', scrollCollect)
+
+  document.getElementById('rightside').style.cssText = "opacity: ''; transform: ''"
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script charset="UTF-8" src="https://cdn.cbd.int/anzhiyu-theme-static@1.1.5/accesskey/accesskey.js"></script></div><div id="popup-window"><div class="popup-window-title">通知</div><div class="popup-window-divider"></div><div class="popup-window-content"><div class="popup-tip">你好呀</div><div class="popup-link"><i class="anzhiyufont anzhiyu-icon-arrow-circle-right"></i></div></div></div></body></html>

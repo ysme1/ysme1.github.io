@@ -1,0 +1,1328 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><title>进阶配置 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#f7f9fe"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-touch-fullscreen" content="yes"><meta name="apple-mobile-web-app-title" content="进阶配置"><meta name="application-name" content="进阶配置"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="#f7f9fe"><meta property="og:type" content="article"><meta property="og:title" content="进阶配置"><meta property="og:url" content="https://vcloud.ysme.top/2023/10/18/anzhiyu-docs/advanced/index/index.html"><meta property="og:site_name" content="Blog"><meta property="og:description" content="进阶配置 🚀评论开启评论需要在 comments-use 中填写你需要的评论。 支持双评论显示，只需要配置两个评论（第一个为默认显示） 12345678910comments:  # Up to two comments system, the first will be shown as def"><meta property="og:locale" content="zh-CN"><meta property="og:image" content="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><meta property="article:author" content="ysme"><meta property="article:tag"><meta name="twitter:card" content="summary"><meta name="twitter:image" content="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><link rel="shortcut icon" href="/favicon.ico"><link rel="canonical" href="https://vcloud.ysme.top/2023/10/18/anzhiyu-docs/advanced/index/"><link rel="preconnect" href="//npm.elemecdn.com"/><link rel="preconnect" href="//npm.onmicrosoft.cn"/><meta name="google-site-verification" content="xxx"/><meta name="baidu-site-verification" content="code-xxx"/><meta name="msvalidate.01" content="xxx"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.cbd.int/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.cbd.int/@fancyapps/ui@5.0.20/dist/fancybox/fancybox.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = { 
+  root: '/',
+  preloader: {"source":3},
+  friends_vue_info: undefined,
+  navMusic: true,
+  mainTone: undefined,
+  authorStatus: {"skills":["🤖️ 数码科技爱好者","🔍 分享与热心帮助","🏠 智能家居小能手","🔨 设计开发一条龙","🤝 专修交互与设计","🏃 脚踏实地行动派","🧱 团队小组发动机","💢 壮汉人狠话不多"]},
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"languages":{"hits_empty":"找不到您查询的内容：${query}"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"简","rightMenuMsgToTraditionalChinese":"转为繁体","rightMenuMsgToSimplifiedChinese":"转为简体"},
+  noticeOutdate: {"limitDay":365,"position":"top","messagePrev":"It has been","messageNext":"days since the last update, the content of the article may be outdated."},
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":330},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    simplehomepage: true,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"你已切换为繁体","cht_to_chs":"你已切换为简体","day_to_night":"你已切换为深色模式","night_to_day":"你已切换为浅色模式","bgLight":"#3b70fc","bgDark":"#1f1f1f","position":"top-center"},
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.cbd.int/flickr-justified-gallery@2.1.2/dist/fjGallery.min.js',
+      css: 'https://cdn.cbd.int/flickr-justified-gallery@2.1.2/dist/fjGallery.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false,
+  shortcutKey: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '进阶配置',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-10-18 11:12:33',
+  postMainColor: '',
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#18171d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f7f9fe')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+          const isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches
+          const isNotSpecified = window.matchMedia('(prefers-color-scheme: no-preference)').matches
+          const hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+          if (t === undefined) {
+            if (isLightMode) activateLightMode()
+            else if (isDarkMode) activateDarkMode()
+            else if (isNotSpecified || hasNoSupport) {
+              const now = new Date()
+              const hour = now.getHours()
+              const isNight = hour <= 6 || hour >= 18
+              isNight ? activateDarkMode() : activateLightMode()
+            }
+            window.matchMedia('(prefers-color-scheme: dark)').addListener(function (e) {
+              if (saveToLocal.get('theme') === undefined) {
+                e.matches ? activateDarkMode() : activateLightMode()
+              }
+            })
+          } else if (t === 'light') activateLightMode()
+          else activateDarkMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body data-type="anzhiyu"><div id="web_bg"></div><div id="an_music_bg"></div><div id="loading-box" onclick="document.getElementById(&quot;loading-box&quot;).classList.add(&quot;loaded&quot;)"><div class="loading-bg"><img class="loading-img nolazyload" alt="加载头像" src="data:image/jpeg;base64,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"/><div class="loading-image-dot"></div><div id="loading-percentage">0%</div></div></div><script>if (GLOBAL_CONFIG.preloader.source == "2" || GLOBAL_CONFIG.preloader.source == "3") {
+  const loadingPercentage = document.getElementById("loading-percentage");
+  let loadingPercentageTimer = setInterval(function() {
+    var progressBar = document.querySelector(".pace-progress");
+    if (!progressBar) return
+    var currentValue = progressBar.getAttribute("data-progress-text");
+    if (currentValue !== loadingPercentage.textContent) {
+      loadingPercentage.textContent = currentValue;
+      if (currentValue === "100%") {
+        clearInterval(loadingPercentageTimer);
+      }
+    }
+  }, 100);
+}
+
+const preloader = {
+  endLoading: () => {
+    document.body.style.overflow = 'auto';
+    document.getElementById('loading-box').classList.add("loaded");
+  },
+  initLoading: () => {
+    document.body.style.overflow = '';
+    document.getElementById('loading-box').classList.remove("loaded")
+  }
+}
+window.addEventListener('load',()=> { preloader.endLoading() })
+setTimeout(function(){preloader.endLoading();},10000)
+
+if (true) {
+  document.addEventListener('pjax:send', () => { preloader.initLoading() })
+  document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+}</script><link rel="stylesheet" href="https://cdn.cbd.int/anzhiyu-theme-static@1.0.0/progress_bar/progress_bar.css"/><script async="async" src="https://cdn.cbd.int/pace-js@1.2.4/pace.min.js" data-pace-options="{ &quot;restartOnRequestAfter&quot;:false,&quot;eventLag&quot;:false}"></script><div id="web_box"><div id="web_container"><div id="menu-mask"></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><div id="nav-group"><span id="blog_name"><a id="site-name" href="/" accesskey="h"><div class="title">Blog</div><i class="anzhiyufont anzhiyu-icon-house-chimney"></i></a></span><div class="mask-name-container"><div id="name-container"><a id="page-name" href="javascript:anzhiyu.scrollToDest(0, 500)">PAGE_NAME</a></div></div><div id="menus"></div><div id="nav-right"><div class="nav-button" id="randomPost_button"><a class="site-page" onclick="toRandomPost()" title="随机前往一个文章" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-dice"></i></a></div><div class="nav-button" id="search-button"><a class="site-page social-icon search" href="javascript:void(0);" title="搜索🔍" accesskey="s"><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i><span> 搜索</span></a></div><input id="center-console" type="checkbox"/><label class="widget" for="center-console" title="中控台" onclick="anzhiyu.switchConsole();"><i class="left"></i><i class="widget center"></i><i class="widget right"></i></label><div id="console"><div class="console-card-group-reward"><ul class="reward-all console-card"><li class="reward-item"><a href="/img/qrcode-weichat.png" target="_blank"><img class="post-qr-code-img" alt="wechat" src="/img/qrcode-weichat.png"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/qrcode-alipay.png" target="_blank"><img class="post-qr-code-img" alt="alipay" src="/img/qrcode-alipay.png"/></a><div class="post-qr-code-desc">alipay</div></li></ul></div><div class="console-card-group"><div class="console-card-group-left"><div class="console-card" id="card-newest-comments"><div class="card-content"><div class="author-content-item-tips">互动</div><span class="author-content-item-title"> <span>最新评论</span></span></div><div class="aside-list"><span>正在加载中...</span></div></div></div><div class="console-card-group-right"><div class="console-card tags"><div class="card-content"><div class="author-content-item-tips">兴趣点</div><span class="author-content-item-title">寻找你感兴趣的领域</span><div class="card-tags"><div class="item-headline"></div><div class="card-tag-cloud"><a href="/tags/Git-%E5%B7%A5%E5%85%B7/" style="font-size: 1.05rem;">Git 工具<sup>1</sup></a><a href="/tags/Linux%E5%BC%80%E5%8F%91/" style="font-size: 1.05rem;">Linux开发<sup>2</sup></a></div></div><hr/></div></div><div class="console-card history"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-box-archiv"></i><span>文章</span></div><div class="card-archives"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/10/"><span class="card-archive-list-date">十月 2023</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">73</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/03/"><span class="card-archive-list-date">三月 2023</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">1</span><span>篇</span></div></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/01/"><span class="card-archive-list-date">一月 2023</span><div class="card-archive-list-count-group"><span class="card-archive-list-count">2</span><span>篇</span></div></a></li></ul></div><hr/></div></div></div><div class="button-group"><div class="console-btn-item"><a class="darkmode_switchbutton" onclick="anzhiyu.switchDarkMode()" title="显示模式切换" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-moon"></i></a></div><div class="console-btn-item" id="consoleHideAside" onclick="anzhiyu.hideAsideBtn()" title="边栏显示控制"><a class="asideSwitch"><i class="anzhiyufont anzhiyu-icon-arrows-left-right"></i></a></div><div class="console-btn-item on" id="consoleCommentBarrage" onclick="anzhiyu.switchCommentBarrage()" title="热评开关"><a class="commentBarrage"><i class="anzhiyufont anzhiyu-icon-message"></i></a></div><div class="console-btn-item" id="consoleMusic" onclick="anzhiyu.musicToggle()" title="音乐开关"><a class="music-switch"><i class="anzhiyufont anzhiyu-icon-music"></i></a></div></div><div class="console-mask" onclick="anzhiyu.hideConsole()" href="javascript:void(0);"></div></div><div class="nav-button" id="nav-totop"><a class="totopbtn" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-arrow-up"></i><span id="percent" onclick="anzhiyu.scrollToDest(0,500)">0</span></a></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);" title="切换"><i class="anzhiyufont anzhiyu-icon-bars"></i></a></div></div></div></nav><div id="post-info"><div id="post-firstinfo"><div class="meta-firstline"><a class="post-meta-original">原创</a><span class="article-meta tags"></span></div></div><h1 class="post-title">进阶配置</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="anzhiyufont anzhiyu-icon-calendar-days post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-10-18T03:12:33.588Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time><span class="post-meta-separator"></span><i class="anzhiyufont anzhiyu-icon-history post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-10-18T03:12:33.588Z" title="更新于 2023-10-18 11:12:33">2023-10-18</time></span></div><div class="meta-secondline"><span class="post-meta-separator">       </span><span class="post-meta-position" title="作者IP属地为嘉兴"><i class="anzhiyufont anzhiyu-icon-location-dot"></i>嘉兴</span></div></div></div><section class="main-hero-waves-area waves-area"><svg class="waves-svg" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto"><defs><path id="gentle-wave" d="M -160 44 c 30 0 58 -18 88 -18 s 58 18 88 18 s 58 -18 88 -18 s 58 18 88 18 v 44 h -352 Z"></path></defs><g class="parallax"><use href="#gentle-wave" x="48" y="0"></use><use href="#gentle-wave" x="48" y="3"></use><use href="#gentle-wave" x="48" y="5"></use><use href="#gentle-wave" x="48" y="7"></use></g></svg></section><div id="post-top-cover"><img class="nolazyload" id="post-top-bg" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h1 id="进阶配置-🚀"><a href="#进阶配置-🚀" class="headerlink" title="进阶配置 🚀"></a>进阶配置 🚀</h1><h2 id="评论"><a href="#评论" class="headerlink" title="评论"></a>评论</h2><p>开启评论需要在 comments-use 中填写你需要的评论。</p>
+<p>支持双评论显示，只需要配置两个评论（第一个为默认显示）</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">comments:</span></span><br><span class="line">  <span class="comment"># Up to two comments system, the first will be shown as default</span></span><br><span class="line">  <span class="comment"># Choose: Valine/Waline/Twikoo/</span></span><br><span class="line">  <span class="attr">use:</span> <span class="string">Twikoo,Waline</span> <span class="comment"># Twikoo/Waline</span></span><br><span class="line">  <span class="attr">text:</span> <span class="literal">true</span> <span class="comment"># Display the comment name next to the button</span></span><br><span class="line">  <span class="comment"># lazyload: The comment system will be load when comment element enters the browser&#x27;s viewport.</span></span><br><span class="line">  <span class="comment"># If you set it to true, the comment count will be invalid</span></span><br><span class="line">  <span class="attr">lazyload:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">count:</span> <span class="literal">true</span> <span class="comment"># Display comment count in post&#x27;s top_img</span></span><br><span class="line">  <span class="attr">card_post_count:</span> <span class="literal">false</span> <span class="comment"># Display comment count in Home Page</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>use</td>
+<td>使用的评论（请注意，最多支持两个，如果不需要请留空）</td>
+</tr>
+<tr>
+<td>text</td>
+<td>是否显示评论服务商的名字</td>
+</tr>
+<tr>
+<td>lazyload</td>
+<td>是否为评论开启 lazyload，开启后，只有滚动到评论位置时才会加载评论所需要的资源（开启 lazyload 后，评论数将不显示）</td>
+</tr>
+<tr>
+<td>count</td>
+<td>是否在文章顶部显示评论数</td>
+</tr>
+<tr>
+<td>card_post_count</td>
+<td>是否在首页文章卡片显示评论数</td>
+</tr>
+</tbody></table>
+<h3 id="Twikoo"><a href="#Twikoo" class="headerlink" title="Twikoo"></a>Twikoo</h3><p><code>Twikoo</code> 是一个简洁、安全、无后端的静态网站评论系统，基于<a target="_blank" rel="noopener" href="https://cloud.tencent.com/product/tcb">腾讯云开发</a>。</p>
+<p>具体如何配置评论，请查看 <a target="_blank" rel="noopener" href="https://twikoo.js.org/quick-start.html">Twikoo 文档</a></p>
+<p>你只需要把获取到的 <code>环境 ID (envId)</code> 填写到配置上去就行</p>
+<p>修改 <code>主题配置文件</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Twikoo</span></span><br><span class="line"><span class="comment"># https://github.com/imaegoo/twikoo</span></span><br><span class="line"><span class="attr">twikoo:</span></span><br><span class="line">  <span class="attr">envId:</span></span><br><span class="line">  <span class="attr">region:</span></span><br><span class="line">  <span class="attr">visitor:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">option:</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>envId</td>
+<td>环境 ID</td>
+</tr>
+<tr>
+<td>region</td>
+<td>环境地域，默认为 ap-shanghai，如果您的环境地域不是上海，需传此参数</td>
+</tr>
+<tr>
+<td>visitor</td>
+<td>是否显示文章阅读数</td>
+</tr>
+<tr>
+<td>option</td>
+<td>可选配置</td>
+</tr>
+<tr>
+<td>card_post_count</td>
+<td>是否在首页文章卡片显示评论数</td>
+</tr>
+</tbody></table>
+<p>开启 visitor 后，文章页的访问人数将改为 Twikoo 提供，而不是 <code>不蒜子</code></p>
+<h3 id="Valine"><a href="#Valine" class="headerlink" title="Valine"></a>Valine</h3><p>遵循 <a target="_blank" rel="noopener" href="https://github.com/xCss/Valine">Valine</a> 的指示去配置你的 LeanCloud 应用。以及查看相应的配置说明。</p>
+<p>然后修改 <code>主题配置文件</code>:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">valine:</span></span><br><span class="line">  <span class="attr">appId:</span> <span class="comment"># leancloud application app id</span></span><br><span class="line">  <span class="attr">appKey:</span> <span class="comment"># leancloud application app key</span></span><br><span class="line">  <span class="attr">avatar:</span> <span class="string">monsterid</span> <span class="comment"># gravatar style https://valine.js.org/#/avatar</span></span><br><span class="line">  <span class="attr">serverURLs:</span> <span class="comment"># This configuration is suitable for domestic custom domain name users, overseas version will be automatically detected (no need to manually fill in)</span></span><br><span class="line">  <span class="attr">bg:</span> <span class="comment"># valine background</span></span><br><span class="line">  <span class="attr">visitor:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">option:</span></span><br></pre></td></tr></table></figure>
+
+<p>开启 visitor 后，文章页的访问人数将改为 Valine 提供，而不是 不蒜子</p>
+<p>Valine 于 v1.4.5 开始支持自定义表情，如果你需要自行配置，请在 emojiCDN 配置表情 CDN。</p>
+<p>同时在 Hexo 工作目录下的 source&#x2F;_data&#x2F;创建一个 json 文件 valine.json,等同于 Valine 需要配置的 emojiMaps，valine.json 配置方式可参考如下</p>
+<p>valine.json</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;tv_doge&quot;</span><span class="punctuation">:</span> <span class="string">&quot;6ea59c827c414b4a2955fe79e0f6fd3dcd515e24.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_亲亲&quot;</span><span class="punctuation">:</span> <span class="string">&quot;a8111ad55953ef5e3be3327ef94eb4a39d535d06.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_偷笑&quot;</span><span class="punctuation">:</span> <span class="string">&quot;bb690d4107620f1c15cff29509db529a73aee261.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_再见&quot;</span><span class="punctuation">:</span> <span class="string">&quot;180129b8ea851044ce71caf55cc8ce44bd4a4fc8.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_冷漠&quot;</span><span class="punctuation">:</span> <span class="string">&quot;b9cbc755c2b3ee43be07ca13de84e5b699a3f101.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_发怒&quot;</span><span class="punctuation">:</span> <span class="string">&quot;34ba3cd204d5b05fec70ce08fa9fa0dd612409ff.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_发财&quot;</span><span class="punctuation">:</span> <span class="string">&quot;34db290afd2963723c6eb3c4560667db7253a21a.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_可爱&quot;</span><span class="punctuation">:</span> <span class="string">&quot;9e55fd9b500ac4b96613539f1ce2f9499e314ed9.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_吐血&quot;</span><span class="punctuation">:</span> <span class="string">&quot;09dd16a7aa59b77baa1155d47484409624470c77.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_呆&quot;</span><span class="punctuation">:</span> <span class="string">&quot;fe1179ebaa191569b0d31cecafe7a2cd1c951c9d.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_呕吐&quot;</span><span class="punctuation">:</span> <span class="string">&quot;9f996894a39e282ccf5e66856af49483f81870f3.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_困&quot;</span><span class="punctuation">:</span> <span class="string">&quot;241ee304e44c0af029adceb294399391e4737ef2.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_坏笑&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1f0b87f731a671079842116e0991c91c2c88645a.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_大佬&quot;</span><span class="punctuation">:</span> <span class="string">&quot;093c1e2c490161aca397afc45573c877cdead616.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_大哭&quot;</span><span class="punctuation">:</span> <span class="string">&quot;23269aeb35f99daee28dda129676f6e9ea87934f.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_委屈&quot;</span><span class="punctuation">:</span> <span class="string">&quot;d04dba7b5465779e9755d2ab6f0a897b9b33bb77.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_害羞&quot;</span><span class="punctuation">:</span> <span class="string">&quot;a37683fb5642fa3ddfc7f4e5525fd13e42a2bdb1.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_尴尬&quot;</span><span class="punctuation">:</span> <span class="string">&quot;7cfa62dafc59798a3d3fb262d421eeeff166cfa4.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_微笑&quot;</span><span class="punctuation">:</span> <span class="string">&quot;70dc5c7b56f93eb61bddba11e28fb1d18fddcd4c.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_思考&quot;</span><span class="punctuation">:</span> <span class="string">&quot;90cf159733e558137ed20aa04d09964436f618a1.png&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;tv_惊吓&quot;</span><span class="punctuation">:</span> <span class="string">&quot;0d15c7e2ee58e935adc6a7193ee042388adc22af.png&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Waline"><a href="#Waline" class="headerlink" title="Waline"></a>Waline</h3><p>Waline - 一款从 Valine 衍生的带后端评论系统。可以将 Waline 等价成 With backend Valine。</p>
+<p>具体配置可参考 <a target="_blank" rel="noopener" href="https://waline.js.org/">waline 文档</a></p>
+<p>然后修改 主题配置文件:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">waline:</span></span><br><span class="line">  <span class="attr">serverURL:</span> <span class="comment"># Waline server address url</span></span><br><span class="line">  <span class="attr">bg:</span> <span class="comment"># waline background</span></span><br><span class="line">  <span class="attr">pageview:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">option:</span></span><br></pre></td></tr></table></figure>
+
+<p>开启 pageview 后，文章页的访问人数将改为 Waline 提供，而不是 不蒜子</p>
+<h2 id="在线聊天"><a href="#在线聊天" class="headerlink" title="在线聊天"></a>在线聊天</h2><h3 id="通用配置"><a href="#通用配置" class="headerlink" title="通用配置"></a>通用配置</h3><p>这些工具都提供了一个按钮可以打开&#x2F;关闭聊天窗口。<br>主题也提供了一个集合主题特色的按钮来替换这些工具本身的按钮，这个聊天按钮将会出现在右下角里。<br>你只需要把 <code>chat_btn</code> 打开就行。</p>
+<p>修改 <code>主题配置文件</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Chat Button [recommend]</span></span><br><span class="line"><span class="comment"># It will create a button in the bottom right corner of website, and hide the origin button</span></span><br><span class="line"><span class="attr">chat_btn:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>为了不影响访客的体验，主题提供一个 <code>chat_hide_show</code> 配置<br>设为 true 后，使用工具提供的按钮时，只有向上滚动才会显示聊天按钮，向下滚动时会隐藏按钮。</p>
+<p>修改 <code>主题配置文件</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># The origin chat button is displayed when scrolling up, and the button is hidden when scrolling down</span></span><br><span class="line"><span class="attr">chat_hide_show:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>如果使用工具自带的聊天按钮，按钮位置可能会遮挡右下角图标，请配置 <code>rightside-bottom</code> 调正右下角图标位置</p>
+<h3 id="chatra"><a href="#chatra" class="headerlink" title="chatra"></a>chatra</h3><p>配置 <a target="_blank" rel="noopener" href="https://chatra.com/cn/">chatra</a>,需要知道 <code>Public key</code></p>
+<p>打开 <a target="_blank" rel="noopener" href="https://chatra.com/cn/">chatra</a> 并注册账号。<br>你可以在 <code>Preferences</code> 中找到 <code>Public key</code></p>
+<p>修改 <code>主题配置文件</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># chatra</span></span><br><span class="line"><span class="comment"># https://chatra.io/</span></span><br><span class="line"><span class="attr">chatra:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">id:</span> <span class="string">xxxxxxxx</span></span><br></pre></td></tr></table></figure>
+
+<p><code>chatra</code> 的样式你可以 <code>Chat Widget</code> 自行配置</p>
+<h3 id="tidio"><a href="#tidio" class="headerlink" title="tidio"></a>tidio</h3><p>配置 tidio,需要知道 <code>Public key</code></p>
+<p>打开 <a target="_blank" rel="noopener" href="https://www.tidio.com/">tidio</a> 并注册账号。<br>你可以在 <code>Preferences &gt; Developer</code> 中找到 <code>Public key</code></p>
+<p>修改 <code>主题配置文件</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># tidio</span></span><br><span class="line"><span class="comment"># https://www.tidio.com/</span></span><br><span class="line"><span class="attr">tidio:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">public_key:</span> <span class="string">XXXX</span></span><br></pre></td></tr></table></figure>
+
+<p><code>tidio</code>的样式你可以<code>Channels</code>自行配置</p>
+<h3 id="daovoice"><a href="#daovoice" class="headerlink" title="daovoice"></a>daovoice</h3><p>打开 <a target="_blank" rel="noopener" href="https://www.daocloud.io/">daovoice</a> 和注册帐号</p>
+<p>找到你的 <code>app id</code><br><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://file.crazywong.com/gh/jerryc127/CDN/img/hexo-theme-butterfly-docs-chat-daovoice-appid.png"></p>
+<p>修改 <code>主题配置文件</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># daovoice</span></span><br><span class="line"><span class="comment"># http://daovoice.io/</span></span><br><span class="line"><span class="attr">daovoice:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">app_id:</span> <span class="string">xxxxx</span></span><br></pre></td></tr></table></figure>
+
+<p>可在<code>聊天设置</code>里配置聊天按钮等样式</p>
+<h3 id="crisp"><a href="#crisp" class="headerlink" title="crisp"></a>crisp</h3><p>打开 <a target="_blank" rel="noopener" href="https://crisp.chat/en/">crisp</a> 并注册帐号</p>
+<p>找到需要的网站 ID</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># crisp</span></span><br><span class="line"><span class="comment"># https://crisp.chat/en/</span></span><br><span class="line"><span class="attr">crisp:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">website_id:</span> <span class="string">xxxxxxxx</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://file.crazywong.com/gh/jerryc127/CDN/img/hexo-theme-buttefly-docs-chat-crisp.png"></p>
+<h3 id="messenger"><a href="#messenger" class="headerlink" title="messenger"></a>messenger</h3><p>messenger 为 Facebook 旗下的聊天服务</p>
+<p>具体操作请查看 <a target="_blank" rel="noopener" href="https://developers.facebook.com/docs/messenger-platform/discovery/facebook-chat-plugin/">Facebook 洽谈附加程式 - Messenger 平台</a></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">messenger:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">pageID:</span> <span class="string">xxxxx</span></span><br><span class="line">  <span class="attr">lang:</span> <span class="string">zh_TW</span> <span class="comment"># Language en_US/zh_CN/zh_TW and so on</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="ai-摘要"><a href="#ai-摘要" class="headerlink" title="ai 摘要"></a>ai 摘要</h2><p>需主题版本大于 1.1.6 版本</p>
+<p>修改主题配置文件，其中<code>key</code>和<code>Referer</code> 为 <code>tianli gpt</code> 的<code>key</code>和<code>Referer</code>，可在 <a target="_blank" rel="noopener" href="https://afdian.net/item/886a79d4db6711eda42a52540025c377">https://afdian.net/item/886a79d4db6711eda42a52540025c377</a> 购买 key，购买完成后请立即在<a target="_blank" rel="noopener" href="https://summary.tianli0.top/">前端面板</a>绑定key，以防止被盗用。</p>
+<p>适用于AnZhiYu主题项目的Key，前端管理面板 <a target="_blank" rel="noopener" href="https://summary.tianli0.top/">https://summary.tianli0.top/</a></p>
+<p>每个key限制请求字数50000字，如果是已经请求过的内容不会再次消耗key<br>使用时需要绑定key。 虚拟物品一经发出不支持退款。</p>
+<p>关于续费：<br>续费和绑定流程相同，绑定成功后会自动充值到原有的key上，也就是说无需更改网页中的key参数，直接绑定即可。 格式发送，返回的 token 即你的剩余字数</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 文章顶部ai摘要</span></span><br><span class="line"><span class="attr">post_head_ai_description:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">gptName:</span> <span class="string">AnZhiYu</span></span><br><span class="line">  <span class="attr">mode:</span> <span class="string">local</span> <span class="comment"># 默认模式 可选值: tianli/local</span></span><br><span class="line">  <span class="attr">switchBtn:</span> <span class="literal">false</span> <span class="comment"># 可以配置是否显示切换按钮 以切换tianli/local</span></span><br><span class="line">  <span class="attr">btnLink:</span> <span class="string">https://afdian.net/item/886a79d4db6711eda42a52540025c377</span></span><br><span class="line">  <span class="attr">randomNum:</span> <span class="number">3</span> <span class="comment"># 按钮最大的随机次数，也就是一篇文章最大随机出来几种</span></span><br><span class="line">  <span class="attr">basicWordCount:</span> <span class="number">1000</span> <span class="comment"># 最低获取字符数, 最小1000, 最大1999</span></span><br><span class="line">  <span class="attr">key:</span> <span class="string">xxxx</span></span><br><span class="line">  <span class="attr">Referer:</span> <span class="string">https://xx.xx/</span></span><br></pre></td></tr></table></figure>
+
+<p>配置完成以后在文章的<code>Front-matter</code>配置<code>ai: true</code><br>使用 <code>tianli gpt</code> 需将 mode 改为<code>tianli</code> 然后在需要 ai 摘要的文章的<code>Front-matter配置ai: true</code></p>
+<p>如果使用<code>local</code>,需要按照以下方式配置</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: AnZhiYu主题快速开始</span><br><span class="line">ai:</span><br><span class="line"><span class="bullet">  -</span> 本教程介绍了如何在博客中安装基于Hexo主题的安知鱼主题，并提供了安装、应用主题、修改配置文件、本地启动等详细步骤及技术支持方式。教程的内容针对最新的主题版本进行更新，如果你是旧版本教程会有出入。</span><br><span class="line"><span class="section">  - 本文真不错</span></span><br><span class="line"><span class="section">---</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>mode</th>
+<th>对比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>tianli</td>
+<td>具有完备的训练后端功能，可优秀的完成文章的摘要，方便的快速生成对应摘要</td>
+</tr>
+<tr>
+<td>local</td>
+<td>本地，需自行在文章顶部添加 ai 摘要，内容自行决定，书写较为麻烦。</td>
+</tr>
+</tbody></table>
+<h2 id="控制台信息"><a href="#控制台信息" class="headerlink" title="控制台信息"></a>控制台信息</h2><p>关于控制台信息，主题不提供修改配置，但是可以在主题配置文件中进行关闭。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 控制台打印信息</span></span><br><span class="line"><span class="attr">console:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>控制台打印时间相关信息可以配置页脚内容来修改。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">footer:</span></span><br><span class="line">  <span class="attr">owner:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">since:</span> <span class="number">2020</span></span><br><span class="line">  <span class="attr">custom_text:</span></span><br><span class="line">  <span class="attr">copyright:</span> <span class="literal">false</span> <span class="comment"># Copyright of theme and framework</span></span><br><span class="line">  <span class="attr">runtime:</span></span><br><span class="line">    <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">launch_time:</span> <span class="number">04</span><span class="string">/01/2021</span> <span class="number">00</span><span class="string">:00:00</span> <span class="comment"># 网站上线时间</span></span><br><span class="line">    <span class="attr">work_img:</span> <span class="string">https://npm.elemecdn.com/anzhiyu-blog@2.0.4/img/badge/安知鱼-上班摸鱼中.svg</span></span><br><span class="line">    <span class="attr">work_description:</span> <span class="string">距离月入25k也就还差一个大佬带我~</span></span><br><span class="line">    <span class="attr">offduty_img:</span> <span class="string">https://npm.elemecdn.com/anzhiyu-blog@2.0.4/img/badge/安知鱼-下班啦.svg</span></span><br><span class="line">    <span class="attr">offduty_description:</span> <span class="string">下班了就该开开心心的玩耍，嘿嘿~</span></span><br></pre></td></tr></table></figure>
+
+<p>如果实在有强迫症也可以自行修改内容<code>themes/anzhiyu/layout/includes/anzhiyu/log-js.pug</code>。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f29cf50177c.png" alt="控制台打印信息"></p>
+<h2 id="如何配置首页顶部右侧不使用轮播图"><a href="#如何配置首页顶部右侧不使用轮播图" class="headerlink" title="如何配置首页顶部右侧不使用轮播图"></a>如何配置首页顶部右侧不使用轮播图</h2><p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://img02.anheyu.com/adminuploads/1/2023/03/27/642172c889a45.png" alt="效果预览"></p>
+<p>将主题配置文件中<code>home_top.swiper.enable</code> 修改为 <code>false</code> 即可.</p>
+<h2 id="标签卖萌"><a href="#标签卖萌" class="headerlink" title="标签卖萌"></a>标签卖萌</h2><p>主题配置文件中</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 标签卖萌</span></span><br><span class="line"><span class="attr">diytitle:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">leaveTitle:</span> <span class="string">w(ﾟДﾟ)w</span> <span class="string">不要走！再看看嘛！</span></span><br><span class="line">  <span class="attr">backTitle:</span> <span class="string">♪(^∇^*)欢迎肥来！</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="配置关于页与文章页底部打赏二维码"><a href="#配置关于页与文章页底部打赏二维码" class="headerlink" title="配置关于页与文章页底部打赏二维码"></a>配置关于页与文章页底部打赏二维码</h2><p>在主题配置文件中</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Sponsor/reward</span></span><br><span class="line"><span class="attr">reward:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">coinAudio:</span> <span class="string">https://npm.elemecdn.com/akilar-candyassets@1.0.36/audio/aowu.m4a</span></span><br><span class="line">  <span class="attr">QR_code:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">img:</span> <span class="string">https://npm.elemecdn.com/anzhiyu-blog@1.1.6/img/post/common/qrcode-weichat.png</span></span><br><span class="line">      <span class="attr">link:</span></span><br><span class="line">      <span class="attr">text:</span> <span class="string">wechat</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">img:</span> <span class="string">https://npm.elemecdn.com/anzhiyu-blog@1.1.6/img/post/common/qrcode-alipay.png</span></span><br><span class="line">      <span class="attr">link:</span></span><br><span class="line">      <span class="attr">text:</span> <span class="string">alipay</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="主题如何获取文章主色调"><a href="#主题如何获取文章主色调" class="headerlink" title="主题如何获取文章主色调"></a>主题如何获取文章主色调</h2><p>支持在文章<code>Post Front-matter</code>配置主色<code>main_color</code>，例如</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">AnZhiYu主题安装文档（一）</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2023-03-26 18:55:44</span></span><br><span class="line"><span class="attr">main_color:</span> <span class="string">&quot;#c0e0e0&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br></pre></td></tr></table></figure>
+
+<p>主题将会优先获取文章<code>Post Front-matter</code>颜色，如果未设置才会使用<code>cdn/api/both</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 主色调相关配置</span></span><br><span class="line"><span class="attr">mainTone:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span> <span class="comment"># true or false 文章是否启用获取图片主色调</span></span><br><span class="line">  <span class="attr">mode:</span> <span class="string">both</span> <span class="comment"># cdn/api/both cdn模式为图片url+imageAve参数获取主色调，api模式为请求API获取主色调，both模式会先请求cdn参数，无法获取的情况下将请求API获取</span></span><br><span class="line">  <span class="comment"># 项目地址：https://github.com/anzhiyu-c/img2color-go</span></span><br><span class="line">  <span class="attr">api:</span> <span class="string">https://color.anheyu.com/api?img=</span> <span class="comment"># mode为api时可填写</span></span><br><span class="line">  <span class="attr">cover_change:</span> <span class="literal">true</span> <span class="comment"># 整篇文章跟随cover修改主色调</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enable</td>
+<td>是否开启主色调</td>
+</tr>
+<tr>
+<td>mode</td>
+<td>cdn&#x2F;api&#x2F;both cdn模式为图片url+imageAve参数获取主色调，api模式为请求API获取主色调，both模式会先请求cdn参数，无法获取的情况下将请求API获取（目前cdn模式支持多吉云和腾讯数据万象两种方式）</td>
+</tr>
+<tr>
+<td>api</td>
+<td>mode为api时，需返回16进制颜色，可以参考部署项目: <a target="_blank" rel="noopener" href="https://github.com/anzhiyu-c/img2color-go">https://github.com/anzhiyu-c/img2color-go</a></td>
+</tr>
+<tr>
+<td>cover_change</td>
+<td>整篇文章跟随cover修改主色调</td>
+</tr>
+</tbody></table>
+<h2 id="双栏"><a href="#双栏" class="headerlink" title="双栏"></a>双栏</h2><p>如果你需要像我一样首页双栏，修改主题配置文件<code>_config.anzhiyu.yml</code>（主题版本需要 1.1.1 以及以上）</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 双栏文章</span></span><br><span class="line"><span class="attr">article_double_row:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="首页顶部-3-大分类配置"><a href="#首页顶部-3-大分类配置" class="headerlink" title="首页顶部 3 大分类配置"></a>首页顶部 3 大分类配置</h2><p>首页技能点轮播下的分类，可通过配置主题配置文件<code>home_top</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new page categories</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">---</span><br><span class="line">title: Hello World</span><br><span class="line"><span class="section">categories: 前端开发</span></span><br><span class="line"><span class="section">---</span></span><br></pre></td></tr></table></figure>
+
+<p>只需要在创建分类以后在对应的文章中添加上对应的分类，配置 path 即可，注意一定要对应。</p>
+<h2 id="左下角音乐球"><a href="#左下角音乐球" class="headerlink" title="左下角音乐球"></a>左下角音乐球</h2><p>歌单配置很简单，只需要修改主题配置文件中<code>nav_music</code>即可.</p>
+<p>其中id与server配置可以参考<a target="_blank" rel="noopener" href="https://github.com/metowolf/MetingJS">MetingJS</a></p>
+<table>
+<thead>
+<tr>
+<th align="left">option</th>
+<th align="center">default</th>
+<th align="left">description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">id</td>
+<td align="center"><strong>require</strong></td>
+<td align="left">song id &#x2F; playlist id &#x2F; album id &#x2F; search keyword</td>
+</tr>
+<tr>
+<td align="left">server</td>
+<td align="center"><strong>require</strong></td>
+<td align="left">music platform: <code>netease</code>, <code>tencent</code>, <code>kugou</code>, <code>xiami</code>, <code>baidu</code></td>
+</tr>
+</tbody></table>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 左下角音乐配置项</span></span><br><span class="line"><span class="comment"># https://github.com/metowolf/MetingJS</span></span><br><span class="line"><span class="attr">nav_music:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">console_widescreen_music:</span> <span class="literal">false</span> <span class="comment"># 宽屏状态控制台显示音乐而不是标签 enable为true 控制台依然会显示</span></span><br><span class="line">  <span class="attr">id:</span> <span class="number">8152976493</span></span><br><span class="line">  <span class="attr">server:</span> <span class="string">netease</span></span><br><span class="line">  <span class="attr">all_playlist:</span> <span class="string">https://y.qq.com/n/ryqq/playlist/8802438608</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f294ef59784.png"></p>
+<h2 id="评论匿名邮箱"><a href="#评论匿名邮箱" class="headerlink" title="评论匿名邮箱"></a>评论匿名邮箱</h2><p>目前只支持Twikoo</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 评论匿名邮箱</span></span><br><span class="line"><span class="attr">visitorMail:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">mail:</span> <span class="string">visitor@anheyu.com</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f294f05b26a.png" alt="评论匿名"></p>
+<h2 id="文章底部工具"><a href="#文章底部工具" class="headerlink" title="文章底部工具"></a>文章底部工具</h2><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ptool 文章底部工具</span></span><br><span class="line"><span class="attr">ptool:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">share_mobile:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">share_weibo:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">share_copyurl:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">categories:</span> <span class="literal">false</span> <span class="comment"># 是否显示分类</span></span><br><span class="line">  <span class="attr">mode:</span> <span class="string">/wechat/</span> <span class="comment"># 运营模式与责任，不配置不显示</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f29566258df.png"></p>
+<h2 id="首页技能点配置"><a href="#首页技能点配置" class="headerlink" title="首页技能点配置"></a>首页技能点配置</h2><p>[blog]代表你的博客根目录。示例数据中的图片链接为本人图床，请自行上传至您自己的图床，（不保证永久可用性）。</p>
+<p>主题配置文件，关闭<code>peoplecanvas.enable</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 首页随便逛逛people模式 而非技能点模式，关闭后为技能点模式需要配置creativity.yml</span></span><br><span class="line"><span class="attr">peoplecanvas:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">img:</span> <span class="string">https://upload-bbs.miyoushe.com/upload/2023/09/03/125766904/ee23df8517f3c3e3efc4145658269c06_5714860933110284659.png</span></span><br></pre></td></tr></table></figure>
+
+<p>创建<code>[blog]/source/_data/creativity.yml</code>，输入以下内容</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">class_name:</span> <span class="string">开启创造力</span></span><br><span class="line">  <span class="attr">creativity_list:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Java</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#fff&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/04/09/643293b1184e9.jpg</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Docker</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#57b6e6&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/04/09/643293b0f0abe.png</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Photoshop</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#4082c3&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2022/12/15/639aa3a5c240e.png</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Node</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#333&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://npm.elemecdn.com/anzhiyu-blog@2.1.1/img/svg/node-logo.svg</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Webpack</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#2e3a41&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/04/09/643293b68026c.png</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Pinia</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#fff&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://npm.elemecdn.com/anzhiyu-blog@2.0.8/img/svg/pinia-logo.svg</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Python</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#fff&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/04/09/643293b1230f7.png</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Vite</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#937df7&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://npm.elemecdn.com/anzhiyu-blog@2.0.8/img/svg/vite-logo.svg</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Flutter</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#4499e4&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/04/09/643293b1055c2.png</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Vue</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#b8f0ae&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/04/09/643293b6788bd.png</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">React</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#222&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii0xMS41IC0xMC4yMzE3NCAyMyAyMC40NjM0OCI+CiAgPHRpdGxlPlJlYWN0IExvZ288L3RpdGxlPgogIDxjaXJjbGUgY3g9IjAiIGN5PSIwIiByPSIyLjA1IiBmaWxsPSIjNjFkYWZiIi8+CiAgPGcgc3Ryb2tlPSIjNjFkYWZiIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiPgogICAgPGVsbGlwc2Ugcng9IjExIiByeT0iNC4yIi8+CiAgICA8ZWxsaXBzZSByeD0iMTEiIHJ5PSI0LjIiIHRyYW5zZm9ybT0icm90YXRlKDYwKSIvPgogICAgPGVsbGlwc2Ugcng9IjExIiByeT0iNC4yIiB0cmFuc2Zvcm09InJvdGF0ZSgxMjApIi8+CiAgPC9nPgo8L3N2Zz4K</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">CSS3</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#2c51db&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2022/12/15/639aa3a5c251e.png</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">JS</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#f7cb4f&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/04/09/643293b121f02.png</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">HTML</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#e9572b&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2022/12/15/639aa3a5c241c.png</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Git</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#df5b40&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/04/09/643293b10ccdd.webp</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Apifox</span></span><br><span class="line">      <span class="attr">color:</span> <span class="string">&quot;#e65164&quot;</span></span><br><span class="line">      <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2022/11/19/6378d6458c6b6.png</span></span><br></pre></td></tr></table></figure>
+
+<p>此时可以看到首页顶部已经有技能点的轮播了。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://img02.anheyu.com/adminuploads/1/2023/03/26/641fe7b5c77c3.webp" alt="技能点轮播"></p>
+<p>文字部分在主题配置文件中<code>home_top</code>配置项修改</p>
+<h2 id="配置-nav-顶栏左侧应用列表"><a href="#配置-nav-顶栏左侧应用列表" class="headerlink" title="配置 nav 顶栏左侧应用列表"></a>配置 nav 顶栏左侧应用列表</h2><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nav左侧菜单</span></span><br><span class="line"><span class="attr">nav:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">menu:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">title:</span> <span class="string">网页</span></span><br><span class="line">      <span class="attr">item:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">个人主页</span></span><br><span class="line">          <span class="attr">link:</span> <span class="string">https://index.anheyu.com/</span></span><br><span class="line">          <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/08/13/64d8c2748ef34.jpg</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">博客</span></span><br><span class="line">          <span class="attr">link:</span> <span class="string">https://blog.anheyu.com/</span></span><br><span class="line">          <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/07/23/64bc72c75319d.png</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">安知鱼图床</span></span><br><span class="line">          <span class="attr">link:</span> <span class="string">https://image.anheyu.com/</span></span><br><span class="line">          <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/08/13/64d8c2653332e.ico</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">title:</span> <span class="string">项目</span></span><br><span class="line">      <span class="attr">item:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">安知鱼图床</span></span><br><span class="line">          <span class="attr">link:</span> <span class="string">https://image.anheyu.com/</span></span><br><span class="line">          <span class="attr">icon:</span> <span class="string">https://bu.dusays.com/2023/08/13/64d8c2653332e.ico</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="字数统计"><a href="#字数统计" class="headerlink" title="字数统计"></a>字数统计</h2><p>要为 AnZhiYu 配上字数统计特性, 你需要如下几个步骤:</p>
+<p>打开 hexo 工作目录</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">npm install hexo-wordcount --save</span><br><span class="line">或者</span><br><span class="line">yarn add hexo-wordcount</span><br></pre></td></tr></table></figure>
+
+<p>修改 主题配置文件:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">wordcount:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">post_wordcount:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">min2read:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">total_wordcount:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="网站验证"><a href="#网站验证" class="headerlink" title="网站验证"></a>网站验证</h2><p>如果需要搜索引擎收录网站，可能需要登录对应搜索引擎的管理平台进行提交。<br>各自的验证码可从各自管理平台拿到</p>
+<p>修改 <code>主题配置文件</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">site_verification:</span></span><br><span class="line">  <span class="comment"># - name: google_site_verification</span></span><br><span class="line">  <span class="comment">#   content: xxxxxx</span></span><br><span class="line">  <span class="comment"># - name: baidu_site_verification</span></span><br><span class="line">  <span class="comment">#   content: xxxxxxx</span></span><br></pre></td></tr></table></figure>
+
+
+<h2 id="搜索系统"><a href="#搜索系统" class="headerlink" title="搜索系统"></a>搜索系统</h2><p>:::tabs</p>
+<p>&#x3D;&#x3D; algolia</p>
+<p>记得运行 hexo clean</p>
+<p>使用 <a target="_blank" rel="noopener" href="https://github.com/LouisBarranqueiro/hexo-algoliasearch">hexo-algoliasearch</a>，请记得配置 fields 参数的 <code>title</code>, <code>permalink</code> 和 <code>content</code></p>
+<p>你需要安装 <a target="_blank" rel="noopener" href="https://github.com/LouisBarranqueiro/hexo-algoliasearch">hexo-algoliasearch</a>. 根据它的说明文档去做相应的配置。</p>
+<p>修改 主题配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">algolia_search:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">hits:</span></span><br><span class="line">    <span class="attr">per_page:</span> <span class="number">6</span></span><br></pre></td></tr></table></figure>
+
+<p>hexo 配置文件 <code>_config.yml</code> 添加以下内容</p>
+<p>注意algolia搜索出来URL前缀为hexo配置文件<code>_config.yml</code>中的<code>url</code>配置。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># algolia搜索: https://github.com/LouisBarranqueiro/hexo-algoliasearch</span></span><br><span class="line"><span class="attr">algolia:</span></span><br><span class="line">  <span class="attr">appId:</span> <span class="string">&quot;xxxx&quot;</span></span><br><span class="line">  <span class="attr">apiKey:</span> <span class="string">&quot;xxxx&quot;</span></span><br><span class="line">  <span class="attr">adminApiKey:</span> <span class="string">&quot;xxxx&quot;</span></span><br><span class="line">  <span class="attr">chunkSize:</span> <span class="number">5000</span></span><br><span class="line">  <span class="attr">indexName:</span> <span class="string">&quot;hexo&quot;</span></span><br><span class="line">  <span class="attr">fields:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">content:strip:truncate,0,200</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">excerpt:strip</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">gallery</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">permalink</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">photos</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">slug</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">tags</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">title</span></span><br></pre></td></tr></table></figure>
+
+<p>&#x3D;&#x3D; 本地搜索</p>
+<p>记得运行 <code>hexo clean</code></p>
+<p>你需要安装 <a target="_blank" rel="noopener" href="https://github.com/wzpan/hexo-generator-search">hexo-generator-search</a>，根据它的文档去做相应配置</p>
+<p>修改 主题配置文件</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">local_search:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">preload:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">CDN:</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enable</td>
+<td>是否开启本地搜索</td>
+</tr>
+<tr>
+<td>preload</td>
+<td>预加载，开启后，进入网页后会自动加载搜索文件。关闭时，只有点击搜索按钮后，才会加载搜索文件</td>
+</tr>
+<tr>
+<td>CDN</td>
+<td>搜索文件的 CDN 地址（默认使用的本地链接）</td>
+</tr>
+</tbody></table>
+<p>&#x3D;&#x3D; DocSearch<br>DocSearch 是另一款由 algolia 提供的搜索服务，具体申请和使用请查看 <a target="_blank" rel="noopener" href="https://docsearch.algolia.com/">DocSearch 文档</a></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">docsearch:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">appId:</span></span><br><span class="line">  <span class="attr">apiKey:</span></span><br><span class="line">  <span class="attr">indexName:</span></span><br><span class="line">  <span class="attr">option:</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enable</td>
+<td>【必须】是否开启 docsearch</td>
+</tr>
+<tr>
+<td>appId</td>
+<td>【必须】你的 Algolia 应用 ID</td>
+</tr>
+<tr>
+<td>apiKey</td>
+<td>【必须】你的 Algolia 搜索 API key</td>
+</tr>
+<tr>
+<td>indexName</td>
+<td>【必须】你的 Algolia index name</td>
+</tr>
+<tr>
+<td>option</td>
+<td>【可选】其余的 docsearch 配置 具体配置可查<a target="_blank" rel="noopener" href="https://docsearch.algolia.com/docs/api/">这里</a></td>
+</tr>
+</tbody></table>
+<p>:::</p>
+<h2 id="数学公式"><a href="#数学公式" class="headerlink" title="数学公式"></a>数学公式</h2><p>:::tabs</p>
+<p>&#x3D;&#x3D; hexo-renderer-pandoc（推荐）</p>
+<p>详情请见 <a target="_blank" rel="noopener" href="https://www.yyyzyyyz.cn/posts/654d8712aff4/">https://www.yyyzyyyz.cn/posts/654d8712aff4/</a></p>
+<p>&#x3D;&#x3D; Mathjax</p>
+<p>不要在标题里使用 mathjax 语法，toc 目录不一定能正确显示 mathjax，可能显示 mathjax 代码</p>
+<p>建议使用 KaTex 获得更好的效果，下文有介绍！</p>
+<p>修改 <code>主题配置文件</code>:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">mathjax:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># true 表示每一页都加载mathjax.js</span></span><br><span class="line">  <span class="comment"># false 需要时加载，须在使用的Markdown Front-matter 加上 mathjax: true</span></span><br><span class="line">  <span class="attr">per_page:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>如果 <code>per_page</code> 设为 <code>true</code>,则每一页都会加载 Mathjax 服务。设为 <code>false</code>，则需要在文章 <code>Front-matter</code> 添加 <code>mathjax: true</code>,对应的文章才会加载 Mathjax 服务。</p>
+</blockquote>
+<p>然后你需要修改一下默认的 <code>markdown</code> 渲染引擎来实现 MathJax 的效果。</p>
+<p>查看: <a target="_blank" rel="noopener" href="https://www.npmjs.com/package/hexo-renderer-kramed">hexo-renderer-kramed</a></p>
+<p>以下操作在你 hexo 博客的目录下 (<strong>不是 Anzhiyu 的目录</strong>):</p>
+<ol>
+<li>安装插件</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm uninstall hexo-renderer-marked --save</span><br><span class="line">npm install hexo-renderer-kramed --save</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>配置 hexo 根目录的配置文件</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">kramed:</span><br><span class="line">  gfm: <span class="literal">true</span></span><br><span class="line">  pedantic: <span class="literal">false</span></span><br><span class="line">  sanitize: <span class="literal">false</span></span><br><span class="line">  tables: <span class="literal">true</span></span><br><span class="line">  breaks: <span class="literal">true</span></span><br><span class="line">  smartLists: <span class="literal">true</span></span><br><span class="line">  smartypants: <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>&#x3D;&#x3D; KaTeX<br>不要在标题里使用 KaTeX 语法，toc 目录不能正确显示 KaTeX。</p>
+<p>首先禁用 <code>MathJax</code>（如果你配置过 MathJax 的话），然后修改你的<code>主题配置文件</code>以便加载 <code>katex.min.css</code>:</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">katex:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="comment"># true 表示每一页都加载katex.js</span></span><br><span class="line">  <span class="comment"># false 需要时加载，须在使用的Markdown Front-matter 加上 katex: true</span></span><br><span class="line">  <span class="attr">per_page:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">hide_scrollbar:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>你不需要添加 <code>katex.min.js</code> 来渲染数学方程。相应的你需要卸载你之前的 hexo 的 markdown 渲染器，然后安装其它插件。</p>
+<p>因为 KaTeX 更快更轻量，因此没有 MathJax 的功能多（比如右键菜单）。为那些使用 MathJax 的用户，主题也内置了 katex 的 <a target="_blank" rel="noopener" href="https://github.com/KaTeX/KaTeX/tree/master/contrib/copy-tex">复制</a> 功能。</p>
+<p>&#x3D;&#x3D; hexo-renderer-markdown-it<br>卸载掉 marked 插件，安装 <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo-renderer-markdown-it">hexo-renderer-markdown-it</a></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">npm un hexo-renderer-marked --save <span class="comment"># 如果有安装这个的话，卸载</span></span><br><span class="line">npm un hexo-renderer-kramed --save <span class="comment"># 如果有安装这个的话，卸载</span></span><br><span class="line"></span><br><span class="line">npm i hexo-renderer-markdown-it --save <span class="comment"># 需要安装这个渲染插件</span></span><br><span class="line">npm install katex @renbaoshuo/markdown-it-katex <span class="comment">#需要安装这个katex插件</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>在 hexo 的根目录的<code>_config.yml</code> 中配置</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">markdown:</span></span><br><span class="line">  <span class="attr">plugins:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;@renbaoshuo/markdown-it-katex&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>如需配置其它参数，请参考 <a target="_blank" rel="noopener" href="https://katex.org/docs/options.html">katex 官网</a></p>
+<p>&#x3D;&#x3D; hexo-renderer-markdown-it-plus</p>
+<blockquote>
+<p>注意，此方法生成的 katex 没有斜体</p>
+</blockquote>
+<p>卸载掉 marked 插件，然后安装新的<code>hexo-renderer-markdown-it-plus</code>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 替换 `hexo-renderer-kramed` 或者 `hexo-renderer-marked` 等hexo的markdown渲染器</span></span><br><span class="line"><span class="comment"># 你可以在你的package.json里找到hexo的markdwon渲染器，并将其卸载</span></span><br><span class="line">npm un hexo-renderer-marked --save</span><br><span class="line"></span><br><span class="line"><span class="comment"># or</span></span><br><span class="line"></span><br><span class="line">npm un hexo-renderer-kramed --save</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 然后安装 `hexo-renderer-markdown-it-plus`</span></span><br><span class="line">npm i @upupming/hexo-renderer-markdown-it-plus --save</span><br></pre></td></tr></table></figure>
+
+<p>注意到 <code>hexo-renderer-markdown-it-plus</code> 已经无人持续维护, 所以我们使用 <code>@upupming/hexo-renderer-markdown-it-plus</code>。 这份 fork 的代码使用了 <code>@neilsustc/markdown-it-katex</code> 同时它也是 VSCode 的插件 <a target="_blank" rel="noopener" href="https://github.com/yzhang-gh/vscode-markdown">Markdown All in One</a> 所使用的, 所以我们可以获得最新的 KaTex 功能例如 \tag{}。</p>
+<p>你还可以通过 <code>@neilsustc/markdown-it-katex</code> 控制 KaTeX 的设置，所有可配置的选项参见 <a target="_blank" rel="noopener" href="https://katex.org/docs/options.html">https://katex.org/docs/options.html</a>。 比如你想要禁用掉 KaTeX 在命令行上输出的宂长的警告信息，你可以在根目录的 _config.yml 中使用下面的配置将 strict 设置为 false</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">markdown_it_plus:</span><br><span class="line">  plugins:</span><br><span class="line">    - plugin:</span><br><span class="line">      name: <span class="string">&#x27;@neilsustc/markdown-it-katex&#x27;</span></span><br><span class="line">      <span class="built_in">enable</span>: <span class="literal">true</span></span><br><span class="line">      options:</span><br><span class="line">        strict: <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p>当然，你还可以利用这个特性来定义一些自己常用的 <code>macros</code>。</p>
+<p>:::</p>
+<h2 id="分享"><a href="#分享" class="headerlink" title="分享"></a>分享</h2><p>只能选择一个分享服务商</p>
+<p>:::tabs<br>&#x3D;&#x3D; sharejs<br>如果你不知道 <a target="_blank" rel="noopener" href="https://github.com/overtrue/share.js/">sharejs</a>，看看它的説明。</p>
+<p>修改 <code>主题配置文件</code></p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">sharejs:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">sites:</span> <span class="string">facebook,twitter,wechat,weibo,qq</span> <span class="comment">#想要显示的内容</span></span><br></pre></td></tr></table></figure>
+
+<p>&#x3D;&#x3D; addtoany<br>可以到 <a target="_blank" rel="noopener" href="https://www.addtoany.com/">addtoany</a> 查看使用説明</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">addtoany:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">item:</span> <span class="string">facebook,twitter,wechat,sina_weibo,facebook_messenger,email,copy_link</span></span><br></pre></td></tr></table></figure>
+
+<p>:::</p>
+<h2 id="欢迎语配置"><a href="#欢迎语配置" class="headerlink" title="欢迎语配置"></a>欢迎语配置</h2><p>在每次进入首页时根据当前时间弹出欢迎语，为true时必须配置list。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 欢迎语配置</span></span><br><span class="line"><span class="attr">greetingBox:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span> <span class="comment">#开启后必须配置下面的list对应的时间段，不然会出现小白条</span></span><br><span class="line">  <span class="attr">default:</span> <span class="string">晚上好👋</span></span><br><span class="line">  <span class="attr">list:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">greeting:</span> <span class="string">晚安😴</span></span><br><span class="line">      <span class="attr">startTime:</span> <span class="number">0</span></span><br><span class="line">      <span class="attr">endTime:</span> <span class="number">5</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">greeting:</span> <span class="string">早上好鸭👋,</span> <span class="string">祝你一天好心情！</span></span><br><span class="line">      <span class="attr">startTime:</span> <span class="number">6</span></span><br><span class="line">      <span class="attr">endTime:</span> <span class="number">9</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">greeting:</span> <span class="string">上午好👋,</span> <span class="string">状态很好，鼓励一下～</span></span><br><span class="line">      <span class="attr">startTime:</span> <span class="number">10</span></span><br><span class="line">      <span class="attr">endTime:</span> <span class="number">10</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">greeting:</span> <span class="number">11</span><span class="string">点多啦,</span> <span class="string">在坚持一下就吃饭啦～</span></span><br><span class="line">      <span class="attr">startTime:</span> <span class="number">11</span></span><br><span class="line">      <span class="attr">endTime:</span> <span class="number">11</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">greeting:</span> <span class="string">午安👋,</span> <span class="string">宝贝</span></span><br><span class="line">      <span class="attr">startTime:</span> <span class="number">12</span></span><br><span class="line">      <span class="attr">endTime:</span> <span class="number">14</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">greeting:</span> <span class="string">🌈充实的一天辛苦啦！</span></span><br><span class="line">      <span class="attr">startTime:</span> <span class="number">14</span></span><br><span class="line">      <span class="attr">endTime:</span> <span class="number">18</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">greeting:</span> <span class="number">19</span><span class="string">点喽,</span> <span class="string">奖励一顿丰盛的大餐吧🍔。</span></span><br><span class="line">      <span class="attr">startTime:</span> <span class="number">19</span></span><br><span class="line">      <span class="attr">endTime:</span> <span class="number">19</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">greeting:</span> <span class="string">晚上好👋,</span> <span class="string">在属于自己的时间好好放松😌~</span></span><br><span class="line">      <span class="attr">startTime:</span> <span class="number">20</span></span><br><span class="line">      <span class="attr">endTime:</span> <span class="number">24</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f295fbab122.png" alt="欢迎语配置"></p>
+<h2 id="博客快捷键"><a href="#博客快捷键" class="headerlink" title="博客快捷键"></a>博客快捷键</h2><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 快捷键配置</span></span><br><span class="line"><span class="attr">shortcutKey:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">delay:</span> <span class="number">100</span> <span class="comment"># 所有键位延时触发而不是立即触发（包括shift，以解决和浏览器键位冲突问题）</span></span><br><span class="line">  <span class="attr">shiftDelay:</span> <span class="number">200</span> <span class="comment"># shift按下延时多久开启</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f28f14b1677.png" alt="博客快捷键"></p>
+<h2 id="无障碍优化"><a href="#无障碍优化" class="headerlink" title="无障碍优化"></a>无障碍优化</h2><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 无障碍优化（在首页按下「shift + ?」以查看效果）</span></span><br><span class="line"><span class="attr">accesskey:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f2969b6a83b.webp" alt="无障碍优化"></p>
+<h2 id="友情链接顶部相关配置"><a href="#友情链接顶部相关配置" class="headerlink" title="友情链接顶部相关配置"></a>友情链接顶部相关配置</h2><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 友情链接顶部相关配置</span></span><br><span class="line"><span class="attr">linkPageTop:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">title:</span> <span class="string">与数百名博主无限进步</span></span><br><span class="line">  <span class="comment"># 添加博主友链的评论自定义格式</span></span><br><span class="line">  <span class="attr">addFriendPlaceholder:</span> <span class="string">&quot;昵称（请勿包含博客等字样）：\n网站地址（要求博客地址，请勿提交个人主页）：\n头像图片url（请提供尽可能清晰的图片，我会上传到我自己的图床）：\n描述：\n站点截图（可选）：\n&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f296f1ed91f.webp"></p>
+<h2 id="缩略图后缀"><a href="#缩略图后缀" class="headerlink" title="缩略图后缀"></a>缩略图后缀</h2><p>该配置用于优化缩略图，archive&#x2F;tag&#x2F;category 页面单独开启后缀，可以优化图像质量问题，注意开启后一定要保证你的图片本身可以支持链接后➕pageThumbnailSuffix能够被访问。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 缩略图后缀 archive/tag/category 页面单独开启后缀</span></span><br><span class="line"><span class="attr">pageThumbnailSuffix:</span> <span class="string">&quot;!page_thumbnail&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f297a3be6a7.webp" alt="缩略图后缀"></p>
+<h2 id="隐私协议弹窗"><a href="#隐私协议弹窗" class="headerlink" title="隐私协议弹窗"></a>隐私协议弹窗</h2><p>该弹窗一个窗口会话只会弹出一次。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 隐私协议弹窗</span></span><br><span class="line"><span class="attr">agreementPopup:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">url:</span> <span class="string">/privacy</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f297ecbb523.webp" alt="隐私协议弹窗"></p>
+<h2 id="定制化的右键菜单"><a href="#定制化的右键菜单" class="headerlink" title="定制化的右键菜单"></a>定制化的右键菜单</h2><p>开启<code>rightClickMenu</code>即可。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 右键菜单</span></span><br><span class="line"><span class="attr">rightClickMenu:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f2987b95753.png" alt="右键菜单一般情况"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f2987b95753.png" alt="右键菜单链接情况"></p>
+<h2 id="动效控制"><a href="#动效控制" class="headerlink" title="动效控制"></a>动效控制</h2><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 动效</span></span><br><span class="line"><span class="attr">dynamicEffect:</span></span><br><span class="line">  <span class="attr">postTopWave:</span> <span class="literal">true</span> <span class="comment"># 文章顶部波浪效果</span></span><br><span class="line">  <span class="attr">postTopRollZoomInfo:</span> <span class="literal">true</span> <span class="comment"># 文章顶部滚动时缩放</span></span><br><span class="line">  <span class="attr">pageCommentsRollZoom:</span> <span class="literal">true</span> <span class="comment"># 非文章页面评论滚动时缩放显示（仅仅Twikoo生效）</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f298e0920cb.webp" alt="文章顶部波浪效果"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f299eb3ea0d.gif" alt="文章顶部滚动时缩放"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f29a87d6dbc.gif" alt="非文章页面评论滚动时缩放显示"></p>
+<h2 id="51A统计"><a href="#51A统计" class="headerlink" title="51A统计"></a>51A统计</h2><p>可以配置 <a target="_blank" rel="noopener" href="https://v6.51.la/user/application">51A统计</a> 与<a target="_blank" rel="noopener" href="https://perf.51.la/manage/home">灵雀</a></p>
+<p>配置后可在关于页面显示统计信息。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 51a统计配置</span></span><br><span class="line"><span class="attr">LA:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">ck:</span> <span class="string">Jp8wwGQpp21utaFQ</span></span><br><span class="line">  <span class="attr">LingQueMonitorID:</span> <span class="string">Jp8ztDRrxmTf7LDj</span></span><br></pre></td></tr></table></figure>
+
+<p>::: warning 警告<br>注意一定要开启数据挂件功能!!!<br>:::</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f29c8ae5d5a.png" alt="开启数据挂件"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f29c29019c9.png" alt="51A统计ck"></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f29be2c2aee.webp" alt="灵雀LingQueMonitorID"></p>
+<h2 id="页面卡片顶部气泡升起效果"><a href="#页面卡片顶部气泡升起效果" class="headerlink" title="页面卡片顶部气泡升起效果"></a>页面卡片顶部气泡升起效果</h2><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 页面卡片顶部气泡升起效果</span></span><br><span class="line"><span class="attr">bubble:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f29d7965a3d.webp" alt="页面卡片顶部气泡升起效果"></p>
+<h2 id="深色模式粒子效果canvas"><a href="#深色模式粒子效果canvas" class="headerlink" title="深色模式粒子效果canvas"></a>深色模式粒子效果canvas</h2><figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 深色模式粒子效果canvas</span></span><br><span class="line"><span class="attr">universe:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="https://bu.dusays.com/2023/09/02/64f29dfaa6f04.webp" alt="深色模式粒子效果canvas"></p>
+</article><div class="post-copyright"><div class="copyright-cc-box"><i class="anzhiyufont anzhiyu-icon-copyright"></i></div><div class="post-copyright__author_box"><a class="post-copyright__author_img" href="/" title="头像"><img class="post-copyright__author_img_back" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/avatar.jpg" title="头像" alt="头像"><img class="post-copyright__author_img_front" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/avatar.jpg" title="头像" alt="头像"></a><div class="post-copyright__author_name">ysme</div><div class="post-copyright__author_desc"></div></div><div class="post-copyright__post__info"><a class="post-copyright__original" title="该文章为原创文章，注意版权协议" href="https://vcloud.ysme.top/2023/10/18/anzhiyu-docs/advanced/index/">原创</a><a class="post-copyright-title"><span onclick="rm.copyPageUrl('https://vcloud.ysme.top/2023/10/18/anzhiyu-docs/advanced/index/')">进阶配置</span></a></div><div class="post-tools" id="post-tools"><div class="post-tools-left"><div class="rewardLeftButton"><div class="post-reward" onclick="anzhiyu.addRewardMask()"><div class="reward-button button--animated" title="赞赏作者"><i class="anzhiyufont anzhiyu-icon-hand-heart-fill"></i>打赏作者</div><div class="reward-main"><div class="reward-all"><span class="reward-title">感谢你赐予我前进的力量</span><ul class="reward-group"><li class="reward-item"><a href="/img/qrcode-weichat.png" target="_blank"><img class="post-qr-code-img" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/qrcode-weichat.png" alt="wechat"/></a><div class="post-qr-code-desc">wechat</div></li><li class="reward-item"><a href="/img/qrcode-alipay.png" target="_blank"><img class="post-qr-code-img" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/qrcode-alipay.png" alt="alipay"/></a><div class="post-qr-code-desc">alipay</div></li></ul><a class="reward-main-btn" href="/about/#about-reward" target="_blank"><div class="reward-text">赞赏者名单</div><div class="reward-dec">因为你们的支持让我意识到写文章的价值🙏</div></a></div></div></div><div id="quit-box" onclick="anzhiyu.removeRewardMask()" style="display: none"></div></div><div class="shareRight"><div class="share-link mobile"><div class="share-qrcode"><div class="share-button" title="使用手机访问这篇文章"><i class="anzhiyufont anzhiyu-icon-qrcode"></i></div><div class="share-main"><div class="share-main-all"><div id="qrcode" title="https://vcloud.ysme.top/2023/10/18/anzhiyu-docs/advanced/index/"></div><div class="reward-dec">使用手机访问这篇文章</div></div></div></div></div><div class="share-link weibo"><a class="share-button" target="_blank" href="https://service.weibo.com/share/share.php?title=进阶配置&amp;url=https://vcloud.ysme.top/2023/10/18/anzhiyu-docs/advanced/index/&amp;pic=data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" rel="external nofollow noreferrer noopener"><i class="anzhiyufont anzhiyu-icon-weibo"></i></a></div><div class="share-link copyurl"><div class="share-button" id="post-share-url" title="复制链接" onclick="rm.copyPageUrl()"><i class="anzhiyufont anzhiyu-icon-link"></i></div></div></div></div></div><div class="post-copyright__notice"><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="post-tools-right"><div class="tag_share"><div class="post-meta__box"><div class="post-meta__box__tag-list"></div></div></div><div class="post_share"><div class="social-share" data-image="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.cbd.int/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"/><script src="https://cdn.cbd.int/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer="defer"></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/10/18/anzhiyu-docs/global/base/"><img class="prev-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">基础配置</div></div></a></div><div class="next-post pull-right"><a href="/2023/10/18/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E5%90%AF%E5%8A%A8/"><img class="next-cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info"></div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-content"><div class="author-info__sayhi" id="author-info__sayhi" onclick="anzhiyu.changeSayHelloText()"></div><div class="author-info-top" title="点击展开"><div class="card-info-avatar"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-status-box"><div class="author-status"><g-emoji class="g-emoji" alias="writing_hand" fallback-src="https://github.githubassets.com/images/icons/emoji/unicode/270d.png">✍️</g-emoji><span>on Studying</span></div></div></div></div><div class="author-info__description"><div style="line-height:1.38;margin:0.6rem 0;text-align:justify;color:rgba(255, 255, 255, 0.8);">这有关于<b style="color:#fff">产品、设计、开发</b>相关的问题和看法，还有<b style="color:#fff">文章翻译</b>和<b style="color:#fff">分享</b>。</div><div style="line-height:1.38;margin:0.6rem 0;text-align:justify;color:rgba(255, 255, 255, 0.8);">相信你可以在这里找到对你有用的<b style="color:#fff">知识</b>和<b style="color:#fff">教程</b>。</div></div></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-bars"></i><span>文章目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%9B%E9%98%B6%E9%85%8D%E7%BD%AE-%F0%9F%9A%80"><span class="toc-number">1.</span> <span class="toc-text">进阶配置 🚀</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%84%E8%AE%BA"><span class="toc-number">1.1.</span> <span class="toc-text">评论</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Twikoo"><span class="toc-number">1.1.1.</span> <span class="toc-text">Twikoo</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Valine"><span class="toc-number">1.1.2.</span> <span class="toc-text">Valine</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Waline"><span class="toc-number">1.1.3.</span> <span class="toc-text">Waline</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%A8%E7%BA%BF%E8%81%8A%E5%A4%A9"><span class="toc-number">1.2.</span> <span class="toc-text">在线聊天</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%9A%E7%94%A8%E9%85%8D%E7%BD%AE"><span class="toc-number">1.2.1.</span> <span class="toc-text">通用配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#chatra"><span class="toc-number">1.2.2.</span> <span class="toc-text">chatra</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tidio"><span class="toc-number">1.2.3.</span> <span class="toc-text">tidio</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#daovoice"><span class="toc-number">1.2.4.</span> <span class="toc-text">daovoice</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#crisp"><span class="toc-number">1.2.5.</span> <span class="toc-text">crisp</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#messenger"><span class="toc-number">1.2.6.</span> <span class="toc-text">messenger</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ai-%E6%91%98%E8%A6%81"><span class="toc-number">1.3.</span> <span class="toc-text">ai 摘要</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A7%E5%88%B6%E5%8F%B0%E4%BF%A1%E6%81%AF"><span class="toc-number">1.4.</span> <span class="toc-text">控制台信息</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E9%A6%96%E9%A1%B5%E9%A1%B6%E9%83%A8%E5%8F%B3%E4%BE%A7%E4%B8%8D%E4%BD%BF%E7%94%A8%E8%BD%AE%E6%92%AD%E5%9B%BE"><span class="toc-number">1.5.</span> <span class="toc-text">如何配置首页顶部右侧不使用轮播图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%87%E7%AD%BE%E5%8D%96%E8%90%8C"><span class="toc-number">1.6.</span> <span class="toc-text">标签卖萌</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E5%85%B3%E4%BA%8E%E9%A1%B5%E4%B8%8E%E6%96%87%E7%AB%A0%E9%A1%B5%E5%BA%95%E9%83%A8%E6%89%93%E8%B5%8F%E4%BA%8C%E7%BB%B4%E7%A0%81"><span class="toc-number">1.7.</span> <span class="toc-text">配置关于页与文章页底部打赏二维码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BB%E9%A2%98%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96%E6%96%87%E7%AB%A0%E4%B8%BB%E8%89%B2%E8%B0%83"><span class="toc-number">1.8.</span> <span class="toc-text">主题如何获取文章主色调</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%8C%E6%A0%8F"><span class="toc-number">1.9.</span> <span class="toc-text">双栏</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A6%96%E9%A1%B5%E9%A1%B6%E9%83%A8-3-%E5%A4%A7%E5%88%86%E7%B1%BB%E9%85%8D%E7%BD%AE"><span class="toc-number">1.10.</span> <span class="toc-text">首页顶部 3 大分类配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B7%A6%E4%B8%8B%E8%A7%92%E9%9F%B3%E4%B9%90%E7%90%83"><span class="toc-number">1.11.</span> <span class="toc-text">左下角音乐球</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%84%E8%AE%BA%E5%8C%BF%E5%90%8D%E9%82%AE%E7%AE%B1"><span class="toc-number">1.12.</span> <span class="toc-text">评论匿名邮箱</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E7%AB%A0%E5%BA%95%E9%83%A8%E5%B7%A5%E5%85%B7"><span class="toc-number">1.13.</span> <span class="toc-text">文章底部工具</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A6%96%E9%A1%B5%E6%8A%80%E8%83%BD%E7%82%B9%E9%85%8D%E7%BD%AE"><span class="toc-number">1.14.</span> <span class="toc-text">首页技能点配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE-nav-%E9%A1%B6%E6%A0%8F%E5%B7%A6%E4%BE%A7%E5%BA%94%E7%94%A8%E5%88%97%E8%A1%A8"><span class="toc-number">1.15.</span> <span class="toc-text">配置 nav 顶栏左侧应用列表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AD%97%E6%95%B0%E7%BB%9F%E8%AE%A1"><span class="toc-number">1.16.</span> <span class="toc-text">字数统计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BD%91%E7%AB%99%E9%AA%8C%E8%AF%81"><span class="toc-number">1.17.</span> <span class="toc-text">网站验证</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%90%9C%E7%B4%A2%E7%B3%BB%E7%BB%9F"><span class="toc-number">1.18.</span> <span class="toc-text">搜索系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E5%AD%A6%E5%85%AC%E5%BC%8F"><span class="toc-number">1.19.</span> <span class="toc-text">数学公式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%86%E4%BA%AB"><span class="toc-number">1.20.</span> <span class="toc-text">分享</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%AC%A2%E8%BF%8E%E8%AF%AD%E9%85%8D%E7%BD%AE"><span class="toc-number">1.21.</span> <span class="toc-text">欢迎语配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%9A%E5%AE%A2%E5%BF%AB%E6%8D%B7%E9%94%AE"><span class="toc-number">1.22.</span> <span class="toc-text">博客快捷键</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%A0%E9%9A%9C%E7%A2%8D%E4%BC%98%E5%8C%96"><span class="toc-number">1.23.</span> <span class="toc-text">无障碍优化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%8B%E6%83%85%E9%93%BE%E6%8E%A5%E9%A1%B6%E9%83%A8%E7%9B%B8%E5%85%B3%E9%85%8D%E7%BD%AE"><span class="toc-number">1.24.</span> <span class="toc-text">友情链接顶部相关配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%A9%E7%95%A5%E5%9B%BE%E5%90%8E%E7%BC%80"><span class="toc-number">1.25.</span> <span class="toc-text">缩略图后缀</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9A%90%E7%A7%81%E5%8D%8F%E8%AE%AE%E5%BC%B9%E7%AA%97"><span class="toc-number">1.26.</span> <span class="toc-text">隐私协议弹窗</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E5%88%B6%E5%8C%96%E7%9A%84%E5%8F%B3%E9%94%AE%E8%8F%9C%E5%8D%95"><span class="toc-number">1.27.</span> <span class="toc-text">定制化的右键菜单</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A8%E6%95%88%E6%8E%A7%E5%88%B6"><span class="toc-number">1.28.</span> <span class="toc-text">动效控制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#51A%E7%BB%9F%E8%AE%A1"><span class="toc-number">1.29.</span> <span class="toc-text">51A统计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A1%B5%E9%9D%A2%E5%8D%A1%E7%89%87%E9%A1%B6%E9%83%A8%E6%B0%94%E6%B3%A1%E5%8D%87%E8%B5%B7%E6%95%88%E6%9E%9C"><span class="toc-number">1.30.</span> <span class="toc-text">页面卡片顶部气泡升起效果</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B7%B1%E8%89%B2%E6%A8%A1%E5%BC%8F%E7%B2%92%E5%AD%90%E6%95%88%E6%9E%9Ccanvas"><span class="toc-number">1.31.</span> <span class="toc-text">深色模式粒子效果canvas</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="anzhiyufont anzhiyu-icon-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%EF%BC%8C%E7%AE%A1%E9%81%93%EF%BC%8Csocket%EF%BC%8CXSI(System%20V)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%EF%BC%8C%E7%AE%A1%E9%81%93%EF%BC%8Csocket%EF%BC%8CXSI(System%20V)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.612Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.608Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.608Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.608Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/" title="无题"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="无题"/></a><div class="content"><a class="title" href="/2023/10/18/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/" title="无题">无题</a><time datetime="2023-10-18T03:12:33.608Z" title="发表于 2023-10-18 11:12:33">2023-10-18</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"></div><div id="footer-bar"><div class="footer-bar-links"><div class="footer-bar-left"><div id="footer-bar-tips"><div class="copyright">&copy;2020 - 2023 By <a class="footer-bar-link" href="/" title="ysme" target="_blank">ysme</a></div></div><div id="footer-type-tips"></div><div class="js-pjax"><script>function subtitleType () {
+  fetch('https://v1.hitokoto.cn')
+    .then(response => response.json())
+    .then(data => {
+      if (true) {
+        const from = '出自 ' + data.from
+        const sub = []
+        sub.unshift(data.hitokoto, from)
+        window.typed = new Typed('#footer-type-tips', {
+          strings: sub,
+          startDelay: 300,
+          typeSpeed: 150,
+          loop: true,
+          backSpeed: 50,
+        })
+      } else {
+        document.getElementById('footer-type-tips').innerHTML = data.hitokoto
+      }
+    })
+}
+
+if (true) {
+  if (typeof Typed === 'function') {
+    subtitleType()
+  } else {
+    getScript('https://cdn.cbd.int/typed.js@2.0.15/dist/typed.umd.js').then(subtitleType)
+  }
+} else {
+  subtitleType()
+}
+</script></div></div><div class="footer-bar-right"><a class="footer-bar-link" target="_blank" rel="noopener" href="https://github.com/anzhiyu-c/hexo-theme-anzhiyu" title="主题">主题</a></div></div></div></footer></div></div></div><div id="sidebar"><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" onerror="this.onerror=null,this.src=&quot;/img/404.jpg&quot;" data-lazy-src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/" title="archive"><div class="headline">文章</div><div class="length-num">76</div></a><a href="/tags/" title="tag"><div class="headline">标签</div><div class="length-num">2</div></a><a href="/categories/" title="category"><div class="headline">分类</div><div class="length-num">7</div></a></div></div></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="anzhiyufont anzhiyu-icon-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="anzhiyufont anzhiyu-icon-circle-half-stroke"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="anzhiyufont anzhiyu-icon-arrows-left-right"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="anzhiyufont anzhiyu-icon-gear"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="anzhiyufont anzhiyu-icon-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></button></div></div><div id="nav-music"><a id="nav-music-hoverTips" onclick="anzhiyu.musicToggle()" accesskey="m">播放音乐</a><div id="console-music-bg"></div><meting-js id="8152976493" server="netease" type="playlist" mutex="true" preload="none" theme="var(--anzhiyu-main)" data-lrctype="0" order="random"></meting-js></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="anzhiyufont anzhiyu-icon-xmark"></i></button></nav><div class="is-center" id="loading-database"><i class="anzhiyufont anzhiyu-icon-spinner anzhiyu-pulse-icon"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div></div></div><div id="search-mask"></div></div><div id="rightMenu"><div class="rightMenu-group rightMenu-small"><div class="rightMenu-item" id="menu-backward"><i class="anzhiyufont anzhiyu-icon-arrow-left"></i></div><div class="rightMenu-item" id="menu-forward"><i class="anzhiyufont anzhiyu-icon-arrow-right"></i></div><div class="rightMenu-item" id="menu-refresh"><i class="anzhiyufont anzhiyu-icon-arrow-rotate-right" style="font-size: 1rem;"></i></div><div class="rightMenu-item" id="menu-top"><i class="anzhiyufont anzhiyu-icon-arrow-up"></i></div></div><div class="rightMenu-group rightMenu-line rightMenuPlugin"><div class="rightMenu-item" id="menu-copytext"><i class="anzhiyufont anzhiyu-icon-copy"></i><span>复制选中文本</span></div><div class="rightMenu-item" id="menu-pastetext"><i class="anzhiyufont anzhiyu-icon-paste"></i><span>粘贴文本</span></div><a class="rightMenu-item" id="menu-commenttext"><i class="anzhiyufont anzhiyu-icon-comment-medical"></i><span>引用到评论</span></a><div class="rightMenu-item" id="menu-newwindow"><i class="anzhiyufont anzhiyu-icon-window-restore"></i><span>新窗口打开</span></div><div class="rightMenu-item" id="menu-copylink"><i class="anzhiyufont anzhiyu-icon-link"></i><span>复制链接地址</span></div><div class="rightMenu-item" id="menu-copyimg"><i class="anzhiyufont anzhiyu-icon-images"></i><span>复制此图片</span></div><div class="rightMenu-item" id="menu-downloadimg"><i class="anzhiyufont anzhiyu-icon-download"></i><span>下载此图片</span></div><div class="rightMenu-item" id="menu-newwindowimg"><i class="anzhiyufont anzhiyu-icon-window-restore"></i><span>新窗口打开图片</span></div><div class="rightMenu-item" id="menu-search"><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i><span>站内搜索</span></div><div class="rightMenu-item" id="menu-searchBaidu"><i class="anzhiyufont anzhiyu-icon-magnifying-glass"></i><span>百度搜索</span></div><div class="rightMenu-item" id="menu-music-toggle"><i class="anzhiyufont anzhiyu-icon-play"></i><span>播放音乐</span></div><div class="rightMenu-item" id="menu-music-back"><i class="anzhiyufont anzhiyu-icon-backward"></i><span>切换到上一首</span></div><div class="rightMenu-item" id="menu-music-forward"><i class="anzhiyufont anzhiyu-icon-forward"></i><span>切换到下一首</span></div><div class="rightMenu-item" id="menu-music-playlist" onclick="window.open(&quot;https://y.qq.com/n/ryqq/playlist/8802438608&quot;, &quot;_blank&quot;);" style="display: none;"><i class="anzhiyufont anzhiyu-icon-radio"></i><span>查看所有歌曲</span></div><div class="rightMenu-item" id="menu-music-copyMusicName"><i class="anzhiyufont anzhiyu-icon-copy"></i><span>复制歌名</span></div></div><div class="rightMenu-group rightMenu-line rightMenuOther"><a class="rightMenu-item menu-link" id="menu-randomPost"><i class="anzhiyufont anzhiyu-icon-shuffle"></i><span>随便逛逛</span></a><a class="rightMenu-item menu-link" href="/categories/"><i class="anzhiyufont anzhiyu-icon-cube"></i><span>博客分类</span></a><a class="rightMenu-item menu-link" href="/tags/"><i class="anzhiyufont anzhiyu-icon-tags"></i><span>文章标签</span></a></div><div class="rightMenu-group rightMenu-line rightMenuOther"><a class="rightMenu-item" id="menu-copy" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-copy"></i><span>复制地址</span></a><a class="rightMenu-item" id="menu-commentBarrage" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-message"></i><span class="menu-commentBarrage-text">关闭热评</span></a><a class="rightMenu-item" id="menu-darkmode" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-circle-half-stroke"></i><span class="menu-darkmode-text">深色模式</span></a><a class="rightMenu-item" id="menu-translate" href="javascript:void(0);"><i class="anzhiyufont anzhiyu-icon-language"></i><span>轉為繁體</span></a></div></div><div id="rightmenu-mask"></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.cbd.int/@fancyapps/ui@5.0.20/dist/fancybox/fancybox.umd.js"></script><script src="https://cdn.cbd.int/instant.page@5.2.0/instantpage.js" type="module"></script><script src="https://cdn.cbd.int/vanilla-lazyload@17.3.1/dist/lazyload.iife.min.js"></script><script src="https://cdn.cbd.int/node-snackbar@0.1.16/dist/snackbar.min.js"></script><canvas id="universe"></canvas><script async src="https://npm.elemecdn.com/anzhiyu-theme-static@1.0.0/dark/dark.js"></script><script>// 消除控制台打印
+var HoldLog = console.log;
+console.log = function () {};
+let now1 = new Date();
+queueMicrotask(() => {
+  const Log = function () {
+    HoldLog.apply(console, arguments);
+  }; //在恢复前输出日志
+  const grt = new Date("04/01/2021 00:00:00"); //此处修改你的建站时间或者网站上线时间
+  now1.setTime(now1.getTime() + 250);
+  const days = (now1 - grt) / 1000 / 60 / 60 / 24;
+  const dnum = Math.floor(days);
+  const ascll = [
+    `欢迎使用安知鱼!`,
+    `生活明朗, 万物可爱`,
+    `
+        
+       █████╗ ███╗   ██╗███████╗██╗  ██╗██╗██╗   ██╗██╗   ██╗
+      ██╔══██╗████╗  ██║╚══███╔╝██║  ██║██║╚██╗ ██╔╝██║   ██║
+      ███████║██╔██╗ ██║  ███╔╝ ███████║██║ ╚████╔╝ ██║   ██║
+      ██╔══██║██║╚██╗██║ ███╔╝  ██╔══██║██║  ╚██╔╝  ██║   ██║
+      ██║  ██║██║ ╚████║███████╗██║  ██║██║   ██║   ╚██████╔╝
+      ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝    ╚═════╝
+        
+        `,
+    "已上线",
+    dnum,
+    "天",
+    "©2020 By 安知鱼 V1.5.4",
+  ];
+  const ascll2 = [`NCC2-036`, `调用前置摄像头拍照成功，识别为【小笨蛋】.`, `Photo captured: `, `🤪`];
+
+  setTimeout(
+    Log.bind(
+      console,
+      `\n%c${ascll[0]} %c ${ascll[1]} %c ${ascll[2]} %c${ascll[3]}%c ${ascll[4]}%c ${ascll[5]}\n\n%c ${ascll[6]}\n`,
+      "color:#3b70fc",
+      "",
+      "color:#3b70fc",
+      "color:#3b70fc",
+      "",
+      "color:#3b70fc",
+      ""
+    )
+  );
+  setTimeout(
+    Log.bind(
+      console,
+      `%c ${ascll2[0]} %c ${ascll2[1]} %c \n${ascll2[2]} %c\n${ascll2[3]}\n`,
+      "color:white; background-color:#4fd953",
+      "",
+      "",
+      'background:url("https://npm.elemecdn.com/anzhiyu-blog@1.1.6/img/post/common/tinggge.gif") no-repeat;font-size:450%'
+    )
+  );
+
+  setTimeout(Log.bind(console, "%c WELCOME %c 你好，小笨蛋.", "color:white; background-color:#4f90d9", ""));
+
+  setTimeout(
+    console.warn.bind(
+      console,
+      "%c ⚡ Powered by 安知鱼 %c 你正在访问 ysme 的博客.",
+      "color:white; background-color:#f0ad4e",
+      ""
+    )
+  );
+
+  setTimeout(Log.bind(console, "%c W23-12 %c 你已打开控制台.", "color:white; background-color:#4f90d9", ""));
+
+  setTimeout(
+    console.warn.bind(console, "%c S013-782 %c 你现在正处于监控中.", "color:white; background-color:#d9534f", "")
+  );
+});</script><script async src="/anzhiyu/random.js"></script><script src="/js/search/local-search.js"></script><div class="js-pjax"><input type="hidden" name="page-type" id="page-type" value="post"></div><script>var visitorMail = "visitor@anheyu.com";</script><script>//动态标题
+let leaveTitle = 'w(ﾟДﾟ)w 不要走！再看看嘛！';
+let backTitle = '♪(^∇^*)欢迎肥来！';
+let OriginTitile = document.title
+let titleTime
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden) {
+    //离开当前页面时标签显示内容
+    document.title = leaveTitle
+    clearTimeout(titleTime)
+  } else {
+    //返回当前页面时标签显示内容
+    document.title = backTitle + OriginTitile
+    //两秒后变回正常标题
+    titleTime = setTimeout(function () {
+      document.title = OriginTitile
+    }, 2000)
+  }
+})</script><script async data-pjax src="https://cdn.cbd.int/anzhiyu-theme-static@1.0.0/waterfall/waterfall.js"></script><script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/qrcodejs/1.0.0/qrcode.min.js"></script><script>// 初始化函数
+let rm = {};
+
+//禁止图片与超链接拖拽
+let aElements = document.getElementsByTagName("a");
+for (let i = 0; i < aElements.length; i++) {
+  aElements[i].setAttribute("draggable", "false");
+  let imgElements = aElements[i].getElementsByTagName("img");
+  for (let j = 0; j < imgElements.length; j++) {
+    imgElements[j].setAttribute("draggable", "false");
+  }
+}
+
+// 显示菜单
+rm.showRightMenu = function (isTrue, x = 0, y = 0) {
+  console.info(x, y)
+  let rightMenu = document.getElementById("rightMenu");
+  rightMenu.style.top = x + "px";
+  rightMenu.style.left = y + "px";
+  if (isTrue) {
+    rightMenu.style.display = "block";
+    stopMaskScroll();
+  } else {
+    rightMenu.style.display = "none";
+  }
+};
+
+// 隐藏菜单
+rm.hideRightMenu = function () {
+  rm.showRightMenu(false);
+  let rightMenuMask = document.querySelector("#rightmenu-mask");
+  rightMenuMask.style.display = "none";
+};
+
+// 尺寸
+let rmWidth = document.getElementById("rightMenu").offsetWidth;
+let rmHeight = document.getElementById("rightMenu").offsetHeight;
+
+// 重新定义尺寸
+rm.reloadrmSize = function () {
+  rightMenu.style.visibility = "hidden";
+  rightMenu.style.display = "block";
+  // 获取宽度和高度
+  rmWidth = document.getElementById("rightMenu").offsetWidth;
+  rmHeight = document.getElementById("rightMenu").offsetHeight;
+  rightMenu.style.visibility = "visible";
+};
+
+// 获取点击的href
+let domhref = "";
+let domImgSrc = "";
+let globalEvent = null;
+
+var oncontextmenuFunction = function (event) {
+  if (document.body.clientWidth > 768) {
+    let pageX = event.clientX + 10; //加10是为了防止显示时鼠标遮在菜单上
+    let pageY = event.clientY;
+
+    //其他额外菜单
+    const $rightMenuOther = document.querySelector(".rightMenuOther");
+    const $rightMenuPlugin = document.querySelector(".rightMenuPlugin");
+    const $rightMenuCopyText = document.querySelector("#menu-copytext");
+    const $rightMenuPasteText = document.querySelector("#menu-pastetext");
+    const $rightMenuCommentText = document.querySelector("#menu-commenttext");
+    const $rightMenuNewWindow = document.querySelector("#menu-newwindow");
+    const $rightMenuNewWindowImg = document.querySelector("#menu-newwindowimg");
+    const $rightMenuCopyLink = document.querySelector("#menu-copylink");
+    const $rightMenuCopyImg = document.querySelector("#menu-copyimg");
+    const $rightMenuDownloadImg = document.querySelector("#menu-downloadimg");
+    const $rightMenuSearch = document.querySelector("#menu-search");
+    const $rightMenuSearchBaidu = document.querySelector("#menu-searchBaidu");
+    const $rightMenuMusicToggle = document.querySelector("#menu-music-toggle");
+    const $rightMenuMusicBack = document.querySelector("#menu-music-back");
+    const $rightMenuMusicForward = document.querySelector("#menu-music-forward");
+    const $rightMenuMusicPlaylist = document.querySelector("#menu-music-playlist");
+    const $rightMenuMusicCopyMusicName = document.querySelector("#menu-music-copyMusicName");
+
+    let href = event.target.href;
+    let imgsrc = event.target.currentSrc;
+
+    // 判断模式 扩展模式为有事件
+    let pluginMode = false;
+    $rightMenuOther.style.display = "block";
+    globalEvent = event;
+
+    // 检查是否需要复制 是否有选中文本
+    if (selectTextNow && window.getSelection()) {
+      pluginMode = true;
+      $rightMenuCopyText.style.display = "block";
+      $rightMenuCommentText.style.display = "block";
+      $rightMenuSearch.style.display = "block";
+      $rightMenuSearchBaidu.style.display = "block";
+    } else {
+      $rightMenuCopyText.style.display = "none";
+      $rightMenuCommentText.style.display = "none";
+      $rightMenuSearchBaidu.style.display = "none";
+      $rightMenuSearch.style.display = "none";
+    }
+
+    //检查是否右键点击了链接a标签
+    if (href) {
+      pluginMode = true;
+      $rightMenuNewWindow.style.display = "block";
+      $rightMenuCopyLink.style.display = "block";
+      domhref = href;
+    } else {
+      $rightMenuNewWindow.style.display = "none";
+      $rightMenuCopyLink.style.display = "none";
+    }
+
+    //检查是否需要复制图片
+    if (imgsrc) {
+      pluginMode = true;
+      $rightMenuCopyImg.style.display = "block";
+      $rightMenuDownloadImg.style.display = "block";
+      $rightMenuNewWindowImg.style.display = "block";
+      document.getElementById("rightMenu").style.width="12rem"
+      domImgSrc = imgsrc;
+    } else {
+      $rightMenuCopyImg.style.display = "none";
+      $rightMenuDownloadImg.style.display = "none";
+      $rightMenuNewWindowImg.style.display = "none";
+    }
+
+    // 判断是否为输入框
+    if (event.target.tagName.toLowerCase() === "input" || event.target.tagName.toLowerCase() === "textarea") {
+      pluginMode = true;
+      $rightMenuPasteText.style.display = "block";
+    } else {
+      $rightMenuPasteText.style.display = "none";
+    }
+    const navMusicEl = document.querySelector("#nav-music");
+    //判断是否是音乐
+    if (navMusicEl && navMusicEl.contains(event.target)) {
+      pluginMode = true;
+      $rightMenuMusicToggle.style.display = "block";
+      $rightMenuMusicBack.style.display = "block";
+      $rightMenuMusicForward.style.display = "block";
+      $rightMenuMusicPlaylist.style.display = "block";
+      $rightMenuMusicCopyMusicName.style.display = "block";
+    } else {
+      $rightMenuMusicToggle.style.display = "none";
+      $rightMenuMusicBack.style.display = "none";
+      $rightMenuMusicForward.style.display = "none";
+      $rightMenuMusicPlaylist.style.display = "none";
+      $rightMenuMusicCopyMusicName.style.display = "none";
+    }
+
+    // 如果不是扩展模式则隐藏扩展模块
+    if (pluginMode) {
+      $rightMenuOther.style.display = "none";
+      $rightMenuPlugin.style.display = "block";
+    } else {
+      $rightMenuPlugin.style.display = "none";
+    }
+
+    rm.reloadrmSize();
+
+    // 鼠标默认显示在鼠标右下方，当鼠标靠右或靠下时，将菜单显示在鼠标左方\上方
+    if (pageX + rmWidth > window.innerWidth) {
+      pageX -= rmWidth + 10;
+    }
+    if (pageY + rmHeight > window.innerHeight) {
+      pageY -= pageY + rmHeight - window.innerHeight;
+    }
+
+    rm.showRightMenu(true, pageY, pageX);
+    document.getElementById("rightmenu-mask").style.display = "flex";
+    return false;
+  }
+};
+
+// 监听右键初始化
+window.oncontextmenu = oncontextmenuFunction
+
+// 下载图片状态
+rm.downloadimging = false;
+
+// 复制图片到剪贴板
+rm.writeClipImg = function (imgsrc) {
+  console.log("按下复制");
+  rm.hideRightMenu();
+  anzhiyu.snackbarShow("正在下载中，请稍后", false, 10000);
+  if (rm.downloadimging == false) {
+    rm.downloadimging = true;
+    setTimeout(function () {
+      copyImage(imgsrc);
+      anzhiyu.snackbarShow("复制成功！图片已添加盲水印，请遵守版权协议");
+      rm.downloadimging = false;
+    }, "10000");
+  }
+};
+
+function imageToBlob(imageURL) {
+  const img = new Image();
+  const c = document.createElement("canvas");
+  const ctx = c.getContext("2d");
+  img.crossOrigin = "";
+  img.src = imageURL;
+  return new Promise(resolve => {
+    img.onload = function () {
+      c.width = this.naturalWidth;
+      c.height = this.naturalHeight;
+      ctx.drawImage(this, 0, 0);
+      c.toBlob(
+        blob => {
+          // here the image is a blob
+          resolve(blob);
+        },
+        "image/png",
+        0.75
+      );
+    };
+  });
+}
+
+async function copyImage(imageURL) {
+  const blob = await imageToBlob(imageURL);
+  const item = new ClipboardItem({ "image/png": blob });
+  navigator.clipboard.write([item]);
+}
+
+rm.copyUrl = function (id) {
+  const input = document.createElement("input"); // Create a new <input> element
+  input.id = "copyVal"; // Set the id of the new element to "copyVal"
+  document.body.appendChild(input); // Append the new element to the end of the <body> element
+  
+  const text = id;
+  input.value = text;
+  input.select();
+  input.setSelectionRange(0, input.value.length);
+  document.execCommand("copy");
+  
+  input.remove(); // Remove the <input> element from the DOM
+};
+
+function stopMaskScroll() {
+  if (document.getElementById("rightmenu-mask")) {
+    let xscroll = document.getElementById("rightmenu-mask");
+    xscroll.addEventListener(
+      "mousewheel",
+      function (e) {
+        //阻止浏览器默认方法
+        rm.hideRightMenu();
+        // e.preventDefault();
+      },
+      { passive: true }
+    );
+  }
+  if (document.getElementById("rightMenu")) {
+    let xscroll = document.getElementById("rightMenu");
+    xscroll.addEventListener(
+      "mousewheel",
+      function (e) {
+        //阻止浏览器默认方法
+        rm.hideRightMenu();
+        // e.preventDefault();
+      },
+      { passive: true }
+    );
+  }
+}
+
+rm.rightmenuCopyText = function (txt) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt);
+  }
+  rm.hideRightMenu();
+};
+
+rm.copyPageUrl = function (url) {
+  if (!url) {
+    url = window.location.href;
+  }
+  rm.copyUrl(url);
+  anzhiyu.snackbarShow("复制链接地址成功", false, 2000);
+  rm.hideRightMenu();
+};
+
+rm.sharePage = function () {
+  var content = window.location.href;
+  rm.copyUrl(url);
+  anzhiyu.snackbarShow("复制链接地址成功", false, 2000);
+  rm.hideRightMenu();
+};
+
+// 复制当前选中文本
+var selectTextNow = "";
+document.onmouseup = document.ondblclick = selceText;
+
+function selceText() {
+  var txt;
+  if (document.selection) {
+    txt = document.selection.createRange().text;
+  } else {
+    txt = window.getSelection().toString();
+  }
+  selectTextNow = txt !== "" ? txt : "";
+}
+
+// 读取剪切板
+rm.readClipboard = function () {
+  if (navigator.clipboard) {
+    navigator.clipboard.readText().then(clipText => rm.insertAtCaret(globalEvent.target, clipText));
+  }
+};
+
+// 粘贴文本到焦点
+rm.insertAtCaret = function (elemt, value) {
+  const startPos = elemt.selectionStart,
+    endPos = elemt.selectionEnd;
+  if (document.selection) {
+    elemt.focus();
+    var sel = document.selection.createRange();
+    sel.text = value;
+    elemt.focus();
+  } else {
+    if (startPos || startPos == "0") {
+      var scrollTop = elemt.scrollTop;
+      elemt.value = elemt.value.substring(0, startPos) + value + elemt.value.substring(endPos, elemt.value.length);
+      elemt.focus();
+      elemt.selectionStart = startPos + value.length;
+      elemt.selectionEnd = startPos + value.length;
+      elemt.scrollTop = scrollTop;
+    } else {
+      elemt.value += value;
+      elemt.focus();
+    }
+  }
+};
+
+//粘贴文本
+rm.pasteText = function () {
+  const result = rm.readClipboard() || "";
+  rm.hideRightMenu();
+};
+
+//引用到评论
+rm.rightMenuCommentText = function (txt) {
+  rm.hideRightMenu();
+  const postCommentDom = document.getElementById("post-comment");
+  var domTop = postCommentDom.offsetTop;
+  window.scrollTo(0, domTop - 80);
+  if (txt == "undefined" || txt == "null") txt = "好棒！";
+  function setText() {
+    setTimeout(() => {
+      var input = document.getElementsByClassName("el-textarea__inner")[0];
+      if (!input) setText();
+      let evt = document.createEvent("HTMLEvents");
+      evt.initEvent("input", true, true);
+      let inputValue = replaceAll(txt, "\n", "\n> ");
+      input.value = "> " + inputValue + "\n\n";
+      input.dispatchEvent(evt);
+      input.focus();
+      input.setSelectionRange(-1, -1);
+      if (document.getElementById("comment-tips")) {
+        document.getElementById("comment-tips").classList.add("show");
+      }
+    }, 100);
+  }
+  setText();
+};
+
+//替换所有内容
+function replaceAll(string, search, replace) {
+  return string.split(search).join(replace);
+}
+
+// 百度搜索
+rm.searchBaidu = function () {
+  anzhiyu.snackbarShow("即将跳转到百度搜索", false, 2000);
+  setTimeout(function () {
+    window.open("https://www.baidu.com/s?wd=" + selectTextNow);
+  }, "2000");
+  rm.hideRightMenu();
+};
+
+//分享链接
+rm.copyLink = function () {
+  rm.rightmenuCopyText(domhref);
+  anzhiyu.snackbarShow("已复制链接地址");
+};
+
+function addRightMenuClickEvent() {
+  // 添加点击事件
+  document.getElementById("menu-backward").addEventListener("click", function () {
+  window.history.back();
+    rm.hideRightMenu();
+  });
+
+  document.getElementById("menu-forward").addEventListener("click", function () {
+    window.history.forward();
+    rm.hideRightMenu();
+  });
+
+  document.getElementById("menu-refresh").addEventListener("click", function () {
+    window.location.reload();
+  });
+
+  document.getElementById("menu-top").addEventListener("click", function () {
+    anzhiyu.scrollToDest(0, 500);
+    rm.hideRightMenu();
+  });
+
+  const menuLinks = document.querySelectorAll(".menu-link");
+  menuLinks.forEach(function (link) {
+    link.addEventListener("click", rm.hideRightMenu);
+  });
+
+  document.getElementById("menu-darkmode").addEventListener("click", anzhiyu.switchDarkMode);
+
+  document.getElementById("menu-home") && document.getElementById("menu-home").addEventListener("click", function () {
+    window.location.href = window.location.origin;
+  });
+
+  document.getElementById("menu-randomPost").addEventListener("click", function () {
+    toRandomPost();
+  });
+
+  document.getElementById("menu-commentBarrage").addEventListener("click", anzhiyu.switchCommentBarrage);
+
+  document.getElementById("rightmenu-mask").addEventListener("click", rm.hideRightMenu);
+
+  document.getElementById("rightmenu-mask").addEventListener("contextmenu", function (event) {
+    rm.hideRightMenu();
+    event.preventDefault(); // Prevent the default context menu from appearing
+  });
+
+  document.getElementById("menu-copy").addEventListener("click", rm.copyPageUrl);
+
+  document.getElementById("menu-pastetext").addEventListener("click", rm.pasteText);
+
+  document.getElementById("menu-copytext").addEventListener("click", function () {
+    rm.rightmenuCopyText(selectTextNow);
+    anzhiyu.snackbarShow("复制成功，复制和转载请标注本文地址");
+  });
+
+  document.getElementById("menu-commenttext").addEventListener("click", function () {
+    rm.rightMenuCommentText(selectTextNow);
+  });
+
+  document.getElementById("menu-newwindow").addEventListener("click", function () {
+    window.open(domhref, "_blank");
+    rm.hideRightMenu();
+  });
+
+  document.getElementById("menu-copylink").addEventListener("click", rm.copyLink);
+
+  document.getElementById("menu-downloadimg").addEventListener("click", function () {
+    anzhiyu.downloadImage(domImgSrc, "anzhiyu");
+  });
+
+  document.getElementById("menu-newwindowimg").addEventListener("click", function () {
+    window.open(domImgSrc, "_blank");
+    rm.hideRightMenu();
+  });
+
+  document.getElementById("menu-copyimg").addEventListener("click", function () {
+    rm.writeClipImg(domImgSrc);
+  });
+
+  document.getElementById("menu-searchBaidu").addEventListener("click", rm.searchBaidu);
+
+  //音乐
+  document.getElementById("menu-music-toggle").addEventListener("click", anzhiyu.musicToggle);
+
+  document.getElementById("menu-music-back").addEventListener("click", anzhiyu.musicSkipBack);
+
+  document.getElementById("menu-music-forward").addEventListener("click", anzhiyu.musicSkipForward);
+
+  document.getElementById("menu-music-copyMusicName").addEventListener("click", function () {
+    rm.rightmenuCopyText(anzhiyu.musicGetName());
+    anzhiyu.snackbarShow("复制歌曲名称成功", false, 3000);
+  });
+
+}
+
+addRightMenuClickEvent();</script><script data-pjax>var themeColorMeta = document.querySelector('meta[name="theme-color"]');
+var pageHeaderEl = document.getElementById("page-header");
+var navMusicEl = document.getElementById("nav-music");
+var consoleEl = document.getElementById("console");
+// 已随机的歌曲
+var selectRandomSong = [];
+// 音乐默认声音大小
+var musicVolume = 0.8;
+// 是否切换了周杰伦音乐列表
+var changeMusicListFlag = false;
+// 当前默认播放列表
+var defaultPlayMusicList = [];
+
+document.getElementById("page-name").innerText = document.title.split(" | Blog")[0];
+anzhiyu.initIndexEssay();
+anzhiyu.changeTimeInEssay();
+anzhiyu.removeBodyPaceClass();
+anzhiyu.qrcodeCreate();
+anzhiyu.changeTimeInAlbumDetail();
+anzhiyu.reflashEssayWaterFall();
+anzhiyu.sayhi();
+anzhiyu.stopImgRightDrag();
+anzhiyu.addNavBackgroundInit();
+anzhiyu.setValueToBodyType();
+anzhiyu.catalogActive();
+anzhiyu.tagsPageActive();
+anzhiyu.categoriesBarActive();
+anzhiyu.topCategoriesBarScroll();
+anzhiyu.switchRightClickMenuHotReview();
+anzhiyu.getCustomPlayList();
+anzhiyu.addEventListenerConsoleMusicList(false);
+setTimeout(() => {if (typeof addFriendLinksInFooter === "function") {addFriendLinksInFooter();}}, 200)</script><link rel="stylesheet" href="https://cdn.cbd.int/anzhiyu-theme-static@1.1.9/icon/ali_iconfont_css.css"><link rel="stylesheet" href="https://cdn.cbd.int/anzhiyu-theme-static@1.0.0/aplayer/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.cbd.int/anzhiyu-blog-static@1.0.1/js/APlayer.min.js"></script><script src="https://cdn.cbd.int/hexo-anzhiyu-music@1.0.1/assets/js/Meting2.min.js"></script><script src="https://cdn.cbd.int/pjax@0.2.8/pjax.min.js"></script><script>let pjaxSelectors = ["head > title","#config-diff","#body-wrap","#rightside-config-hide","#rightside-config-show",".js-pjax"]
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:send', function () {
+  // removeEventListener scroll 
+  window.tocScrollFn && window.removeEventListener('scroll', window.tocScrollFn)
+  window.scrollCollect && window.removeEventListener('scroll', scrollCollect)
+
+  document.getElementById('rightside').style.cssText = "opacity: ''; transform: ''"
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  // google analytics
+  typeof gtag === 'function' && gtag('config', '', {'page_path': window.location.pathname});
+
+  // baidu analytics
+  typeof _hmt === 'object' && _hmt.push(['_trackPageview',window.location.pathname]);
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+})
+
+document.addEventListener('pjax:error', (e) => {
+  if (e.request.status === 404) {
+    pjax.loadUrl('/404.html')
+  }
+})</script><script charset="UTF-8" src="https://cdn.cbd.int/anzhiyu-theme-static@1.1.5/accesskey/accesskey.js"></script></div><div id="popup-window"><div class="popup-window-title">通知</div><div class="popup-window-divider"></div><div class="popup-window-content"><div class="popup-tip">你好呀</div><div class="popup-link"><i class="anzhiyufont anzhiyu-icon-arrow-circle-right"></i></div></div></div></body></html>
