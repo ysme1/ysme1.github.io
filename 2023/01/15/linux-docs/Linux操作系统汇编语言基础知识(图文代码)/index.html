@@ -1,32 +1,229 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux操作系统汇编语言基础知识(图文代码) | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="1、什么是汇编语言，它在计算机语言中的地位？1汇编语言是程序设计语言的基础语言，是唯一可以直接与计算机硬件打交道的语言  2、汇编语言与源程序、汇编程序、汇编的关系？ 3、汇编语言的特点 \1) 汇编语言与机器指令一一对应，可充分理解计算机的操作过程汇编语言指令是机器指令的符号表示 \2) 汇编语言是靠近机器的语言编程时要求熟悉机器硬件系统，可充分利用机器硬件中的全部功能，发挥机器的特点在计算机系">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux操作系统汇编语言基础知识(图文代码)">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E5%9B%BE%E6%96%87%E4%BB%A3%E7%A0%81)/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="1、什么是汇编语言，它在计算机语言中的地位？1汇编语言是程序设计语言的基础语言，是唯一可以直接与计算机硬件打交道的语言  2、汇编语言与源程序、汇编程序、汇编的关系？ 3、汇编语言的特点 \1) 汇编语言与机器指令一一对应，可充分理解计算机的操作过程汇编语言指令是机器指令的符号表示 \2) 汇编语言是靠近机器的语言编程时要求熟悉机器硬件系统，可充分利用机器硬件中的全部功能，发挥机器的特点在计算机系">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-b9c8c1f5adce7fab60ba6010280982cc_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.417Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic1.zhimg.com/80/v2-b9c8c1f5adce7fab60ba6010280982cc_720w.webp"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E5%9B%BE%E6%96%87%E4%BB%A3%E7%A0%81)/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux操作系统汇编语言基础知识(图文代码)',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://pic1.zhimg.com/80/v2-b9c8c1f5adce7fab60ba6010280982cc_720w.webp')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux操作系统汇编语言基础知识(图文代码)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.417Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc/">linux-doc</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux操作系统汇编语言基础知识(图文代码)"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="1、什么是汇编语言，它在计算机语言中的地位？"><a href="#1、什么是汇编语言，它在计算机语言中的地位？" class="headerlink" title="1、什么是汇编语言，它在计算机语言中的地位？"></a>1、什么是汇编语言，它在计算机语言中的地位？</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">汇编语言是程序设计语言的基础语言，是唯一可以直接与计算机硬件打交道的语言</span><br></pre></td></tr></table></figure>
+
+<h2 id="2、汇编语言与源程序、汇编程序、汇编的关系？"><a href="#2、汇编语言与源程序、汇编程序、汇编的关系？" class="headerlink" title="2、汇编语言与源程序、汇编程序、汇编的关系？"></a>2、汇编语言与源程序、汇编程序、汇编的关系？</h2><p><img src="https://pic1.zhimg.com/80/v2-b9c8c1f5adce7fab60ba6010280982cc_720w.webp" alt="img"></p>
+<h2 id="3、汇编语言的特点"><a href="#3、汇编语言的特点" class="headerlink" title="3、汇编语言的特点"></a>3、汇编语言的特点</h2><ul>
+<li>\1) 汇编语言与机器指令一一对应，可充分理解计算机的操作过程汇编语言指令是机器指令的符号表示</li>
+<li>\2) 汇编语言是靠近机器的语言编程时要求熟悉机器硬件系统，可充分利用机器硬件中的全部功能，发挥机器的特点在计算机系统中，某些功能由汇编语言程序实现：实时过程控制系统、系统初始化、实际的输入输出设备操作</li>
+<li>\3) 汇编语言程序的效率高于高级语言效率，指的是用汇编语言编写的源程序在汇编后所得的目标程序效率高时间域的高效率：运行速度快；空间域的高效率：目标代码占用存储空间少</li>
+</ul>
+<h2 id="4、汇编语言与高级语言的比较"><a href="#4、汇编语言与高级语言的比较" class="headerlink" title="4、汇编语言与高级语言的比较"></a>4、汇编语言与高级语言的比较</h2><p><img src="https://pic2.zhimg.com/80/v2-e147e0cdc60a6b243dae382353af0ad9_720w.webp" alt="img"></p>
+<h2 id="5、进制转换"><a href="#5、进制转换" class="headerlink" title="5、进制转换"></a>5、进制转换</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">（略）</span><br></pre></td></tr></table></figure>
+
+<h2 id="6、数据组织单位"><a href="#6、数据组织单位" class="headerlink" title="6、数据组织单位"></a>6、数据组织单位</h2><blockquote>
+<p>\1) 位（bit）<br>是计算机中表示信息的最小单位，符号b，是一个二进制位，每一位用0或1表示<br>\2) 字节（Byte）<br>8位二进制数为一个字节<br>\3) 字（Word）<br>若干个字节为一个字，一般一个字包含两个字节<br>范围0000H<del>FFFFH<br>\4) 双字（Double Word）<br>两个字节为一个字，四个字节为连个字，称为双字<br>范围00000000H</del>FFFFFFFFH<br>\5) 字长<br>机器字的长度为字长，即计算机中每个字所包含的位数，由机器数据总线数决定<br>例如，数据总线数为64位，机器字长为64位，即每个字有8个字节<br>\6) 数据字与指令字<br>数据字：在存储单元中存储的是数据<br>指令字：在存储单元中存储的是指令<br>无论是数据字还是指令字，在存储单元中都是以二进制的形式存放的</p>
+</blockquote>
+<p><strong>7、BCD码</strong></p>
+<p>两种存储方式：组合型（1个字节表示2个BCD码）；非组合型（1个字节表示1个BCD码）</p>
+<p><strong>8、80X86计算机组织结构</strong></p>
+<p>微型计算机的硬件系统主要由3个主要部分组成：</p>
+<ul>
+<li>1)中央处理器CPU（运算器、控制器、寄存器）</li>
+<li>2)输入输出设备</li>
+<li>3)存储器</li>
+</ul>
+<p><strong>9、80X86 CPU的寄存器</strong></p>
+<p>寄存器分为3类：</p>
+<ul>
+<li>1)通用寄存器</li>
+<li>2)控制寄存器</li>
+<li>3)段寄存器</li>
+</ul>
+<p>8个8位通用寄存器：AL,AH,BL,BH,CL,CH,DL,DH</p>
+<p>8个16位通用寄存器：AX,BX,CX,DX,SI,DI,BP,SP</p>
+<p>8个32位通用寄存器：EAX,EBX,ECX,EDX,ESI,EDI,EBP,ESP</p>
+<p><img src="https://pic1.zhimg.com/80/v2-0631762f84d53592ee29dcc490ff3994_720w.webp" alt="img"></p>
+<blockquote>
+<p>说明：1）指针寄存器（SP,ESP,BP,EBP）<br>SP,ESP为堆栈指针寄存器，存放当前堆栈段栈顶的偏移地址，<br>是根据指令自动移动的，要想随机读取</p>
+<p>堆栈段中的数据，必须通过BP或EBP基址指针寄存器来读取。<br>2）控制寄存器（IP,EIP,FLAGS,EFLAGS）<br>IP,EIP为指令指针寄存器，用于存放当前正在执行的指令的<br>下一条指令的偏移地址，该寄存器所指的为代码段的偏移地址。<br>FLAGS为标识寄存器，表示程序运行时的状态和一些特殊控制</p>
+</blockquote>
+<p>3）段寄存器</p>
+<p>代码和数据是分开存放，代码存放在代码段，数据存放在数据段</p>
+<p><strong>10、内存组织结构</strong></p>
+<p>1）内存的地址<br>在存储器中内存单元的基本单位是<em>字节</em>，每个字节都有一个唯一的地址</p>
+<p><img src="https://pic3.zhimg.com/80/v2-5cf385fec47048719360e4f84cb0a67a_720w.webp" alt="img"></p>
+<p><strong>2）存储单元的内容</strong></p>
+<p>一个存储单元存放的信息为存储单元的内容</p>
+<ol>
+<li>分为：字节单元、字节单元、双字单元</li>
+<li>双字：需要两个16位寄存器，通常为DX:AX,DX高位，AX低位</li>
+</ol>
+<p><img src="https://pic3.zhimg.com/80/v2-422fd8d4b3b9a5a5b914c8c118a428f6_720w.webp" alt="img"></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">3</span>)堆栈</span><br><span class="line">堆栈是内存中一块特定的区域，其中数据按照*先进后出*原则</span><br><span class="line">作用：暂存数据、子程序调用与返回、调用中断处理程序、从中断处理程序返回</span><br><span class="line">位置：堆栈段地址存放于SS寄存器中，偏移地址存放在堆栈指针寄存器（<span class="built_in">SP</span>(<span class="number">16</span>位)/<span class="built_in">ESP</span>(<span class="number">32</span>位)），</span><br><span class="line">他们永远指向栈顶</span><br><span class="line">	初始化：堆栈的初始化时通过设置SS及SP/ESP值来完成的，可以由编译系统自动完成，也可以在程序</span><br><span class="line">中通过伪指令显示地定义</span><br></pre></td></tr></table></figure>
+
+<p><strong>11、实模式</strong></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>)介绍</span><br><span class="line">	</span><br><span class="line">	只有<span class="number">8086</span>/<span class="number">8088</span>工作在实模式下；</span><br><span class="line">	<span class="number">80286</span>以上的微处理器工作在实模式和保护模式下；</span><br><span class="line">	在实模式下微处理器只能寻址<span class="number">1</span>MB的存储空间；</span><br><span class="line">	<span class="number">80286</span>以上系统的微处理器在加点或复位时都以实模式方式开始工作</span><br><span class="line"></span><br><span class="line"><span class="number">2</span>）内存地址的分段</span><br><span class="line"></span><br><span class="line">	*为什么要分段？*</span><br><span class="line">	<span class="number">8086</span>/<span class="number">8088</span>地址总线为<span class="number">20</span>根，可访问的地址为：<span class="number">2</span>^<span class="number">20</span>=<span class="number">1048576</span>=<span class="number">1</span>M</span><br><span class="line">	<span class="number">8086</span>/<span class="number">8088</span>内部寄存器都是<span class="number">16</span>位的，可以直接处理<span class="number">16</span>位长度的存储地址，<span class="number">16</span>位地址的寻址<span class="number">2</span>^<span class="number">16</span>=<span class="number">64</span>K</span><br><span class="line">	为了把寻址范围扩大到<span class="number">1</span>MB，实模式存储器地址均采用存储空间的分段技术来解决寻址<span class="number">1</span>MB的存储空间</span><br><span class="line">	提出了段地址和偏移地址合成<span class="number">20</span>位物理地址的概念</span><br><span class="line">	</span><br><span class="line">	*分段方法？*</span><br><span class="line">	<span class="number">16</span>位段地址+<span class="number">16</span>位段内地址---&gt;<span class="number">20</span>位物理地址</span><br><span class="line">	地址的组合：物理地址=段地址*<span class="number">16</span>D(或<span class="number">10</span>H)+偏移地址，（段地址*<span class="number">16</span>D--二进制段地址左移<span class="number">4</span>位）</span><br><span class="line">	存放段地址：<span class="number">16</span>位段地址寄存器（CS、DS、SS、ES）</span><br><span class="line">	存放偏移地址：<span class="number">16</span>位指针寄存器（IP、SP）</span><br><span class="line">	在<span class="number">1</span>MB存储器中可以有<span class="number">64</span>K个段，每个段最多<span class="number">64</span>KB，最小为<span class="number">16</span>KB</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">	*物理地址、段地址、段内地址、逻辑地址的区别？*</span><br><span class="line">	物理地址：与内存单元一一对应的<span class="number">20</span>位二进制数,<span class="number">1</span>MB=<span class="number">00000</span>H~FFFFFH</span><br><span class="line">		    每个物理地址代表一个唯一的内存单元</span><br><span class="line">	</span><br><span class="line">	段地址：将<span class="number">1</span>MB的内存空间分为长<span class="number">64</span>KB的程序区和数据区称为段</span><br><span class="line">		  每个段用<span class="number">1</span>个<span class="number">16</span>位二进制地址表示</span><br><span class="line">		  段地址存放在段寄存器中</span><br><span class="line">		  代码段：用于存放源程序的二进制程序代码，该段的段地址放在CS中</span><br><span class="line">		  数据段：存放操作数据的，该段的段地址放在DS中</span><br><span class="line">		  堆栈段：堆栈用的存储区，该段的段地址放在SS中</span><br><span class="line">		  附加段：该段的段地址放在ES中</span><br><span class="line">	</span><br><span class="line">	段内地址：<span class="number">16</span>位二进制段内地址为偏移地址</span><br><span class="line">   （偏移地址）不同段内的偏移地址存放在不同的寄存器中，段寄存器与装偏移地址的寄存器按一定要求组合</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://pic1.zhimg.com/80/v2-7ea71c556f95e10dde7137a275c01748_720w.webp" alt="img"></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">逻辑地址：用段地址和偏移地址来表示内存单元的地址为逻辑地址，例如，段地址：偏移地址</span><br><span class="line">	*逻辑地址与物理地址的换算关系？*</span><br><span class="line">	物理地址 = 段地址*<span class="number">16</span>D（<span class="number">10</span>H）+偏移地址</span><br><span class="line">	逻辑地址 = 段地址：偏移地址</span><br><span class="line">	例子：逻辑地址，<span class="number">1111</span>H:<span class="number">2222</span>H</span><br><span class="line">物理地址，<span class="number">1111</span>H*<span class="number">10</span>H+<span class="number">2222</span>H = <span class="number">13332</span>H</span><br><span class="line">假设<span class="number">1111</span>H为代码段地址，<span class="number">2222</span>H在指针寄存器IP中，示意图如下：</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://pic3.zhimg.com/80/v2-65c8fa036b5b5f4ca807f594e426308a_720w.webp" alt="img"></p>
+<p><strong>内存分配方法？</strong></p>
+<p>代码段、数据段、堆栈段的大小，是以节为最小单位分配内存区域的16字节&#x3D;2个字&#x3D;1节，节的边界地址就是能够被16整除的地址偏移地址（段内地址）是从0000H开始的例子：假设程序分配的内存区从6100H开始，程序长度1020字节，操作数510字节，堆栈段250字节则代码段长度为1024D&#x3D;400H，数据段长度为512D&#x3D;200H，堆栈段长度为256D&#x3D;100H</p>
+<p><strong>示意图如下：</strong></p>
+<p><img src="https://pic4.zhimg.com/80/v2-f3c4bf9aa6606ce79db198b30797dc4f_720w.webp" alt="img"></p>
+<p><strong>段与段之间的关系？</strong></p>
+<p>8088&#x2F;8086 CPU把1MB的存储空间划分成若干逻辑段每个段的起始地址必须是能够被16整除的数逻辑段的最大长度为64KB 1MB的存储空间最多可以分成64K个逻辑段，当每个逻辑段为16KB时段与段之间可以相邻、分离、重叠、部分重叠</p>
+<p><strong>12、保护模式</strong></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">1）保护模式存储器寻址机制</span><br><span class="line">	在保护模式下，逻辑地址=选择符+偏移地址</span><br><span class="line">	与实模式不同，实模式的段寄存器存放段基地址，而保护模式的段寄存器存放选择符</span><br><span class="line">	保护模式下，通过选择描述符表中的描述符，间接地形成段基地址</span><br><span class="line">	保护模式的偏移地址最大可以是32位，最大段长可以从16KB扩展到4GB</span><br><span class="line">2)描述符</span><br><span class="line">	描述符包括，段在寄存器中的位置，段的长度，访问权限</span><br><span class="line">	由基地址、段界限、访问权限、附加字段组成</span><br><span class="line">		基地址：指定段的起始地址</span><br><span class="line">		段界限：存放该段的最大偏移地址</span><br><span class="line">		访问权限：说明该段在系统中的功能和一些控制信息</span><br><span class="line">		附加字段：描述该段的一些属性</span><br><span class="line">	描述符的内容是由系统自动设置的</span><br><span class="line">	由于段寄存器是16位的，描述符是64位的</span><br><span class="line">	故将64位的段描述符放按顺序存放形成一个段描述符表，放在内存中</span><br><span class="line">	而在段寄存器中实际存放的是要选择的段描述符表的序号，类似于数组中的下标</span><br></pre></td></tr></table></figure>
+
+<p><strong>13、存储器管理机制</strong></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>）分段管理机制</span><br><span class="line">		①虚拟存储器：在有限的物理存储器上获取更大的使用空间</span><br><span class="line">			*虚拟存储器是如何实现存储的？*</span><br><span class="line">			在程序执行期间的任意时刻，虚拟存储器系统自动吧程序分成许多小块即程序段</span><br><span class="line">			将某个程序段存放到物理存储器中，其他程序段放在磁盘中</span><br><span class="line">			当程序要访问到哪个程序段时，就把哪个程序段引导到物理存储器中</span><br><span class="line">		</span><br><span class="line">		②分段管理：将<span class="number">4</span>GB的存储空间分成若干独立的受保护的存储空间块</span><br><span class="line">			每个应用程序可以使用这些存储空间块</span><br><span class="line">	</span><br><span class="line">	<span class="number">2</span>）分页管理机制</span><br><span class="line">①线性地址空间：每个进程都有相同大小的<span class="number">4</span>GB线性空间</span><br><span class="line">用分段管理机制实现虚拟地址空间到线性地址空间的映射，实现把二维的</span><br><span class="line">虚拟地址转换为一维的线性地址</span><br><span class="line"></span><br><span class="line">②分页存储管理：把线性地址空间和物理地址空间分别划分为大小相同的块，每块长为<span class="number">4</span>KB</span><br><span class="line">这样的块称为页，通过分页管理机制实现线性地址空间到物理地址空间的</span><br><span class="line">映射，实现线性地址到物理地址的转换</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>版权声明：本文为知乎博主「玩转Linux内核」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/449157752">https://zhuanlan.zhihu.com/p/449157752</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E5%9B%BE%E6%96%87%E4%BB%A3%E7%A0%81)/">https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E5%9B%BE%E6%96%87%E4%BB%A3%E7%A0%81)/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://pic1.zhimg.com/80/v2-b9c8c1f5adce7fab60ba6010280982cc_720w.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4%E5%85%A5%E9%97%A8%E7%BA%A7%E6%95%B4%E7%90%86%E7%9F%A5%E8%AF%86%E7%82%B9/" title="Linux操作系统汇编指令入门级整理知识点"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux操作系统汇编指令入门级整理知识点</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F%E5%8F%8A%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/" title="Linux操作系统进程同步的几种方式及基本原理"><img class="cover" src="https://pic2.zhimg.com/80/v2-6ccd4b5e0f74b262a55f9e2358fb0105_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux操作系统进程同步的几种方式及基本原理</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%8C%E5%AE%83%E5%9C%A8%E8%AE%A1%E7%AE%97%E6%9C%BA%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E5%9C%B0%E4%BD%8D%EF%BC%9F"><span class="toc-number">1.</span> <span class="toc-text">1、什么是汇编语言，它在计算机语言中的地位？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E4%B8%8E%E6%BA%90%E7%A8%8B%E5%BA%8F%E3%80%81%E6%B1%87%E7%BC%96%E7%A8%8B%E5%BA%8F%E3%80%81%E6%B1%87%E7%BC%96%E7%9A%84%E5%85%B3%E7%B3%BB%EF%BC%9F"><span class="toc-number">2.</span> <span class="toc-text">2、汇编语言与源程序、汇编程序、汇编的关系？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E7%9A%84%E7%89%B9%E7%82%B9"><span class="toc-number">3.</span> <span class="toc-text">3、汇编语言的特点</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%E3%80%81%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E4%B8%8E%E9%AB%98%E7%BA%A7%E8%AF%AD%E8%A8%80%E7%9A%84%E6%AF%94%E8%BE%83"><span class="toc-number">4.</span> <span class="toc-text">4、汇编语言与高级语言的比较</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5%E3%80%81%E8%BF%9B%E5%88%B6%E8%BD%AC%E6%8D%A2"><span class="toc-number">5.</span> <span class="toc-text">5、进制转换</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6%E3%80%81%E6%95%B0%E6%8D%AE%E7%BB%84%E7%BB%87%E5%8D%95%E4%BD%8D"><span class="toc-number">6.</span> <span class="toc-text">6、数据组织单位</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

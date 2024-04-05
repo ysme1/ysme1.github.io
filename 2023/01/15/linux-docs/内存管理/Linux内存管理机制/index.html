@@ -1,32 +1,249 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux内存管理机制 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="1、背景 本文试图通过linux内核源码分析linux的内存管理机制，并且对比内核提供的几个分配内存的接口函数。然后聊下slab层的用法以及接口函数。  2、内核分配内存与用户态分配内存 内核分配内存与用户态分配内存显然是不同的，内核不可以像用户态那样奢侈的使用内存，内核使用内存一定是谨小慎微的。并且，在用户态如果出现内存溢出因为有内存保护机制，可能只是一个报错或警告，而在内核态若出现内存溢出后果">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内存管理机制">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="1、背景 本文试图通过linux内核源码分析linux的内存管理机制，并且对比内核提供的几个分配内存的接口函数。然后聊下slab层的用法以及接口函数。  2、内核分配内存与用户态分配内存 内核分配内存与用户态分配内存显然是不同的，内核不可以像用户态那样奢侈的使用内存，内核使用内存一定是谨小慎微的。并且，在用户态如果出现内存溢出因为有内存保护机制，可能只是一个报错或警告，而在内核态若出现内存溢出后果">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-77cb4c8e04103730a7ce581f149f60df_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.417Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic4.zhimg.com/80/v2-77cb4c8e04103730a7ce581f149f60df_720w.webp"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux内存管理机制',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://pic4.zhimg.com/80/v2-77cb4c8e04103730a7ce581f149f60df_720w.webp')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux内存管理机制</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.417Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">linux-doc 内存管理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux内存管理机制"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="1、背景"><a href="#1、背景" class="headerlink" title="1、背景"></a>1、背景</h2><ul>
+<li>本文试图通过linux内核源码分析linux的内存管理机制，并且对比内核提供的几个分配内存的接口函数。然后聊下slab层的用法以及接口函数。</li>
+</ul>
+<h2 id="2、内核分配内存与用户态分配内存"><a href="#2、内核分配内存与用户态分配内存" class="headerlink" title="2、内核分配内存与用户态分配内存"></a>2、内核分配内存与用户态分配内存</h2><ul>
+<li>内核分配内存与用户态分配内存显然是不同的，内核不可以像用户态那样奢侈的使用内存，内核使用内存一定是谨小慎微的。并且，在用户态如果出现内存溢出因为有内存保护机制，可能只是一个报错或警告，而在内核态若出现内存溢出后果就会严重的多（毕竟再没有管理者了）。</li>
+</ul>
+<h2 id="3、页"><a href="#3、页" class="headerlink" title="3、页"></a>3、页</h2><ul>
+<li>我们知道处理器处理数据的基本单位是字。而内核把页作为内存管理的基本单位。那么，页在内存中是如何描述的？</li>
+<li>内核用struct page结构体表示系统中的每一个物理页：</li>
+</ul>
+<p><img src="https://pic4.zhimg.com/80/v2-77cb4c8e04103730a7ce581f149f60df_720w.webp" alt="img"></p>
+<ul>
+<li>flags存放页的状态，如该页是不是脏页。</li>
+<li>_count域表示该页的使用计数，如果该页未被使用，就可以在新的分配中使用它。</li>
+<li>要注意的是，page结构体描述的是物理页而非逻辑页，描述的是内存页的信息而不是页中数据。</li>
+<li>实际上每个物理页面都由一个page结构体来描述，有的人可能会惊讶说那这得需要多少内存呢？我们可以来算一下，若一个struct page占用40字节内存，一个页有8KB，内存大小为4G的话，共有524288个页面，需要刚好20MB的大小来存放结构体。这相对于4G的内存根本九牛一毛。</li>
+</ul>
+<h2 id="4、区"><a href="#4、区" class="headerlink" title="4、区"></a>4、区</h2><ul>
+<li>有些页是有特定用途的。比如内存中有些页是专门用于DMA的。</li>
+<li>内核使用区的概念将具有相似特性的页进行分组。区是一种逻辑上的分组的概念，而没有物理上的意义。</li>
+<li>区的实际使用和分布是与体系结构相关的。在x86体系结构中主要分为3个区：ZONE_DMA，ZONE_NORMAL，ZONE_HIGHMEM。</li>
+<li>ZONE_DMA区中的页用来进行DMA时使用。ZONE_HIGHMEM是高端内存，其中的页不能永久的映射到内核地址空间，也就是说，没有虚拟地址。剩余的内存就属于ZONE_NORMAL区。</li>
+<li>我们可以看一下描述区的结构体struct zone（在linux&#x2F;mmzone.h中定义）。</li>
+</ul>
+<p><img src="https://pic1.zhimg.com/80/v2-f614dbdf9b08631eabf3158ceef5ff78_720w.webp" alt="img"></p>
+<ul>
+<li>这个结构体比较长，我只截取了一部分出来。</li>
+<li>实际上不是所有的体系结构都定义了全部区，有些64位的体系结构，比如Intel的x86-64体系结构可以映射和处理64位的内存空间，所以其没有ZONE_HIGHMEM区。而有些体系结构中的所有地址都可用于DMA，所以这些体系结构就没有ZONE_DMA区。</li>
+</ul>
+<h2 id="5、内核中内存分配接口"><a href="#5、内核中内存分配接口" class="headerlink" title="5、内核中内存分配接口"></a>5、内核中内存分配接口</h2><ul>
+<li>我们现在已经大体了解了内核中的页与区的概念及描述。接下来我们就可以来看看内核中有哪些内存分配与释放的接口。在内核中，我们正是通过这些接口来分配与释放内存的。首先我们来看看以页为单位进行分配的接口函数。</li>
+</ul>
+<h2 id="6、获得页与释放页"><a href="#6、获得页与释放页" class="headerlink" title="6、获得页与释放页"></a>6、获得页与释放页</h2><ul>
+<li>获得页</li>
+<li>获得页使用的接口是alloc_pages函数，我们来看下它的源码（位于linux&#x2F;gfp.h中）</li>
+</ul>
+<p><img src="https://pic1.zhimg.com/80/v2-0cda6b20bf52c617b2845b226c869acc_720w.webp" alt="img"></p>
+<ul>
+<li>可以看到，该函数返回值是指向page结构体的指针，参数gfp_mask是一个标志，简单来讲就是获得页所使用的行为方式。order参数规定分配多少页面，该函数分配2的order次方个连续的物理页面。返回的指针指向的是第一page页面。</li>
+<li>获得页的方式不只一种，我们还可以使用__get_free_pages函数来获得页，该函数和alloc_pages的参数一样，然而它会返回一个虚拟地址。源码如下：</li>
+</ul>
+<p><img src="https://pic1.zhimg.com/80/v2-f86b5807e6672401ee1d45cebed03d7c_720w.webp" alt="img"></p>
+<ul>
+<li>可以看到，这个函数其实也是调用了alloc_pages函数，只不过在获得了struct page结构体后使用page_address函数获得了虚拟地址。</li>
+<li>另外还有alloc_page函数与__get_free_page函数，都是获得一个页，其实就是将前面两个函数的order分别置为了0而已。这里不赘述了。</li>
+<li>我们在使用这些接口获取页的时候可能会面对一个问题，我们获得的这些页若是给用户态用，虽然这些页中的数据都是随机产生的垃圾数据，不过，虽然概率很低，但是也有可能会包含某些敏感信息。所以，更谨慎些，我们可以将获得的页都填充为0。这会用到get_zeroed_page函数。看下它的源码：</li>
+</ul>
+<p><img src="https://pic2.zhimg.com/80/v2-961c9b8c5be9e8fa14bf2836864fda01_720w.webp" alt="img"></p>
+<ul>
+<li>这个函数也用到了__get_free_pages函数。只是加了一种叫做__GFP_ZERO的gfp_mask方式。所以，这些获得页的函数最终调用的都是alloc_pages函数。alloc_pages函数是获得页的核心函数。</li>
+</ul>
+<h3 id="6-1释放页"><a href="#6-1释放页" class="headerlink" title="6.1释放页"></a>6.1释放页</h3><ul>
+<li>当我们不再需要某些页时可以使用下面的函数释放它们：</li>
+</ul>
+<blockquote>
+<p>__free_pages（struct page *page, unsigned int order）<br>__free_page<br>free_pages<br>free_page（unsigned long addr, unsigned int order）</p>
+</blockquote>
+<ul>
+<li>这些接口都在linux&#x2F;gfp.h中。</li>
+<li>释放页的时候一定要小心谨慎，内核中操作不同于在用户态，若是将地址写错，或是order写错，那么都可能会导致系统的崩溃。若是在用户态进行非法操作，内核作为管理者还会阻止并发出警告，而内核是完全信赖自己的，若是在内核态中有非法操作，那么内核可能会挂掉的。</li>
+</ul>
+<h2 id="7、kmalloc与vmalloc"><a href="#7、kmalloc与vmalloc" class="headerlink" title="7、kmalloc与vmalloc"></a>7、kmalloc与vmalloc</h2><ul>
+<li>前面讲的那些接口都是以页为单位进行内存分配与释放的。而在实际中内核需要的内存不一定是整个页，可能只是以字节为单位的一片区域。这两个函数就是实现这样的目的。不同之处在于，kmalloc分配的是虚拟地址连续，物理地址也连续的一片区域，vmalloc分配的是虚拟地址连续，物理地址不一定连续的一片区域。这里依然需要特别注意的就是使用释放内存的函数kfree与vfree时一定要注意准确释放，否则会发生不可预测的严重后果。</li>
+</ul>
+<h2 id="8、slab层"><a href="#8、slab层" class="headerlink" title="8、slab层"></a>8、slab层</h2><ul>
+<li>分配和释放数据结构是内核中的基本操作。有些多次会用到的数据结构如果频繁分配内存必然导致效率低下。slab层就是用于解决频繁分配和释放数据结构的问题。为便于理解slab层的层次结构，请看下图</li>
+</ul>
+<p><img src="https://pic4.zhimg.com/80/v2-738dd737f55602e9c58986fd7d126083_720w.webp" alt="img"></p>
+<ul>
+<li>简单的说，物理内存中有多个高速缓存，每个高速缓存都是一个结构体类型，一个高速缓存中会有一个或多个slab，slab通常为一页，其中存放着数据结构类型的实例化对象。</li>
+<li>分配高速缓存的接口是struct kmem_cache kmem_cache_create (const char *name, size_t size, size_t align,unsigned long flags, void (*ctor)(void ))。</li>
+<li>它返回的是kmem_cache结构体。第一个参数是缓存的名字，第二个参数是高速缓存中每个对象的大小，第三个参数是slab内第一个对象的偏移量。剩下的就不细说。</li>
+<li>总之，这个接口函数为一个结构体分配了高速缓存，那么高速缓存有了，是不是就要为缓存中分配实例化的对象呢？这个接口是</li>
+<li>void *kmem_cache_alloc(struct kmem_cache *cachep, gfp_t flags)</li>
+<li>参数是kmem_cache结构体，也就是分配好的高速缓存，flags是标志位。</li>
+<li>抽象的介绍看着不直观， 我们看个具体的例子。之前我写过一个关于jbd2日志系统的博客，介绍过jbd2的模块初始化过程。其中就提到过jbd2在进行模块初始化的时候是会创建几个高速缓冲区的。如下：</li>
+</ul>
+<p><img src="https://pic4.zhimg.com/80/v2-a64cc625d9ff3764d6148df5eeb849eb_720w.webp" alt="img"></p>
+<p>我们看看第一个创建缓冲区的函数。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-8e1fda07352ff6af12cfe3cf02915a11_720w.webp" alt="img"></p>
+<ul>
+<li>首先是断言缓冲区一定为空的。然后用kmem_cache_create创建了两个缓冲区。两个高速缓冲区就这么创建好了。看下图</li>
+</ul>
+<p><img src="https://pic1.zhimg.com/80/v2-3f6442ce0e51e1567c3bc48a15c29e58_720w.webp" alt="img"></p>
+<ul>
+<li>这里用kmem_cache结构体，也就是jbd2_revoke_record_cache高速缓存实例化了一个对象。</li>
+</ul>
+<h2 id="9、总结"><a href="#9、总结" class="headerlink" title="9、总结"></a>9、总结</h2><ul>
+<li>内存管理的linux内核源码我只分析了一小部分，主要是总结了一下内核分配与回收内存的接口函数及其用法。</li>
+</ul>
+<hr>
+<p>版权声明：本文为知乎博主「Linux内核库」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文 出处链接及本声明。 </p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/503687069">https://zhuanlan.zhihu.com/p/503687069</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/">https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://pic4.zhimg.com/80/v2-77cb4c8e04103730a7ce581f149f60df_720w.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E4%B8%AD%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/" title="Linux中的内存管理机制"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127829473-f0b75808-a851-4bbe-8902-c785d29f80cc.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux中的内存管理机制</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98%E5%8E%9F%E7%90%86/" title="Linux内核共享内存原理"><img class="cover" src="https://pic4.zhimg.com/80/v2-3209cfa76d596e32532791573ef2973b_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux内核共享内存原理</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81%E8%83%8C%E6%99%AF"><span class="toc-number">1.</span> <span class="toc-text">1、背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81%E5%86%85%E6%A0%B8%E5%88%86%E9%85%8D%E5%86%85%E5%AD%98%E4%B8%8E%E7%94%A8%E6%88%B7%E6%80%81%E5%88%86%E9%85%8D%E5%86%85%E5%AD%98"><span class="toc-number">2.</span> <span class="toc-text">2、内核分配内存与用户态分配内存</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E9%A1%B5"><span class="toc-number">3.</span> <span class="toc-text">3、页</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%E3%80%81%E5%8C%BA"><span class="toc-number">4.</span> <span class="toc-text">4、区</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5%E3%80%81%E5%86%85%E6%A0%B8%E4%B8%AD%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E6%8E%A5%E5%8F%A3"><span class="toc-number">5.</span> <span class="toc-text">5、内核中内存分配接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6%E3%80%81%E8%8E%B7%E5%BE%97%E9%A1%B5%E4%B8%8E%E9%87%8A%E6%94%BE%E9%A1%B5"><span class="toc-number">6.</span> <span class="toc-text">6、获得页与释放页</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1%E9%87%8A%E6%94%BE%E9%A1%B5"><span class="toc-number">6.1.</span> <span class="toc-text">6.1释放页</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7%E3%80%81kmalloc%E4%B8%8Evmalloc"><span class="toc-number">7.</span> <span class="toc-text">7、kmalloc与vmalloc</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8%E3%80%81slab%E5%B1%82"><span class="toc-number">8.</span> <span class="toc-text">8、slab层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#9%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-number">9.</span> <span class="toc-text">9、总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

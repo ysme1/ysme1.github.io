@@ -1,7 +1,231 @@
-extends includes/layout.pug
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta property="og:type" content="website">
+<meta property="og:title" content="Blog">
+<meta property="og:url" content="https://vcloud.ysme.top/page/9/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
+<meta property="article:author" content="ysme">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/page/9/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Blog',
+  isPost: false,
+  isHome: true,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2024-04-05 21:18:37'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
 
-block content
-  include ./includes/mixins/post-ui.pug
-  #recent-posts.recent-posts
-    +postUI
-    include includes/pagination.pug
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="site-info"><h1 id="site-title">Blog</h1></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts" id="recent-posts"><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/" title="Linux内核网络协议栈计算机基础">Linux内核网络协议栈计算机基础</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="content">1、数据报文的封装与分用
+封装：当应用程序用 TCP 协议传送数据时，数据首先进入内核网络协议栈中，然后逐一通过 TCP&#x2F;IP 协议族的每层直到被当作一串比特流送入网络。对于每一层而言，对收到的数据都会封装相应的协议首部信息（有时还会增加尾部信息）。TCP 协议传给 IP 协议的数据单元称作 TCP 报文段，或简称 TCP 段（TCP segment）。IP 传给数据链路层的数据单元称作 IP 数据报（IP datagram），最后通过以太网传输的比特流称作帧（Frame）。
+
+分用：当目的主机收到一个以太网数据帧时，数据就开始从内核网络协议栈中由底向上升，同时去掉各层协议加上的报文首部。每层协议都会检查报文首部中的协议标识，以确定接收数据的上层协议。这个过程称作分用。
+
+2、Linux 内核网络协议栈2.1协议栈的分层结构
+逻辑抽象层级：
+
+物理层：主要提供各种连接的物理设备，如各种网卡，串口卡等。
+链路层：主要提供对物理层进行访问的各种接口卡的驱动程序，如网卡驱动等。
+网路层：是负责将网络数据包传输到正确的位置，最重要的网络层协议是 IP 协议，此外还有如 ICMP，AR ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E6%A0%88%E4%B8%BB%E8%A6%81%E7%BB%93%E6%9E%84%E4%BB%8B%E7%BB%8D/" title="Linux内核网络栈主要结构介绍">Linux内核网络栈主要结构介绍</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="content">1、socket（include\linux\Socket.h）该结构体socket 主要使用在BSD socket 层，是最上层的结构，在INET socket 层也会有涉及，但很少。
+12345678910111213141516171819202122232425262728/*  * Internal representation of a socket. not all the fields are used by  * all configurations:  *  *            server                client  * conn     client connected to server connected to  * iconn        list of clients     -unused-  *       awaiting connections  * wait     sleep for clients,  sleep for connection,  *          sleep for i/o           ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%8E%9F%E7%90%86%E2%80%94%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/" title="Linux操作系统原理—内核网络协议栈">Linux操作系统原理—内核网络协议栈</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="content">前言本文主要记录 Linux 内核网络协议栈的运行原理
+数据报文的封装与分用
+封装：当应用程序用 TCP 协议传送数据时，数据首先进入内核网络协议栈中，然后逐一通过 TCP&#x2F;IP 协议族的每层直到被当作一串比特流送入网络。对于每一层而言，对收到的数据都会封装相应的协议首部信息（有时还会增加尾部信息）。TCP 协议传给 IP 协议的数据单元称作 TCP 报文段，或简称 TCP 段（TCP segment）。IP 传给数据链路层的数据单元称作 IP 数据报（IP datagram），最后通过以太网传输的比特流称作帧（Frame）
+
+分用：当目的主机收到一个以太网数据帧时，数据就开始从内核网络协议栈中由底向上升，同时去掉各层协议加上的报文首部。每层协议都会检查报文首部中的协议标识，以确定接收数据的上层协议。这个过程称作分用。
+
+Linux 内核网络协议栈协议栈的全景图
+协议栈的分层结构
+
+逻辑抽象层级：
+物理层：主要提供各种连接的物理设备，如各种网卡，串口卡等。
+链路层：主要提供对物理层进行访问的各种接口卡的驱动程序，如网卡驱动等。
+网路层：是负责将网络数据包传输到正确的位置，最重 ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E7%BD%91%E7%BB%9C%E6%A0%88%E8%A7%A3%E5%89%96/" title="Linux网络栈解剖">Linux网络栈解剖</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="content">Linux®操作系统的最大功能之一是其网络栈。它最初是BSD协议栈的衍生物，并且组织良好，具有一组干净的接口。其接口范围从协议无关接口（如通用socket层接口或设备层）到各个网络协议的特定接口。本文从网络栈各层的角度探讨了Linux网络栈的结构，并探讨了其一些主要结构体。
+协议介绍虽然网络的正式介绍通常是指七层开放系统互连（OSI）模型，但是Linux中基本网络栈的介绍使用互联网模型的四层模型（参见图1）。
+
+网络栈的底部是链路层。链路层是指提供访问物理层的设备驱动程序（物理层可以是各种各样的介质，诸如串行链路或以太网设备）。链路层上面是网络层，负责将数据包引导到目的地。再上一层是传输层，它负责点对点通信（例如，在主机内，像ssh 127.0.0.1）。网络层管理主机之间的通信，传输层管理这些主机之上的端点(Endpoint)之间的通信。最后是应用层，即可以理解所传输的数据的语义层。
+
+核心网络架构现在讨论Linux网络栈的架构以及它如何实现Internet模型。图2提供了Linux网络栈的高级视图。顶部是定义网络栈用户的用户空间层或应用层。底部是提供与网络（串行或高速网络（如以太网 ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E7%BD%91%E7%BB%9C%E6%BA%90%E4%BB%A3%E7%A0%81%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E6%95%B4%E4%BD%93%E4%BB%8B%E7%BB%8D/" title="Linux网络源代码学习——整体介绍">Linux网络源代码学习——整体介绍</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="content">
+简介
+源码目录
+网络分层
+网络与文件操作
+数据结构
+sk_buff结构
+网络协议栈实现——数据struct 和 协议struct
+
+
+面向过程&#x2F;对象&#x2F;ioc
+其它
+
+以下来自linux1.2.13源码。linux的网络部分由网卡的驱动程序和kernel的网络协议栈部分组成，它们相互交互，完成数据的接收和发送。
+源码目录1234567891011121314151617linux-1.2.13||---net        |        |---protocols.c        |---socket.c        |---unix        |	     |        |	     |---proc.c        |	     |---sock.c        |	     |---unix.h        |---inet                |                |---af_inet.c                |---arp.h,arp.c                |---...          ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/%E6%B7%B1%E5%85%A5%E5%88%86%E6%9E%90Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AF%B9%E4%BA%8ETCP%20IP%E6%A0%88%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E4%B8%8E%E5%85%B7%E4%BD%93%E8%BF%87%E7%A8%8B/" title="深入分析Linux操作系统对于TCP IP栈的实现原理与具体过程">深入分析Linux操作系统对于TCP IP栈的实现原理与具体过程</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="content">一、Linux内核与网络体系结构在我们了解整个linux系统的网络体系结构之前，我们需要对整个网络体系调用，初始化和交互的位置，同时也是Linux操作系统中最为关键的一部分代码——-内核，有一个初步的认知。
+1、Linux内核的结构首先，从功能上，我们将linux内核划分为五个不同的部分，分别是
+（1）进程管理：主要负载CPU的访问控制，对CPU进行调度管理；（2）内存管理：主要提供对内存资源的访问控制；（3）文件系统：将硬盘的扇区组织成文件系统，实现文件读写等操作；（4）设备管理：用于控制所有的外部设备及控制器；（5）网洛：主要负责管理各种网络设备，并实现各种网络协议栈，最终实现通过网络连接其它系统的功能；
+每个部分分别处理一项明确的功能，又向其它各个部分提供自己所完成的功能，相互协调，共同完成操作系统的任务。
+Linux内核架构如下图所示：
+
+2、Linux网络子系统内核的基本架构我们已经了解清楚了，接下来我们重点关注到内核中的网络模块，观察在linux内核中，我们是如何实现及运用TCP&#x2F;IP协议，并完成网络的初始化及各个模块调用调度。我们将内核中的网络部分抽出，通过对比 ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/%E9%80%8F%E8%BF%87%E7%8E%B0%E8%B1%A1%E7%9C%8B%E6%9C%AC%E8%B4%A8%EF%BC%8C%E4%BB%8Elinux%E6%BA%90%E7%A0%81%E8%A7%92%E5%BA%A6%E7%9C%8Bepoll/" title="透过现象看本质，从linux源码角度看epoll">透过现象看本质，从linux源码角度看epoll</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="content">对于较多数量的文件描述符的监听无论是select还是poll系统调用都显得捉襟见肘，poll每次都需要将所有的文件描述符复制到内核，内核本身不会对这些文件描述符加以保存，这样的设计就导致了poll的效率的低下。
+而epoll则对此做了相应的改进，不是epoll_wait的时候才传入fd，而是通过epoll_ctl把所有fd传入内核，再一起”wait”，这就省掉了不必要的重复拷贝。
+其次，在 epoll_wait时，也不是把current轮流的加入fd对应的设备等待队列，而是在设备等待队列醒来时调用一个回调函数（当然，这就需要“唤醒回调”机制），把产生事件的fd归入一个链表，然后返回这个链表上的fd。另外，epoll机制实现了自己特有的文件系统eventpoll filesystem。
+
+epoll初始化当系统启动时，epoll会进行初始化操作
+1234567891011121314151617181920static int __init eventpoll_init(void)&#123;    mutex_init(&amp;epmutex);    /* Initialize t ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/%E9%A9%BE%E9%A9%ADLinux%E5%86%85%E9%83%A8%E7%BD%91%E7%BB%9C%E5%AE%9E%E7%8E%B0%E2%80%94%E2%80%94%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%20sk_buff/" title="驾驭Linux内部网络实现——关键数据结构 sk_buff">驾驭Linux内部网络实现——关键数据结构 sk_buff</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="content">背景在 Linux 的网络栈实现代码中，引用到了一些数据结构。要理解 Linux 内部的网络实现，需要先理清这些数据结构的作用。关键数据结构主要有两个: sk_buff 和 net_device。
+struct sk_buff: 是整个网络数据包存储的地方。这个数据结构会被网络协议栈中的各层用来储存它们的协议头、用户数据和其他它们完成工作需要的数据。
+struct net_device: 在 Linux 内核中，这个数据结构将用来代表网络设备。它会包含设备的硬件和软件配置信息。
+在 Linux 的网络实现中，核心数据结构还有struct sock, 它被用来储存 socket 的信息。但是 Socket 其实是内核为用户态程序提供的一组 Api, 用来访问内核的网络栈实现，所以它不属于内核内部的网络实现，也就不再这里介绍了。
+本文将先着重理解 sk_buff 数据结构。
+Socket Buffer: sk_buff
+sk_buff: 在本文中后面部分也会被称为缓冲区
+
+在 Linux 内核的网络代码中，这或许是最重要的数据结构，用来表示已接收或将要传输的数据。定义在 &lt;inclu ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/Linux%20%E6%80%BB%E7%BA%BF%E3%80%81%E8%AE%BE%E5%A4%87%E3%80%81%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%8E%A2%E7%A9%B6/" title="Linux 总线、设备、驱动模型的探究">Linux 总线、设备、驱动模型的探究</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">linux-doc 设备驱动</a></span></div><div class="content">设备驱动模型的需求总线、设备和驱动模型，如果把它们之间的关系比喻成生活中的例子是比较容易理解的。举个例子，充电墙壁插座安静的嵌入在墙面上，无论设备是电脑还是手机，插座都能依然不动的完成它的使命——充电，没有说为了满足各种设备充电而去更换插座的。其实这就是软件工程强调的高内聚、低耦合概念。
+所谓高内聚低耦合是模块内各元素联系越紧密就代表内聚性就越高，模块间联系越不紧密就代表耦合性低。所以高内聚、低耦合强调的就是内部要紧紧抱团。设备和驱动就是基于这种模型去实现彼此隔离不相干的。这里，有的读者就要问了，高内聚、低耦合的软件模型理解，可设备和驱动为什么要采用这种模型呢？没错，好问题。下面进入今天的话题——总线、设备和驱动模型的探究。
+设想一个叫 GITCHAT 的网卡，它需要接在 CPU 的内部总线上，需要地址总线、数据总线和控制总线，以及中断 pin 脚等。
+
+那么在 GITCHAT 的驱动里需要定义 GITCHAT 的基地址、中断号等信息。假设 GITCHAT 的地址为0x0001，中断号是 2，那么：
+1234567891011121314#define GITCHAT_BASE 0x0 ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/2023/01/15/linux-docs/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/Linux%20%E8%AE%BE%E5%A4%87%E5%92%8C%E9%A9%B1%E5%8A%A8%E7%9A%84%E7%9B%B8%E9%81%87/" title="Linux 设备和驱动的相遇">Linux 设备和驱动的相遇</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">linux-doc 设备驱动</a></span></div><div class="content">本文结合设备信息集合的详细讲解来认识一下设备和驱动是如何绑定的。所谓设备信息集合，就是根据不同的外设寻找各自的外设信息，我们知道一个完整的开发板有 CPU 和各种控制器（如 I2C 控制器、SPI 控制器、DMA 控制器等），CPU 和控制器可以统称为 SOC，除此之外还有各种外设 IP，如 LCD、HDMI、SD、CAMERA 等，如下图：
+
+我们看到一个开发板有很多的设备，这些设备是如何一层一层展开的呢？设备和驱动又是如何绑定的呢？我们带着这些疑问进入本节的主题。
+各级设备的展开内核启动的时候是一层一层展开地去寻找设备，设备树之所以叫设备树也是因为设备在内核中的结构就像树一样，从根部一层一层的向外展开，为了更形象的理解来看一张图：
+
+大的圆圈中就是我们常说的 soc，里面包括 CPU 和各种控制器 A、B、I2C、SPI，soc 外面接了外设 E 和 F。IP 外设有具体的总线，如 I2C 总线、SPI 总线，对应的 I2C 设备和 SPI 设备就挂在各自的总线上，但是在 soc 内部只有系统总线，是没有具体总线的。
+第一节中讲了总线、设备和驱动模型的原理，即任何驱动都是通过对应的 ...</div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/page/8/#content-inner"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/#content-inner">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/#content-inner">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/13/#content-inner">13</a><a class="extend next" rel="next" href="/page/10/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline">
+            <i class="fas fa-folder-open"></i>
+            <span>分类</span>
+            <a class="card-more-btn" href="/categories/" title="查看更多">
+    <i class="fas fa-angle-right"></i></a>
+            </div>
+            <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc/"><span class="card-category-list-name">linux-doc</span><span class="card-category-list-count">36</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/"><span class="card-category-list-name">linux-doc 内存管理</span><span class="card-category-list-count">19</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"><span class="card-category-list-name">linux-doc 文件系统</span><span class="card-category-list-count">14</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/"><span class="card-category-list-name">linux-doc 网络协议栈</span><span class="card-category-list-count">18</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/"><span class="card-category-list-name">linux-doc 设备驱动</span><span class="card-category-list-count">10</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/"><span class="card-category-list-name">linux-doc 进程管理</span><span class="card-category-list-count">30</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/"><span class="card-category-list-name">嵌入式</span><span class="card-category-list-count">2</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux/"><span class="card-category-list-name">linux</span><span class="card-category-list-count">2</span></a></li></ul></li>
+            </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/Linux%E5%BC%80%E5%8F%91/" style="font-size: 1.3em; color: #99a1ac">Linux开发</a> <a href="/tags/Linux/" style="font-size: 1.5em; color: #99a9bf">Linux</a> <a href="/tags/Git-%E5%B7%A5%E5%85%B7/" style="font-size: 1.1em; color: #999">Git 工具</a></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/03/"><span class="card-archive-list-date">三月 2023</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/01/"><span class="card-archive-list-date">一月 2023</span><span class="card-archive-list-count">129</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">130</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2024-04-05T13:18:36.630Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

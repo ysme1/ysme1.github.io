@@ -1,32 +1,216 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux操作系统学习之文件系统 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="一. 前言  本节开始将分析Linux的文件系统。Linux一切皆文件的思想可谓众所周知，而其文件系统又是字符设备、块设备、管道、进程间通信、网络等等的必备知识，因此其重要性可想而知。本文将先介绍文件系统基础知识，然后介绍最重要的结构体inode以及构建于其上的一层层的文件系统。 二. 文件系统基础知识  一切设计均是为了实现需求，因此我们从文件系统需要的基本功能来看看其该如何设计。首先，一个文件">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux操作系统学习之文件系统">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="一. 前言  本节开始将分析Linux的文件系统。Linux一切皆文件的思想可谓众所周知，而其文件系统又是字符设备、块设备、管道、进程间通信、网络等等的必备知识，因此其重要性可想而知。本文将先介绍文件系统基础知识，然后介绍最重要的结构体inode以及构建于其上的一层层的文件系统。 二. 文件系统基础知识  一切设计均是为了实现需求，因此我们从文件系统需要的基本功能来看看其该如何设计。首先，一个文件">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.421Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux操作系统学习之文件系统',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux操作系统学习之文件系统</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.421Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/">linux-doc 文件系统</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux操作系统学习之文件系统"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="一-前言"><a href="#一-前言" class="headerlink" title="一. 前言"></a>一. 前言</h2><p>  本节开始将分析Linux的文件系统。Linux一切皆文件的思想可谓众所周知，而其文件系统又是字符设备、块设备、管道、进程间通信、网络等等的必备知识，因此其重要性可想而知。本文将先介绍文件系统基础知识，然后介绍最重要的结构体inode以及构建于其上的一层层的文件系统。</p>
+<h2 id="二-文件系统基础知识"><a href="#二-文件系统基础知识" class="headerlink" title="二. 文件系统基础知识"></a>二. 文件系统基础知识</h2><p>  一切设计均是为了实现需求，因此我们从文件系统需要的基本功能来看看其该如何设计。首先，一个文件系统需要有以下基本要求</p>
+<ul>
+<li>文件需要让人易于读写，并避免名字冲突等</li>
+<li>文件需要易于查找、整理归类</li>
+<li>操作系统需要有文档记录功能以便管理</li>
+</ul>
+<p>  由此，文件系统设计了如下特性</p>
+<ul>
+<li>采取树形结构、文件夹设计</li>
+<li>对热点文件进行缓存，便于读写</li>
+<li>采用索引结构，便于查找分类</li>
+<li>维护一套数据结构用于记录哪些文档正在被哪些任务使用</li>
+</ul>
+<p>  依此基本设计，我们可以开始慢慢展开看看Linux博大而精神的文件系统。</p>
+<h2 id="三-inode结构体和文件系统"><a href="#三-inode结构体和文件系统" class="headerlink" title="三. inode结构体和文件系统"></a>三. inode结构体和文件系统</h2><h3 id="3-1-块存储的表示"><a href="#3-1-块存储的表示" class="headerlink" title="3.1 块存储的表示"></a>3.1 块存储的表示</h3><p>  硬盘中我们以块为存储单元，而在文件系统中，我们需要有一个存储块信息的基本结构体，这就是文件系统的基石inode，其源码如下。inode意为index node，即索引节点。从这个数据结构中我们可以看出，inode 里面有文件的读写权限 i_mode，属于哪个用户 i_uid，哪个组 i_gid，大小是多少 i_size_lo，占用多少个块 i_blocks_lo。另外，这里面还有几个与文件相关的时间。i_atime 即 access time，是最近一次访问文件的时间；i_ctime 即 change time，是最近一次更改 inode 的时间；i_mtime 即 modify time，是最近一次更改文件的时间。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Structure of an inode on the disk</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ext4_inode</span> &#123;</span></span><br><span class="line">    __le16	i_mode;		<span class="comment">/* File mode */</span></span><br><span class="line">    __le16	i_uid;		<span class="comment">/* Low 16 bits of Owner Uid */</span></span><br><span class="line">    __le32	i_size_lo;	<span class="comment">/* Size in bytes */</span></span><br><span class="line">    __le32	i_atime;	<span class="comment">/* Access time */</span></span><br><span class="line">    __le32	i_ctime;	<span class="comment">/* Inode Change time */</span></span><br><span class="line">    __le32	i_mtime;	<span class="comment">/* Modification time */</span></span><br><span class="line">    __le32	i_dtime;	<span class="comment">/* Deletion Time */</span></span><br><span class="line">    __le16	i_gid;		<span class="comment">/* Low 16 bits of Group Id */</span></span><br><span class="line">    __le16	i_links_count;	<span class="comment">/* Links count */</span></span><br><span class="line">    __le32	i_blocks_lo;	<span class="comment">/* Blocks count */</span></span><br><span class="line">    __le32	i_flags;	<span class="comment">/* File flags */</span></span><br><span class="line">......</span><br><span class="line">    __le32	i_block[EXT4_N_BLOCKS];<span class="comment">/* Pointers to blocks */</span></span><br><span class="line">......</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT4_NDIR_BLOCKS 12</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT4_IND_BLOCK EXT4_NDIR_BLOCKS</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT4_DIND_BLOCK (EXT4_IND_BLOCK + 1)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT4_TIND_BLOCK (EXT4_DIND_BLOCK + 1)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXT4_N_BLOCKS (EXT4_TIND_BLOCK + 1)</span></span><br></pre></td></tr></table></figure>
+<p>  这里我们需要重点关注以下i_block，该成员变量实际存储了文件内容的每一个块。在ext2和ext3格式的文件系统中，我们用前12个块存放对应的文件数据，每个块4KB，如果文件较大放不下，则需要使用后面几个间接存储块来保存数据，下图很形象的表示了其存储原理。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/128176692-6949236a-8cc8-41f1-8e59-ed73e1bf6686.png" alt="image"></p>
+<p> 该存储结构带来的问题是对于大型文件，我们需要多次调用才可以访问对应块的内容，因此访问速度较慢。为此，ext4提出了新的解决方案：Extents。简单的说，Extents以一个树形结构来连续存储文件块，从而提高访问速度，大致结构如下图所示。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/128176736-7ea6b328-674d-420f-b402-24f9e0199366.png" alt="image"></p>
+<p>主要结构体为节点ext4_extent_header，eh_entries 表示这个节点里面有多少项。这里的项分两种：</p>
+<ul>
+<li>如果是叶子节点，这一项会直接指向硬盘上的连续块的地址，我们称为数据节点 ext4_extent；</li>
+<li>如果是分支节点，这一项会指向下一层的分支节点或者叶子节点，我们称为索引节点 ext4_extent_idx。这两种类型的项的大小都是 12 个 byte。</li>
+</ul>
+<p>  如果文件不大，inode 里面的 i_block 中，可以放得下一个 ext4_extent_header 和 4 项 ext4_extent。所以这个时候，eh_depth 为 0，也即 inode 里面的就是叶子节点，树高度为 0。如果文件比较大，4 个 extent 放不下，就要分裂成为一棵树，eh_depth&gt;0 的节点就是索引节点，其中根节点深度最大，在 inode 中。最底层 eh_depth&#x3D;0 的是叶子节点。除了根节点，其他的节点都保存在一个块 4k 里面，4k 扣除 ext4_extent_header 的 12 个 byte，剩下的能够放 340 项，每个 extent 最大能表示 128MB 的数据，340 个 extent 会使你表示的文件达到 42.5GB。这已经非常大了，如果再大，我们可以增加树的深度。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Each block (leaves and indexes), even inode-stored has header.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ext4_extent_header</span> &#123;</span></span><br><span class="line">    __le16	eh_magic;	<span class="comment">/* probably will support different formats */</span></span><br><span class="line">    __le16	eh_entries;	<span class="comment">/* number of valid entries */</span></span><br><span class="line">    __le16	eh_max;		<span class="comment">/* capacity of store in entries */</span></span><br><span class="line">    __le16	eh_depth;	<span class="comment">/* has tree real underlying blocks? */</span></span><br><span class="line">    __le32	eh_generation;	<span class="comment">/* generation of the tree */</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * This is the extent on-disk structure.</span></span><br><span class="line"><span class="comment"> * It&#x27;s used at the bottom of the tree.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ext4_extent</span> &#123;</span></span><br><span class="line">    __le32  ee_block;  <span class="comment">/* first logical block extent covers */</span></span><br><span class="line">    __le16  ee_len;    <span class="comment">/* number of blocks covered by extent */</span></span><br><span class="line">    __le16  ee_start_hi;  <span class="comment">/* high 16 bits of physical block */</span></span><br><span class="line">    __le32  ee_start_lo;  <span class="comment">/* low 32 bits of physical block */</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * This is index on-disk structure.</span></span><br><span class="line"><span class="comment"> * It&#x27;s used at all the levels except the bottom.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ext4_extent_idx</span> &#123;</span></span><br><span class="line">    __le32  ei_block;  <span class="comment">/* index covers logical blocks from &#x27;block&#x27; */</span></span><br><span class="line">    __le32  ei_leaf_lo;  <span class="comment">/* pointer to the physical block of the next *</span></span><br><span class="line"><span class="comment">         * level. leaf or next index could be there */</span></span><br><span class="line">    __le16  ei_leaf_hi;  <span class="comment">/* high 16 bits of physical block */</span></span><br><span class="line">    __u16  ei_unused;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>  由此，我们可以通过inode来表示一系列的块，从而构成了一个文件。在硬盘上，通过一系列的inode，我们可以存储大量的文件。但是我们尚需要一种方式去存储和管理inode，这就是位图。同样的，我们会用块位图去管理块的信息。如下所示为创建inode的过程中对位图的访问，我们需要找出下一个0位所在，即空闲inode的位置。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">inode</span> *__<span class="title">ext4_new_inode</span>(<span class="title">handle_t</span> *<span class="title">handle</span>, <span class="keyword">struct</span> <span class="title">inode</span> *<span class="title">dir</span>,</span></span><br><span class="line"><span class="class">             <span class="title">umode_t</span> <span class="title">mode</span>, <span class="title">const</span> <span class="keyword">struct</span> <span class="title">qstr</span> *<span class="title">qstr</span>,</span></span><br><span class="line"><span class="class">             __<span class="title">u32</span> <span class="title">goal</span>, <span class="title">uid_t</span> *<span class="title">owner</span>, __<span class="title">u32</span> <span class="title">i_flags</span>,</span></span><br><span class="line"><span class="class">             <span class="title">int</span> <span class="title">handle_type</span>, <span class="title">unsigned</span> <span class="title">int</span> <span class="title">line_no</span>,</span></span><br><span class="line"><span class="class">             <span class="title">int</span> <span class="title">nblocks</span>)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">......</span><br><span class="line">    inode_bitmap_bh = ext4_read_inode_bitmap(sb, group);</span><br><span class="line">......</span><br><span class="line">    ino = ext4_find_next_zero_bit((<span class="type">unsigned</span> <span class="type">long</span> *)</span><br><span class="line">                inode_bitmap_bh-&gt;b_data,</span><br><span class="line">                EXT4_INODES_PER_GROUP(sb), ino);</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-2-文件系统的格式"><a href="#3-2-文件系统的格式" class="headerlink" title="3.2 文件系统的格式"></a>3.2 文件系统的格式</h3><p>  <br>  inode和块是文件系统的最小组成单元，在此之上还有多级系统，大致有如下这些：</p>
+<ul>
+<li>块组：存储一块数据的组成单元，数据结构为ext4_group_desc。这里面对于一个块组里的 inode 位图 bg_inode_bitmap_lo、块位图 bg_block_bitmap_lo、inode 列表 bg_inode_table_lo均有相应的定义。一个个块组，就基本构成了我们整个文件系统的结构。</li>
+<li>块组描述符表：多个块组的描述符构成的表</li>
+<li>超级块：对整个文件系统的情况进行描述，即ext4_super_block，存储全局信息，如整个文件系统一共有多少 inode：s_inodes_count；一共有多少块：s_blocks_count_lo，每个块组有多少 inode：s_inodes_per_group，每个块组有多少块：s_blocks_per_group 等。</li>
+<li>引导块：对于整个文件系统，我们需要预留一块区域作为引导区用于操作系统的启动，所以第一个块组的前面要留 1K，用于启动引导区。</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/87457873/128176778-85a9b208-b2a4-4da8-b410-fe9c02a45a3d.png" alt="image"></p>
+<p>超级块和块组描述符表都是全局信息，而且这些数据很重要。如果这些数据丢失了，整个文件系统都打不开了，这比一个文件的一个块损坏更严重。所以，这两部分我们都需要备份，但是采取不同的策略。</p>
+<ul>
+<li>默认策略：在每个块中均保存一份超级块和块组描述表的备份</li>
+<li>sparse_super策略：采取稀疏存储的方式，仅在块组索引为 0、3、5、7 的整数幂里存储。</li>
+<li>Meta Block Groups策略：我们将块组分为多个元块组（Meta Block Groups)，每个元块组里面的块组描述符表仅仅包括自己的内容，一个元块组包含 64 个块组，这样一个元块组中的块组描述符表最多 64 项。这种做法类似于merkle tree，可以在很大程度上优化空间。</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/87457873/128176801-a6849be4-829c-49da-b304-0139c87a290c.png" alt="image"></p>
+<h3 id="3-3-目录的存储格式"><a href="#3-3-目录的存储格式" class="headerlink" title="3.3 目录的存储格式"></a>3.3 目录的存储格式</h3><p>  为了便于文件的查找，我们必须要有索引，即文件目录。其实目录本身也是个文件，也有 inode。inode 里面也是指向一些块。和普通文件不同的是，普通文件的块里面保存的是文件数据，而目录文件的块里面保存的是目录里面一项一项的文件信息。这些信息我们称为 ext4_dir_entry。这里有两个版本，第二个版本 ext4_dir_entry_2 是将一个 16 位的 name_len，变成了一个 8 位的 name_len 和 8 位的 file_type。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ext4_dir_entry</span> &#123;</span></span><br><span class="line">    __le32  inode;      <span class="comment">/* Inode number */</span></span><br><span class="line">    __le16  rec_len;    <span class="comment">/* Directory entry length */</span></span><br><span class="line">    __le16  name_len;    <span class="comment">/* Name length */</span></span><br><span class="line">    <span class="type">char</span>  name[EXT4_NAME_LEN];  <span class="comment">/* File name */</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ext4_dir_entry_2</span> &#123;</span></span><br><span class="line">    __le32  inode;      <span class="comment">/* Inode number */</span></span><br><span class="line">    __le16  rec_len;    <span class="comment">/* Directory entry length */</span></span><br><span class="line">    __u8  name_len;    <span class="comment">/* Name length */</span></span><br><span class="line">    __u8  file_type;</span><br><span class="line">    <span class="type">char</span>  name[EXT4_NAME_LEN];  <span class="comment">/* File name */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>  在目录文件的块中，最简单的保存格式是列表，就是一项一项地将 ext4_dir_entry_2 列在哪里。每一项都会保存这个目录的下一级的文件的文件名和对应的 inode，通过这个 inode，就能找到真正的文件。第一项是“.”，表示当前目录，第二项是“…”，表示上一级目录，接下来就是一项一项的文件名和 inode。有时候，如果一个目录下面的文件太多的时候，我们想在这个目录下找一个文件，按照列表一个个去找太慢了，于是我们就添加了索引的模式。如果在 inode 中设置 EXT4_INDEX_FL 标志，则目录文件的块的组织形式将发生变化，变成了下面定义的这个样子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">dx_root</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fake_dirent</span> <span class="title">dot</span>;</span></span><br><span class="line">    <span class="type">char</span> dot_name[<span class="number">4</span>];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fake_dirent</span> <span class="title">dotdot</span>;</span></span><br><span class="line">    <span class="type">char</span> dotdot_name[<span class="number">4</span>];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dx_root_info</span></span></span><br><span class="line"><span class="class">    &#123;</span></span><br><span class="line">      __le32 reserved_zero;</span><br><span class="line">      u8 hash_version;</span><br><span class="line">      u8 info_length; <span class="comment">/* 8 */</span></span><br><span class="line">      u8 indirect_levels;</span><br><span class="line">      u8 unused_flags;</span><br><span class="line">    &#125;</span><br><span class="line">    info;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dx_entry</span>  <span class="title">entries</span>[0];</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>  当前目录和上级目录不变，文件列表改用dx_root_info结构体，其中最重要的成员变量是 indirect_levels，表示间接索引的层数。索引项由结构体 dx_entry表示，本质上是文件名的哈希值和数据块的一个映射关系。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">dx_entry</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    __le32 hash;</span><br><span class="line">    __le32 block;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>  如果我们要查找一个目录下面的文件名，可以通过名称取哈希。如果哈希能够匹配上，就说明这个文件的信息在相应的块里面。然后打开这个块，如果里面不再是索引，而是索引树的叶子节点的话，那里面还是 ext4_dir_entry_2 的列表，我们只要一项一项找文件名就行。通过索引树，我们可以将一个目录下面的 N 多的文件分散到很多的块里面，可以很快地进行查找。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/128176835-29dd1d86-94a8-4cc6-9582-31b4af06c082.png" alt="image"></p>
+<h3 id="3-4-软链接和硬链接的存储格式"><a href="#3-4-软链接和硬链接的存储格式" class="headerlink" title="3.4 软链接和硬链接的存储格式"></a>3.4 软链接和硬链接的存储格式</h3><p>  软链接和硬链接也是文件的一种，可以通过如下命令创建。ln -s 创建的是软链接，不带 -s 创建的是硬链接。</p>
+<pre><code>ln [参数][源文件或目录][目标文件或目录]
+</code></pre>
+<p> <br> 硬链接与原始文件共用一个 inode ，但是 inode 是不跨文件系统的，每个文件系统都有自己的 inode 列表，因而硬链接是没有办法跨文件系统的。而软链接不同，软链接相当于重新创建了一个文件。这个文件也有独立的 inode，只不过打开这个文件看里面内容的时候，内容指向另外的一个文件。这就很灵活了。我们可以跨文件系统，甚至目标文件被删除了链接文件也依然存在，只不过指向的文件找不到了而已。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/128176914-3227696e-4205-4a01-9e24-71c66f24bb82.png" alt="image"></p>
+<h2 id="四-总结"><a href="#四-总结" class="headerlink" title="四. 总结"></a>四. 总结</h2><p>  本文主要从文件系统的设计角度出发，逐步分析了inode和基于inode的ext4文件系统结构和主要组成部分，下面引用极客时间中的一张图作为总结。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/128176936-eea79fb9-6e04-46e4-a4d0-829e083506e0.png" alt="image"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/">https://vcloud.ysme.top/2023/01/15/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/Linux%E5%86%85%E6%A0%B8%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9F%A5%E8%AF%86%E5%A4%A7%E6%80%BB%E7%BB%93/" title="Linux内核文件系统知识大总结"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux内核文件系统知识大总结</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E8%AF%A6%E8%A7%A3/" title="Linux文件系统详解"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux文件系统详解</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">一. 前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="toc-number">2.</span> <span class="toc-text">二. 文件系统基础知识</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89-inode%E7%BB%93%E6%9E%84%E4%BD%93%E5%92%8C%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="toc-number">3.</span> <span class="toc-text">三. inode结构体和文件系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%9D%97%E5%AD%98%E5%82%A8%E7%9A%84%E8%A1%A8%E7%A4%BA"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 块存储的表示</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%A0%BC%E5%BC%8F"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 文件系统的格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E7%9B%AE%E5%BD%95%E7%9A%84%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 目录的存储格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-%E8%BD%AF%E9%93%BE%E6%8E%A5%E5%92%8C%E7%A1%AC%E9%93%BE%E6%8E%A5%E7%9A%84%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="toc-number">3.4.</span> <span class="toc-text">3.4 软链接和硬链接的存储格式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B-%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">四. 总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

@@ -1,32 +1,222 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux进程、线程、调度(四) | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="延续（三）中，调度器的其他内容：关于多核、分群、硬实时 多核下的负载均衡Linux 每个CPU可能有多个操作线程，每个核均运行的调度算法是 SCHED_FIFO, SCHED_RR，SCHED_NORMAL(CFS)等，每个核都“以劳动为乐”。 tips: 旧的调度算法是通过+&#x2F;- 5 nice值，来照顾IO型，惩罚CPU型。新的进程调度算法CFS，会根据ptime&#x2F;nice值">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux进程、线程、调度(四)">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="延续（三）中，调度器的其他内容：关于多核、分群、硬实时 多核下的负载均衡Linux 每个CPU可能有多个操作线程，每个核均运行的调度算法是 SCHED_FIFO, SCHED_RR，SCHED_NORMAL(CFS)等，每个核都“以劳动为乐”。 tips: 旧的调度算法是通过+&#x2F;- 5 nice值，来照顾IO型，惩罚CPU型。新的进程调度算法CFS，会根据ptime&#x2F;nice值">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127106385-d594a83f-d399-4cf3-b2a8-59a47c674e40.png">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.433Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/127106385-d594a83f-d399-4cf3-b2a8-59a47c674e40.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux进程、线程、调度(四)',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://user-images.githubusercontent.com/87457873/127106385-d594a83f-d399-4cf3-b2a8-59a47c674e40.png')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux进程、线程、调度(四)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.433Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux进程、线程、调度(四)"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>延续（三）中，调度器的其他内容：关于多核、分群、硬实时</p>
+<h3 id="多核下的负载均衡"><a href="#多核下的负载均衡" class="headerlink" title="多核下的负载均衡"></a>多核下的负载均衡</h3><p>Linux 每个CPU可能有多个操作线程，每个核均运行的调度算法是 SCHED_FIFO, SCHED_RR，SCHED_NORMAL(CFS)等，每个核都“以劳动为乐”。</p>
+<p>tips: 旧的调度算法是通过+&#x2F;- 5 nice值，来照顾IO型，惩罚CPU型。新的进程调度算法CFS，会根据ptime&#x2F;nice值进行红黑树匹配。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> *<span class="title function_">thread_fun</span><span class="params">(<span class="type">void</span> *param)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;thread pid:%d, tid:%lu\n&quot;</span>, getpid(), pthread_self());</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) ;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">pthread_t</span> tid1, tid2;</span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;main pid:%d, tid:%lu\n&quot;</span>, getpid(), pthread_self());</span><br><span class="line">    ret = pthread_create(&amp;tid1, <span class="literal">NULL</span>, thread_fun, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (ret == <span class="number">-1</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;cannot create new thread&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ret = pthread_create(&amp;tid2, <span class="literal">NULL</span>, thread_fun, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (ret == <span class="number">-1</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;cannot create new thread&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (pthread_join(tid1, <span class="literal">NULL</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;call pthread_join function fail&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (pthread_join(tid2, <span class="literal">NULL</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;call pthread_join function fail&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="number">1.</span>编译two-loops.c, gcc two-loops.c -pthread，运行:</span><br><span class="line">$ time ./a.out </span><br><span class="line">main pid:<span class="number">14958</span>, tid:<span class="number">3075917568</span></span><br><span class="line">thread pid:<span class="number">14958</span>, tid:<span class="number">3067521856</span></span><br><span class="line">thread pid:<span class="number">14958</span>, tid:<span class="number">3075914560</span></span><br><span class="line">^C</span><br><span class="line"></span><br><span class="line">real	<span class="number">1</span>m10<span class="number">.050</span>s</span><br><span class="line">user	<span class="number">2</span>m20<span class="number">.016</span>s</span><br><span class="line">sys	<span class="number">0</span>m0<span class="number">.004</span>s </span><br><span class="line"></span><br><span class="line">* 我们得到时间分布比例，理解<span class="number">2</span>个死循环被均分到<span class="number">2</span>个core。</span><br><span class="line">* (user+sys)/<span class="number">2</span>=real ，原因：两个线程被Linux自动分配到两个核上，但是两个线程可能随机分配到任意CPU上运行。</span><br></pre></td></tr></table></figure>
+<ul>
+<li>RT进程（task_struct）： 保证N个优先级最高的RT分布到N个核<br>pull_rt_task()<br><br>push_rt_task()</li>
+</ul>
+<p>RT的进程，更多强调的是实时性，因为优先级大于Normal 进程。例如，4核CPU，有8个RT的进程，会优先找其中4个优先级最高的让他们运行到4个核上。</p>
+<ul>
+<li>普通进程：<br>周期性负载均衡： 当操作系统的时钟节拍来临，会查这个核是否空闲，旁边一个核是否忙，当旁边的核忙到一定程度，会自动从旁边较忙的CPU核上，pull task过来。<br><br>IDLE时负载均衡： 当CPU IDLE为0，会从旁边的CPU核上pull task。<br><br>fork和exec时负载均衡：fork时会创建一个新的task_struct，会把这个task_struct放在最空闲的核上运行。<br><br>总结：每个核通过push&#x2F;pull task来实现任务的负载均衡。所以，Linux上运行的多线程，可能会“动态”的出现在各个不同的CPU核上。</li>
+</ul>
+<h3 id="设置-CPU-task-affinity"><a href="#设置-CPU-task-affinity" class="headerlink" title="设置 CPU task affinity"></a>设置 CPU task affinity</h3><p>程序员通过设置 affinity，即设置某个线程跟哪个CPU更亲和。<br><br>内核API提供了两个系统调用，让用户可以修改位掩码或查看当前的位掩码。<br><br>而该位掩码 , 正是对应 进程task_struct数据结构中的cpus_allowed属性，与cpu的每个逻辑核心一一对应。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127106385-d594a83f-d399-4cf3-b2a8-59a47c674e40.png" alt="image"></p>
+<p>上图 np代表 none posix，比如电脑有7个核，但线程只想在第1、2个核上运行。就把cpu_set_t设置为 0x6，代表 110。如果线程只想在第2个核上，就设置为 0x4。</p>
+<p>还可以通过 taskset工具 设置进程的线程在哪个CPU上跑。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">2. 编译two-loops.c, gcc two-loops.c -pthread，运行一份</span><br><span class="line">top发现其CPU利用率接近200%</span><br><span class="line"></span><br><span class="line">把它的所有线程affinity设置为01, 02, 03后分辨来看看CPU利用率</span><br><span class="line"></span><br><span class="line"> taskset -a -p 02 进程PID</span><br><span class="line"> taskset -a -p 01 进程PID</span><br><span class="line"> taskset -a -p 03 进程PID</span><br><span class="line"> </span><br><span class="line">前两次设置后，a.out CPU利用率应该接近100%，最后一次接近200%</span><br><span class="line"></span><br><span class="line">03代表，第1个或第2个CPU核上运行。</span><br><span class="line">-a 代表 进程下的所有线程。</span><br><span class="line"></span><br><span class="line">运行结果：前两次，a.out程序CPU的使用率均为100%，第3次，a.out程序CPU的使用率为200%。</span><br></pre></td></tr></table></figure>
+
+<h3 id="中断负载均衡、RPS软中断负载均衡"><a href="#中断负载均衡、RPS软中断负载均衡" class="headerlink" title="中断负载均衡、RPS软中断负载均衡"></a>中断负载均衡、RPS软中断负载均衡</h3><p>IRQ affinity</p>
+<p>中断也可以负载均衡，Linux每个中断号下面smp_affinity。</p>
+<ul>
+<li>分配IRQ到某个CPU<br>[root@boss ~]# echo 01 &gt; &#x2F;proc&#x2F;irq&#x2F;145&#x2F;smp_affinity<br><br>[root@boss ~]# cat &#x2F;proc&#x2F;irq&#x2F;145&#x2F;smp_affinity<br><br>00000001</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/87457873/127106458-2e0bf69f-ae1a-4c82-bb01-7e90704b2d7b.png" alt="image"></p>
+<p>比如上图，有个网卡有4个收发队列，分别是 74，75，76，77。把4个网卡收发队列的中断分别设置为01，02，04，08，那么这个网卡4个队列的中断就被均分到4个核上。</p>
+<p>但是有些中断不能被负载均衡。比如，一张网卡只有1个队列，8个核。队列上的中断就发到1个核上。网卡中断里，CPU0收到一个中断irq之后，如果在这个irq中调用了soft irq，那么这个soft irq也会运行在CPU0。因为CPU0上中断中调度的软中断，也是会运行在CPU0上。那么这个核上 ，中断的负载和 软中断的负载 均很重，因为TCP&#x2F;IP协议栈的处理，都丢到软中断中，此时网卡的吞吐率肯定上不来。</p>
+<p>此时，出现了RPS补丁，实现 多核间的softIRQ 负载均衡</p>
+<ul>
+<li>RPS将包处理负载均衡到多个CPU</li>
+</ul>
+<p>[root@whale<del>]# echo fffe &gt; &#x2F;sys&#x2F;class&#x2F;net&#x2F;eth1&#x2F;queues&#x2F;rx-0&#x2F;rps_cpus<br><br>fffe<br><br>[root@whale</del>]# watch -d “cat &#x2F;proc&#x2F;softirqs |grep NET_RX”</p>
+<p>每个网卡的队列下面，均有一个文件 rps_cpus， 如果echo fffe到这个文件，就会让某个核上的软中断，负载均衡到0～15个核上。一般来说，CPU0上收到的中断，软中断都会在CPU0。但是CPU0会把收到中断的软中断派发到其他核上，这样其他核也可以处理TCP&#x2F;IP收到的包处理的工作。</p>
+<h3 id="cgroups和CPU资源分群分配"><a href="#cgroups和CPU资源分群分配" class="headerlink" title="cgroups和CPU资源分群分配"></a>cgroups和CPU资源分群分配</h3><p>比如，有两个用户在OS上执行编译程序，用户A创建1000个线程，用户B创建32个线程。如果这1010个线程nice值均为0，那么按照CFS的调度算法，用户A可以拿到1000&#x2F;1032的cpu时间片，用户B只能拿到 32&#x2F;1032的cpu时间片。</p>
+<p>此时，Linux通过分层调度，把某些task_struct 加到cgroup A，另外的task_struct加到cgroup B , cgroup A和B 先按照某个权重进行CPU的分配，再到不同cgroup里面，按照调度算法进行调度。</p>
+<ul>
+<li>定义不同cgroup CPU分享的share –&gt; cpu.shares</li>
+<li>定义某个cgroup在某个周期里面最多跑多久 –&gt; cpu.cfs_quota_us 和 cpu.cfs_period_us</li>
+</ul>
+<p>cpu.cfs_period_us：默认100000 us&#x3D; 100ms<br><br>cpu.cfs_quota_us：<br></p>
+<p>demo</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">3.编译two-loops.c, gcc two-loops.c -pthread，运行三份</span><br><span class="line">用top观察CPU利用率，大概各自66%。</span><br><span class="line">创建A,B两个cgroup</span><br><span class="line"></span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu$ sudo mkdir A</span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu$ sudo mkdir B</span><br><span class="line"></span><br><span class="line">把3个a.out中的2个加到A，1个加到B。</span><br><span class="line"></span><br><span class="line">此时，发现两个cgroup下的cpu.shares 相同，均为1024.</span><br><span class="line"></span><br><span class="line">然后把两个进程下的所有线程都加入到cgroupA，如果只想加某个线程，则echo pid到tasks文件。</span><br><span class="line"></span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu/A$ sudo sh -c &#x27;echo 14995 &gt; cgroup.procs&#x27;</span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu/A$ sudo sh -c &#x27;echo 14998 &gt; cgroup.procs&#x27;</span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu/A$ cd ..</span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu$ cd B/</span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu/B$ sudo sh -c &#x27;echo 15001 &gt; cgroup.procs&#x27;</span><br><span class="line"></span><br><span class="line">这次发现3个a.out的CPU利用率大概是50%, 50%, 100%。</span><br><span class="line"></span><br><span class="line">杀掉第2个和第3个a.out，然后调整cgroup A的quota，观察14995的CPU利用率变化</span><br><span class="line"></span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu/B$ kill 14998</span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu/B$ kill 15001</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">设置A group的quota为20ms：</span><br><span class="line"></span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu/A$ sudo sh -c &#x27;echo 20000 &gt; cpu.cfs_quota_us&#x27;</span><br><span class="line">  </span><br><span class="line">设置A group的quota为40ms：</span><br><span class="line"></span><br><span class="line">  root@whale:/sys/fs/cgroup/cpu/A$ sudo sh -c &#x27;echo 40000 &gt; cpu.cfs_quota_us&#x27;</span><br><span class="line">  </span><br><span class="line">  </span><br><span class="line">以上各自情况，用top观察a.out CPU利用率。</span><br><span class="line"></span><br><span class="line">  当设置为 20000 us = 20ms , CPU利用率立即变为20%；  当设置为 40000 us = 40ms ,CPU利用率立即变为40%</span><br><span class="line">  当设置为 120000 us 时， CPU利用率立即变为120%。quota可以大于period，因为此时 CPU为多核，100ms里面可以运行200ms，该值最大为CPU核数* period。</span><br></pre></td></tr></table></figure>
+
+<h3 id="Android和Docker对cgroup的采用"><a href="#Android和Docker对cgroup的采用" class="headerlink" title="Android和Docker对cgroup的采用"></a>Android和Docker对cgroup的采用</h3><ul>
+<li>apps, bg_non_interactive<br>安卓把应用分为app group ，和 bg_non_interactive 背景非交互的group，<br><br>并且bg_non_interactive的group权重非常低，这样做的好处是，让桌面运行的程序可以更大程度的抢到CPU。<br></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Shares：</span><br><span class="line">apps: cpu.shares = 1024</span><br><span class="line">bg_non_interactive: cpu.shares = 52</span><br><span class="line"></span><br><span class="line">Quota:</span><br><span class="line">apps:</span><br><span class="line">cpu.rt_period_us: 1000000 cpu.rt_runtime_us: 800000</span><br><span class="line">bg_non_interactive: </span><br><span class="line">cpu.rt_period_us: 1000000 cpu.rt_runtime_us: 700000</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>docker run时也可以指定 –cpu-quota 、–cpu-period、 –cpu-shares参数</li>
+</ul>
+<p>Linux 通过Cgroup控制多个容器在运行时，如何分享CPU。这些会在之后的Cgroups详解中详细阐述。</p>
+<p>比如说A容器配置的–cpu-period&#x3D;100000 –cpu-quota&#x3D;50000，那么A容器就可以最多使用50%个CPU资源，如果配置的–cpu-quota&#x3D;200000，那就可以使用200%个CPU资源。所有对采集到的CPU used的绝对值没有意义，还需要参考上限。还是这个例子–cpu-period&#x3D;100000 –cpu-quota&#x3D;50000，如果容器试图在0.1秒内使用超过0.05秒，则throttled就会触发，所有throttled的count和time是衡量CPU是否达到瓶颈的最直观指标。</p>
+<h3 id="Linux为什么不是硬实时的"><a href="#Linux为什么不是硬实时的" class="headerlink" title="Linux为什么不是硬实时的"></a>Linux为什么不是硬实时的</h3><p>如何理解硬实时？并不代表越快越好，硬实时最主要的意思是：可预期。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127106738-b19f18a4-703a-45aa-87b1-a06a4275cb46.png" alt="image"></p>
+<p>如上图，在一个硬实时操作系统中，当唤醒一个高优先级的RT任务，从“你唤醒它”到“它可以被调度”的这段时间，是不会超过截止期限的。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">4.cyclictest -p 99 -t1 -n</span><br><span class="line">观察min, max, act, avg时间，分析hard realtime问题</span><br><span class="line">加到系统负载，运行一些硬盘访问，狂收发包的程序，观察cyclictest的max变化</span><br><span class="line">延迟具有不确定性，最大值可能随着load改变而改变。</span><br></pre></td></tr></table></figure>
+
+<p>Kernel 越发支持抢占</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127106783-7d364233-80be-4aea-989d-ea9a124232de.png" alt="image"></p>
+<p>Linux为什么不是硬实时？</p>
+<p>Linux运行时，CPU时间主要花在“四类区间”上，包括中断、软中断、进程上下文（spin_lock），进程上下文（可调度）。<br><br>其中 进程上下文陷入内核拿到spin_lock，此时拿到spin_lock的CPU核上的调度器就会被关掉，该核就无法进行调度。<br></p>
+<p>程序运行在只有 进程上下文（可调度）这个区间可以调度，其他区间都不能被调度。</p>
+<p>中断是指 进程收到硬件的中断信号，就算在中断里唤醒一个高优先级的RT，也无法调度。<br><br>软中断和中断的唯一区别是，软中断中可以再中断，但中断中不能再中断。Linux 2.6.32之后完全不允许中断嵌套。软中断里唤醒一个高优先级的RT，也无法调度。<br></p>
+<p>如下图，一个绿色的普通进程在T1时刻持有spin_lock进入一个critical section（该核调度被关），绿色进程T2时刻被中断打断，而后T3时刻IRQ1里面唤醒了红色的RT进程（如果是硬实时RTOS，这个时候RT进程应该能抢入），之后IRQ1后又执行了IRQ2，到T4时刻IRQ1和IRQ2都结束了，红色RT进程仍然不能执行（因为绿色进程还在spin_lock里面），直到T5时刻，普通进程释放spin_lock后，红色RT进程才抢入。从T3到T5要多久，鬼都不知道，这样就无法满足硬实时系统的“可预期”延迟性，因此Linux不是硬实时操作系统。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127106839-4bbdd672-43ba-4642-a2a6-96092d56cb0d.png" alt="image"></p>
+<h3 id="preempt-rt对Linux实时性的改造"><a href="#preempt-rt对Linux实时性的改造" class="headerlink" title="preempt-rt对Linux实时性的改造"></a>preempt-rt对Linux实时性的改造</h3><p><img src="https://user-images.githubusercontent.com/87457873/127106866-dc49efc2-0a54-434c-8b06-30e8a5d09e97.png" alt="image"></p>
+<p>Linux的preempt-rt补丁试图把中断、软中断线程化，变成可以被抢占的区间，而把会关本核调度器的spin_lock替换为可以调度的mutex，它实现了在T3时刻唤醒RT进程的时刻，RT进程可以立即抢占调度进入的目标，避免了T3-T5之间延迟的非确定性。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/">https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://user-images.githubusercontent.com/87457873/127106385-d594a83f-d399-4cf3-b2a8-59a47c674e40.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/" title="Linux进程、线程、调度(二)"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127104795-7ec16416-cbee-4022-a36d-84de40a5e229.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux进程、线程、调度(二)</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/" title="Linux进程状态总结"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127657434-bfca795a-6388-486a-bae9-f66d4eff8b9e.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux进程状态总结</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A%E6%A0%B8%E4%B8%8B%E7%9A%84%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="toc-number">1.</span> <span class="toc-text">多核下的负载均衡</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%BE%E7%BD%AE-CPU-task-affinity"><span class="toc-number">2.</span> <span class="toc-text">设置 CPU task affinity</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%AD%E6%96%AD%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E3%80%81RPS%E8%BD%AF%E4%B8%AD%E6%96%AD%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="toc-number">3.</span> <span class="toc-text">中断负载均衡、RPS软中断负载均衡</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#cgroups%E5%92%8CCPU%E8%B5%84%E6%BA%90%E5%88%86%E7%BE%A4%E5%88%86%E9%85%8D"><span class="toc-number">4.</span> <span class="toc-text">cgroups和CPU资源分群分配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Android%E5%92%8CDocker%E5%AF%B9cgroup%E7%9A%84%E9%87%87%E7%94%A8"><span class="toc-number">5.</span> <span class="toc-text">Android和Docker对cgroup的采用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Linux%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E6%98%AF%E7%A1%AC%E5%AE%9E%E6%97%B6%E7%9A%84"><span class="toc-number">6.</span> <span class="toc-text">Linux为什么不是硬实时的</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#preempt-rt%E5%AF%B9Linux%E5%AE%9E%E6%97%B6%E6%80%A7%E7%9A%84%E6%94%B9%E9%80%A0"><span class="toc-number">7.</span> <span class="toc-text">preempt-rt对Linux实时性的改造</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

@@ -1,32 +1,312 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux内核网络中断下半部处理 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="网卡接收和发过数据在 Linux 内核中的处理过程，我们先来回顾一下网卡接收和发送数据的过程，如 图1 所示：  图1 网卡接收和发送数据过程  如上图所示，当网卡接收到从网络中发送过来的数据后，网卡会向 CPU 发起一个硬件中断。当 CPU 接收到网卡的硬件中断后，便会调用网卡驱动向内核注册的中断处理服务，如 NS8390网卡驱动 会向内核注册 ei_interrupt 中断服务。 由于在处理硬">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核网络中断下半部处理">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%A4%84%E7%90%86/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="网卡接收和发过数据在 Linux 内核中的处理过程，我们先来回顾一下网卡接收和发送数据的过程，如 图1 所示：  图1 网卡接收和发送数据过程  如上图所示，当网卡接收到从网络中发送过来的数据后，网卡会向 CPU 发起一个硬件中断。当 CPU 接收到网卡的硬件中断后，便会调用网卡驱动向内核注册的中断处理服务，如 NS8390网卡驱动 会向内核注册 ei_interrupt 中断服务。 由于在处理硬">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.421Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%A4%84%E7%90%86/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux内核网络中断下半部处理',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux内核网络中断下半部处理</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.421Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux内核网络中断下半部处理"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>网卡接收和发过数据在 Linux 内核中的处理过程，我们先来回顾一下网卡接收和发送数据的过程，如 图1 所示：</p>
+<p><img src="https://pic1.zhimg.com/80/v2-fa1a3a8338e1d40aed2ef2a1ddcb016c_720w.webp" alt="img"></p>
+<p>图1 网卡接收和发送数据过程</p>
+<ul>
+<li>如上图所示，当网卡接收到从网络中发送过来的数据后，网卡会向 CPU 发起一个硬件中断。当 CPU 接收到网卡的硬件中断后，便会调用网卡驱动向内核注册的中断处理服务，如 <code>NS8390网卡驱动</code> 会向内核注册 <code>ei_interrupt</code> 中断服务。</li>
+<li>由于在处理硬件中断服务时会关闭硬件中断，所以在处理硬件中断服务的过程中，如果发生了其他的硬件中断，也不能得到有效的处理，从而导致硬件中断丢失的情况。</li>
+<li>为了避免这种情况出现，Linux 内核把中断处理分为：<strong>中断上半部</strong> 和 <strong>中断下半部</strong>，上半部在关闭中断的情况下进行，而下半部在打开中断的情况下进行。</li>
+<li>由于中断上半部在关闭中断的情况下进行，所以必须要快速完成，从而避免中断丢失的情况。而中断下半部处理是在打开中断的情况下进行的，所以可以慢慢进行。</li>
+<li>一般来说，网卡驱动向内核注册的中断处理服务属于 <strong>中断上半部</strong>，如前面介绍的 <code>NS8390网卡驱动</code> 注册的 <code>ei_interrupt</code> 中断处理服务，而本文主要分析网卡 <strong>中断下半部</strong> 的处理。</li>
+</ul>
+<h2 id="1、数据包上送"><a href="#1、数据包上送" class="headerlink" title="1、数据包上送"></a>1、<strong>数据包上送</strong></h2><ul>
+<li>在上一篇文章中，我们介绍过 <code>ei_interrupt</code> 中断处理服务首先会创建一个 <code>sk_buff</code> 数据包对象保存从网卡中接收到的数据，然后调用 <code>netif_rx</code> 函数将数据包上送给网络协议栈处理。</li>
+<li>我们先来分析一下 <code>netif_rx</code> 函数的实现：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">int netif_rx(struct sk_buff *skb)</span><br><span class="line">&#123;</span><br><span class="line">     int this_cpu = smp_processor_id(); // 获取当前运行的CPU</span><br><span class="line">     struct softnet_data *queue;</span><br><span class="line">     unsigned long flags;</span><br><span class="line">     ...</span><br><span class="line">     queue = &amp;softnet_data[this_cpu]; // 获取当前CPU的待处理的数据包队列</span><br><span class="line"> </span><br><span class="line">     local_irq_save(flags); // 关闭本地硬件中断</span><br><span class="line"> </span><br><span class="line">     // 如果待处理队列的数据包数量没超出限制</span><br><span class="line">     if (queue-&gt;input_pkt_queue.qlen &lt;= netdev_max_backlog) &#123;</span><br><span class="line">         if (queue-&gt;input_pkt_queue.qlen) &#123;</span><br><span class="line">             ...</span><br><span class="line"> enqueue:</span><br><span class="line">             dev_hold(skb-&gt;dev); // 增加网卡设备的引用计数器</span><br><span class="line">             __skb_queue_tail(&amp;queue-&gt;input_pkt_queue, skb); // 将数据包添加到待处理队列中</span><br><span class="line">             __cpu_raise_softirq(this_cpu, NET_RX_SOFTIRQ);  // 启动网络中断下半部处理</span><br><span class="line">             local_irq_restore(flags);</span><br><span class="line"> </span><br><span class="line">             return softnet_data[this_cpu].cng_level;</span><br><span class="line">         &#125;</span><br><span class="line">         ...</span><br><span class="line">         goto enqueue;</span><br><span class="line">     &#125;</span><br><span class="line">     ...</span><br><span class="line"> drop:</span><br><span class="line">     local_irq_restore(flags); // 打开本地硬件中断</span><br><span class="line">     kfree_skb(skb);           // 释放数据包对象</span><br><span class="line">     return NET_RX_DROP;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>netif_rx</code> 函数的参数就是要上送给网络协议栈的数据包，<code>netif_rx</code> 函数主要完成以下几个工作：</li>
+</ul>
+<ol>
+<li>获取当前 CPU 的待处理的数据包队列，在 Linux 内核初始化时，会为每个 CPU 创建一个待处理数据包队列，用于存放从网卡中读取到网络数据包。</li>
+<li>如果待处理队列的数据包数量没超出 <code>netdev_max_backlog</code> 设置的限制，那么调用 <code>__skb_queue_tail</code> 函数把数据包添加到待处理队列中，并且调用 <code>__cpu_raise_softirq</code> 函数启动网络中断下半部处理。</li>
+<li>如果待处理队列的数据包数量超出 <code>netdev_max_backlog</code> 设置的限制，那么就把数据包释放。</li>
+</ol>
+<ul>
+<li><code>netif_rx</code> 函数的处理过程如 图2 所示：</li>
+</ul>
+<p><img src="https://pic4.zhimg.com/80/v2-9f87cfe85f20c5650cf38a5b0dc78d0f_720w.webp" alt="img"></p>
+<p>图2 netif_rx 函数的处理过程</p>
+<ul>
+<li>所以，<code>netif_rx</code> 函数的主要工作就是把接收到的数据包添加到待处理队列中，并且启动网络中断下半部处理。</li>
+<li>对于 Linux 内核的中断处理机制可以参考我们之前的文章 <a href="https://link.zhihu.com/?target=https://mp.weixin.qq.com/s?__biz=MzA3NzYzODg1OA==&mid=2648464225&idx=1&sn=7cc26da1f9312e5abc00751c7d65805b&scene=21%23wechat_redirect">Linux中断处理</a>，这里就不详细介绍了。在本文中，我们只需要知道网络中断下半部处理例程为 <code>net_rx_action</code> 函数即可。</li>
+</ul>
+<h2 id="2、网络中断下半部处理"><a href="#2、网络中断下半部处理" class="headerlink" title="2、网络中断下半部处理"></a>2、<strong>网络中断下半部处理</strong></h2><ul>
+<li>上面说了，网络中断下半部处理例程为 <code>net_rx_action</code> 函数，所以我们主要分析 <code>net_rx_action</code> 函数的实现：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">static void net_rx_action(struct softirq_action *h)</span><br><span class="line">&#123;</span><br><span class="line">     int this_cpu = smp_processor_id();                    // 当前运行的CPU</span><br><span class="line">     struct softnet_data *queue = &amp;softnet_data[this_cpu]; // 当前CPU对于的待处理数据包队列</span><br><span class="line">     ...</span><br><span class="line">     for (;;) &#123;</span><br><span class="line">         struct sk_buff *skb;</span><br><span class="line"> </span><br><span class="line">         local_irq_disable();</span><br><span class="line">         skb = __skb_dequeue(&amp;queue-&gt;input_pkt_queue); // 从待处理数据包队列中获取一个数据包</span><br><span class="line">         local_irq_enable();</span><br><span class="line"> </span><br><span class="line">         if (skb == NULL)</span><br><span class="line">             break;</span><br><span class="line"> </span><br><span class="line">         ...</span><br><span class="line">         &#123;</span><br><span class="line">             struct packet_type *ptype, *pt_prev;</span><br><span class="line">             unsigned short type = skb-&gt;protocol; // 网络层协议类型</span><br><span class="line"> </span><br><span class="line">             pt_prev = NULL;</span><br><span class="line">             ...</span><br><span class="line">             // 使用网络层协议处理接口处理数据包</span><br><span class="line">             for (ptype = ptype_base[ntohs(type)&amp;15]; ptype; ptype = ptype-&gt;next) &#123;</span><br><span class="line">                 if (ptype-&gt;type == type</span><br><span class="line">                     &amp;&amp; (!ptype-&gt;dev || ptype-&gt;dev == skb-&gt;dev))</span><br><span class="line">                 &#123;</span><br><span class="line">                     if (pt_prev) &#123;</span><br><span class="line">                         atomic_inc(&amp;skb-&gt;users);</span><br><span class="line">                         // 如处理IP协议数据包的 ip_rcv() 函数</span><br><span class="line">                         pt_prev-&gt;func(skb, skb-&gt;dev, pt_prev);</span><br><span class="line">                     &#125;</span><br><span class="line">                     pt_prev = ptype;</span><br><span class="line">                 &#125;</span><br><span class="line">             &#125;</span><br><span class="line"> </span><br><span class="line">             if (pt_prev) &#123;</span><br><span class="line">                 // 如处理IP协议数据包的 ip_rcv() 函数</span><br><span class="line">                 pt_prev-&gt;func(skb, skb-&gt;dev, pt_prev);</span><br><span class="line">             &#125; else</span><br><span class="line">                 kfree_skb(skb);</span><br><span class="line">         &#125;</span><br><span class="line">         ...</span><br><span class="line">     &#125;</span><br><span class="line">     ...</span><br><span class="line">     return;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>net_rx_action</code> 函数主要完成以下几个工作：</li>
+</ul>
+<ol>
+<li>从待处理数据包队列中获取一个数据包，如果数据包为空，那么就退出网络中断下半部。<br>如果获取的数据包不为空，那么就从数据包的以太网头部中获取到网络层协议的类型。然后根据网络层协议类型从 <code>ptype_base</code> 数组中获取数据处理接口，再通过此数据处理接口来处理数据包。<br>在内核初始化时，通过调用 <code>dev_add_pack</code> 函数向 <code>ptype_base</code> 数组中注册网络层协议处理接口，如 <code>ip_init</code> 函数：</li>
+</ol>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">static struct packet_type ip_packet_type = &#123;</span><br><span class="line">     __constant_htons(ETH_P_IP),</span><br><span class="line">     NULL,</span><br><span class="line">     ip_rcv,  // 处理IP协议数据包的接口</span><br><span class="line">     (void*)1,</span><br><span class="line">     NULL,</span><br><span class="line"> &#125;;</span><br><span class="line"> </span><br><span class="line"> void __init ip_init(void)</span><br><span class="line">&#123;</span><br><span class="line">     // 注册网络层协议处理接口</span><br><span class="line">     dev_add_pack(&amp;ip_packet_type);</span><br><span class="line">     ...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>所以，<code>net_rx_action</code> 函数主要从待处理队列中获取数据包，然后根据数据包的网络层协议类型，找到相应的处理接口处理数据包。其过程如 图3 所示：</li>
+</ul>
+<p><img src="https://pic2.zhimg.com/80/v2-412eb9041d2bcdf4e23f28fe7578b639_720w.webp" alt="img"></p>
+<ul>
+<li><p>从上图可知，<code>net_rx_action</code> 函数将数据包交由网络层协议处理接口后就不管了，而网络层协议处理接口接管数据包后，会对数据包进行进一步处理，如判断数据包的合法性（数据包是否损坏、数据包是否发送给本机）。如果数据包是合法的，就会交由传输层协议处理接口处理。</p>
+</li>
+<li><p>在深度剖析Linux 网络中断下半部处理一文中介绍过，当网卡接收到网络数据包后，会由网卡驱动通过调用 <code>netif_rx</code> 函数把数据包添加到待处理队列中，然后唤起网络中断下半部处理。</p>
+</li>
+<li><p>而网络中断下半部处理由 <code>net_rx_action</code> 函数完成的，其主要功能就是从待处理队列中获取一个数据包，然后根据数据包的网络层协议类型来找到相应的处理接口来处理数据包。我们通过 图1 来展示 <code>net_rx_action</code> 函数的处理过程：</p>
+</li>
+</ul>
+<p><img src="https://pic3.zhimg.com/80/v2-25a34cbac94390750fa9c8adbf3baa9a_720w.webp" alt="img"></p>
+<p>图1 net_rx_action 处理过程</p>
+<ul>
+<li>网络层的处理接口保存在 <code>ptype_base</code> 数组中，其元素的类型为 <code>packet_type</code> 结构，而索引为网络层协议的类型，所以通过网络层协议的类型就能找到对应的处理接口，我们先来看看 <code>packet_type</code> 结构的定义：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">struct packet_type</span><br><span class="line">&#123;</span><br><span class="line">    unsigned short      type;   // 网络层协议类型</span><br><span class="line">    struct net_device   *dev;   // 绑定的设备对象, 一般设置为NULL</span><br><span class="line">    int                 (*func)(struct sk_buff *, struct net_device *, struct packet_type *); // 处理接口</span><br><span class="line">    void                *data;  // 私有数据域, 一般设置为NULL</span><br><span class="line">    struct packet_type  *next;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>ptype_base</code> 数组的定义如下：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">static struct packet_type *ptype_base[16];</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>从 <code>ptype_base</code> 数组的定义可知，其只有 16 个元素，那么如果内核超过 16 种网络层协议怎么办？我们可以从网络层处理接口的注册函数 <code>dev_add_pack</code> 中找到答案：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">void dev_add_pack(struct packet_type *pt)</span><br><span class="line">&#123;</span><br><span class="line">    int hash;</span><br><span class="line"></span><br><span class="line">    br_write_lock_bh(BR_NETPROTO_LOCK);</span><br><span class="line"></span><br><span class="line">    // 如果类型为ETH_P_ALL, 表示需要处理所有协议的数据包</span><br><span class="line">    if (pt-&gt;type == htons(ETH_P_ALL)) &#123; </span><br><span class="line">        netdev_nit++;</span><br><span class="line">        pt-&gt;next = ptype_all;</span><br><span class="line">        ptype_all = pt;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        // 对网络层协议类型与15进行与操作, 得到一个 0 到 15 的整数</span><br><span class="line">        hash = ntohs(pt-&gt;type) &amp; 15;</span><br><span class="line"></span><br><span class="line">        // 通过 next 指针把冲突的处理接口连接起来</span><br><span class="line">        pt-&gt;next = ptype_base[hash];</span><br><span class="line">        ptype_base[hash] = pt;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    br_write_unlock_bh(BR_NETPROTO_LOCK);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>从 <code>dev_add_pack</code> 函数的实现可知，内核把 <code>ptype_base</code> 数组当成了哈希表，而键值就是网络层协议类型，哈希函数就是对协议类型与 15 进行与操作。如果有冲突，就通过 <code>next</code> 指针把冲突的处理接口连接起来。</li>
+<li>我们再来看看 IP 协议是怎样注册处理接口的，如下代码：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">/* /net/ipv4/ip_output.c */</span><br><span class="line"></span><br><span class="line">static struct packet_type ip_packet_type = &#123;</span><br><span class="line">     __constant_htons(ETH_P_IP),</span><br><span class="line">     NULL,</span><br><span class="line">     ip_rcv,  // 处理 IP 协议数据包的接口</span><br><span class="line">     (void*)1,</span><br><span class="line">     NULL,</span><br><span class="line"> &#125;;</span><br><span class="line"> </span><br><span class="line"> void __init ip_init(void)</span><br><span class="line">&#123;</span><br><span class="line">     // 注册 IP 协议处理接口</span><br><span class="line">     dev_add_pack(&amp;ip_packet_type);</span><br><span class="line">     ...</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>从上面的代码可以看到，在 <code>ip_init</code> 函数中调用了 <code>dev_add_pack(&amp;ip_packet_type)</code> 函数来注册了 IP 协议的处理接口，而 IP 协议的处理接口为 <code>ip_rcv</code> 函数。</p>
+</li>
+<li><p>我们再看看 <code>net_rx_action</code> 函数的处理：</p>
+</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">static void net_rx_action(struct softirq_action *h)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    for (;;) &#123;</span><br><span class="line">        ...</span><br><span class="line">        &#123;</span><br><span class="line">            struct packet_type *ptype, *pt_prev;</span><br><span class="line">            unsigned short type = skb-&gt;protocol; // 网络层协议类型</span><br><span class="line"> </span><br><span class="line">            pt_prev = NULL;</span><br><span class="line">            ...</span><br><span class="line">            // 从 ptype_base 数组中查找网络层处理接口</span><br><span class="line">            for (ptype = ptype_base[ntohs(type) &amp; 15]; </span><br><span class="line">                 ptype; </span><br><span class="line">                 ptype = ptype-&gt;next) </span><br><span class="line">            &#123;</span><br><span class="line">                if (ptype-&gt;type == type // 如果协议类型匹配</span><br><span class="line">                    &amp;&amp; (!ptype-&gt;dev || ptype-&gt;dev == skb-&gt;dev))</span><br><span class="line">                &#123;</span><br><span class="line">                    if (pt_prev) &#123;</span><br><span class="line">                        atomic_inc(&amp;skb-&gt;users);</span><br><span class="line">                        // 如处理IP协议数据包的 ip_rcv() 函数</span><br><span class="line">                        pt_prev-&gt;func(skb, skb-&gt;dev, pt_prev);</span><br><span class="line">                    &#125;</span><br><span class="line"></span><br><span class="line">                    pt_prev = ptype;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    return;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>现在就非常清晰了，就是根据数据包的网络层协议类型，然后从 <code>ptype_base</code> 数组中找到对应的处理接口处理数据包，如 IP 协议的数据包就调用 <code>ip_rcv</code> 函数处理。</li>
+</ul>
+<h2 id="3、处理IP数据包"><a href="#3、处理IP数据包" class="headerlink" title="3、处理IP数据包"></a>3、处理IP数据包</h2><ul>
+<li>通过上面的分析，我们知道当内核接收到一个 IP 数据包后，会调用 <code>ip_rcv</code> 函数处理这个数据包，下面我们来分析一下 <code>ip_rcv</code> 函数的实现：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">int ip_rcv(struct sk_buff *skb, struct net_device *dev, </span><br><span class="line">           struct packet_type *pt)</span><br><span class="line">&#123;</span><br><span class="line">    struct iphdr *iph = skb-&gt;nh.iph;</span><br><span class="line"></span><br><span class="line">    // 如果数据包不是发送给本机的, 丢弃数据包</span><br><span class="line">    if (skb-&gt;pkt_type == PACKET_OTHERHOST)</span><br><span class="line">        goto drop;</span><br><span class="line"></span><br><span class="line">    // 如果其他地方也在使用数据包, 复制一份新的数据包</span><br><span class="line">    if ((skb = skb_share_check(skb, GFP_ATOMIC)) == NULL)</span><br><span class="line">        goto out;</span><br><span class="line"></span><br><span class="line">    // 数据包的长度比IP头部的长度还小，不合法丢弃</span><br><span class="line">    if (skb-&gt;len &lt; sizeof(struct iphdr) || skb-&gt;len &lt; (iph-&gt;ihl&lt;&lt;2))</span><br><span class="line">        goto inhdr_error;</span><br><span class="line"></span><br><span class="line">    // 判断IP头部是否合法</span><br><span class="line">    if (iph-&gt;ihl &lt; 5                                 // IP头部长度是否合法</span><br><span class="line">        || iph-&gt;version != 4                         // IP协议版本是否合法</span><br><span class="line">        || ip_fast_csum((u8 *)iph, iph-&gt;ihl) != 0)   // IP校验和是否正确</span><br><span class="line">        goto inhdr_error;</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        __u32 len = ntohs(iph-&gt;tot_len);</span><br><span class="line"></span><br><span class="line">        // 如果数据包的长度比IP头部的总长度小, 说明数据包不合法, 需要丢弃</span><br><span class="line">        if (skb-&gt;len &lt; len || len &lt; (iph-&gt;ihl&lt;&lt;2))</span><br><span class="line">            goto inhdr_error;</span><br><span class="line">        __skb_trim(skb, len);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 如果所有验证都通过, 那么调用 ip_rcv_finish 函数继续处理数据包</span><br><span class="line">    return NF_HOOK(PF_INET, NF_IP_PRE_ROUTING, skb, dev, NULL, ip_rcv_finish);</span><br><span class="line"></span><br><span class="line">    // 这里是丢弃数据包的处理</span><br><span class="line">inhdr_error:</span><br><span class="line">    IP_INC_STATS_BH(IpInHdrErrors);</span><br><span class="line">drop:</span><br><span class="line">    kfree_skb(skb);</span><br><span class="line">out:</span><br><span class="line">    return NET_RX_DROP;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>ip_rcv</code> 函数主要对数据包的合法性进行验证，如果数据包是合法的，那么就调用 <code>ip_rcv_finish</code> 函数继续对数据包进行处理。</p>
+</li>
+<li><p>我们继续分析 <code>ip_rcv_finish</code> 函数的实现：</p>
+</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">static inline int ip_rcv_finish(struct sk_buff *skb)</span><br><span class="line">&#123;</span><br><span class="line">    struct net_device *dev = skb-&gt;dev;</span><br><span class="line">    struct iphdr *iph = skb-&gt;nh.iph;</span><br><span class="line"></span><br><span class="line">    if (skb-&gt;dst == NULL) &#123; // 如果数据包的输入路由缓存还没设置</span><br><span class="line">        // 根据目标IP地址获取数据包的输入路由缓存</span><br><span class="line">        if (ip_route_input(skb, iph-&gt;daddr, iph-&gt;saddr, iph-&gt;tos, dev))</span><br><span class="line">            goto drop;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    // 如果数据包是发送给本机的，那么就调用 ip_local_deliver 进行处理</span><br><span class="line">    return skb-&gt;dst-&gt;input(skb); </span><br><span class="line"></span><br><span class="line">drop:</span><br><span class="line">    kfree_skb(skb);</span><br><span class="line">    return NET_RX_DROP;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>为了简单起见，我们去掉了对 IP 选项的处理。在上面的代码中，如果数据包的输入路由缓存还没设置，那么先调用 <code>ip_route_input</code> 函数获取数据包的输入路由缓存（<code>ip_route_input</code> 函数将会在 <code>路由子系统</code> 一章介绍，暂时可以忽略这个函数）。</p>
+</li>
+<li><p>设置好数据包的路由缓存后，就调用路由缓存的 <code>input</code> 方法处理数据包。如果数据包是发送给本机的，那么路由缓存的 <code>input</code> 方法将会被设置为 <code>ip_local_deliver</code>（由 <code>ip_route_input</code> 函数设置）。</p>
+</li>
+<li><p>所有，如果数据包是发送给本机，那么最终会调用 <code>ip_local_deliver</code> 函数处理数据包，我们继续来分析 <code>ip_local_deliver</code> 函数：</p>
+</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">int ip_local_deliver(struct sk_buff *skb)</span><br><span class="line">&#123;</span><br><span class="line">    struct iphdr *iph = skb-&gt;nh.iph;</span><br><span class="line"></span><br><span class="line">    // 如果当前数据包是一个IP分片, 那么先对数据包进行分片处理</span><br><span class="line">    if (iph-&gt;frag_off &amp; htons(IP_MF|IP_OFFSET)) &#123;</span><br><span class="line">        skb = ip_defrag(skb);</span><br><span class="line">        if (!skb)</span><br><span class="line">            return 0;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 接着调用 ip_local_deliver_finish 函数处理数据包</span><br><span class="line">    return NF_HOOK(PF_INET, NF_IP_LOCAL_IN, skb, skb-&gt;dev, NULL,</span><br><span class="line">                   ip_local_deliver_finish);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>ip_local_deliver</code> 函数首先判断数据包是否为一个 IP 分片（IP 分片将在下一篇文章介绍，暂时可以忽略），如果是就调用 <code>ip_defrag</code> 函数对数据包进行分片重组处理。如果数据包不是一个分片或者分片重组成功，那么最终调用 <code>ip_local_deliver_finish</code> 函数处理数据包。</p>
+</li>
+<li><p><code>ip_local_deliver_finish</code> 函数是 IP 层处理数据包的最后一步，我们接着分析 <code>ip_local_deliver_finish</code> 函数的实现：</p>
+</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">static inline int ip_local_deliver_finish(struct sk_buff *skb)</span><br><span class="line">&#123;</span><br><span class="line">    struct iphdr *iph = skb-&gt;nh.iph;         // 获取数据包的IP头部</span><br><span class="line">    ...</span><br><span class="line">    skb-&gt;h.raw = skb-&gt;nh.raw + iph-&gt;ihl * 4; // 设置传输层协议头部指针</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        int hash = iph-&gt;protocol &amp; (MAX_INET_PROTOS - 1); // 从IP头部获取传输层协议类型</span><br><span class="line">        struct sock *raw_sk = raw_v4_htable[hash];</span><br><span class="line">        struct inet_protocol *ipprot;</span><br><span class="line">        int flag;</span><br><span class="line">        ...</span><br><span class="line">        ipprot = (struct inet_protocol *)inet_protos[hash]; // 传输层协议处理函数</span><br><span class="line">        flag = 0;</span><br><span class="line"></span><br><span class="line">        if (ipprot != NULL) &#123; // 调用传输层协议处理函数处理数据包</span><br><span class="line">            if (raw_sk == NULL &amp;&amp; ipprot-&gt;next == NULL &amp;&amp; ipprot-&gt;protocol == iph-&gt;protocol) &#123;</span><br><span class="line">                return ipprot-&gt;handler(skb, (ntohs(iph-&gt;tot_len)-(iph-&gt;ihl*4)));</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                flag = ip_run_ipprot(skb, iph, ipprot, (raw_sk != NULL));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在上面代码中，我们省略对原始套接字的处理（原始套接字将会在 <code>原始套接字</code> 一章中介绍）。<code>ip_local_deliver_finish</code> 函数的主要工作如下：</li>
+</ul>
+<ol>
+<li>通过数据包的 IP 头部获取到上层协议（传输层）类型。</li>
+<li>根据传输层协议类型从 <code>inet_protos</code> 数组中查找对应的处理函数。</li>
+<li>调用传输层协议的处理函数处理数据包。</li>
+</ol>
+<ul>
+<li><code>inet_protos</code> 数组保存了传输层协议的处理函数，其的定义如下：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">struct inet_protocol</span><br><span class="line">&#123;</span><br><span class="line">    int (*handler)(struct sk_buff *skb, unsigned short len); // 协议的处理函数</span><br><span class="line">    unsigned char protocol;                                  // 协议类型</span><br><span class="line">    struct inet_protocol *next;                              // 解决冲突</span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">#define MAX_INET_PROTOS32</span><br><span class="line"></span><br><span class="line">struct inet_protocol *inet_protos[MAX_INET_PROTOS];</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>不同的传输层协议处理函数，会根据其协议类型的值保存到 <code>inet_protos</code> 数组中。由于 <code>inet_protos</code> 数组只有32个元素，所以保存处理函数时，需要将协议值与32进行取模操作，得到一个 0 ~ 31 的值，然后把处理函数保存到 <code>inet_protos</code> 数组对应位置上。如果有多个协议发生冲突，那么就通过 <code>next</code> 字段连接起来。</p>
+</li>
+<li><p>通过调用 <code>inet_add_protocol</code> 函数，可以向 <code>inet_protos</code> 数组注册传输层协议的处理函数。例如 <code>TCP协议</code> 的处理函数定义如下：</p>
+</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">static struct inet_protocol tcp_protocol = </span><br><span class="line">&#123;</span><br><span class="line">    tcp_v4_rcv,         /* TCP handler */</span><br><span class="line">    IPPROTO_TCP,        /* protocol ID */</span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>所以，当接收到一个 TCP 协议数据包时，将会调用 <code>tcp_v4_rcv</code> 函数处理此数据包。</p>
+</li>
+<li><p>最后，我以一幅图来展示处理 IP 数据包的函数调用链：</p>
+</li>
+</ul>
+<h2 id="3、总结"><a href="#3、总结" class="headerlink" title="3、总结"></a>3、<strong>总结</strong></h2><ul>
+<li>本文主要介绍了网络中断下半部的处理，从分析可知，网络中断下半部主要工作是从待处理队列中获取数据包，并且根据数据包的网络层协议类型来找到相应的处理接口，然后把数据包交由网络层协议处理接口进行处理。</li>
+</ul>
+<hr>
+<p>版权声明：本文为知乎博主「Linux内核库」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文 出处链接及本声明。 </p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/478883502">https://zhuanlan.zhihu.com/p/478883502</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%A4%84%E7%90%86/">https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%A4%84%E7%90%86/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9Cudp%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81%EF%BC%88%E4%BA%8C%EF%BC%89-UDP%E5%8D%8F%E8%AE%AE%E5%B1%82%E5%88%86%E6%9E%90/" title="Linux内核网络udp数据包发送（二）-UDP协议层分析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux内核网络udp数据包发送（二）-UDP协议层分析</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88accept%E5%87%BD%E6%95%B0%E5%89%96%E6%9E%90/" title="Linux内核网络协议栈accept函数剖析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux内核网络协议栈accept函数剖析</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81%E6%95%B0%E6%8D%AE%E5%8C%85%E4%B8%8A%E9%80%81"><span class="toc-number">1.</span> <span class="toc-text">1、数据包上送</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81%E7%BD%91%E7%BB%9C%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%A4%84%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">2、网络中断下半部处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E5%A4%84%E7%90%86IP%E6%95%B0%E6%8D%AE%E5%8C%85"><span class="toc-number">3.</span> <span class="toc-text">3、处理IP数据包</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">3、总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

@@ -1,32 +1,364 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux内核网络udp数据包发送（二）-UDP协议层分析 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="1.前言本文分享了Linux内核网络数据包发送在UDP协议层的处理，主要分析了udp_sendmsg和udp_send_skb函数，并分享了UDP层的数据统计和监控以及套接字发送大小的调优。 2.udp_sendmsg这个函数定义在net &#x2F; ipv4 &#x2F; udp.c，函数很长，分段来看。 2.1 UDP插入UDP udp_sendmsg corking是一项优化技术，允许内核">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核网络udp数据包发送（二）-UDP协议层分析">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9Cudp%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81%EF%BC%88%E4%BA%8C%EF%BC%89-UDP%E5%8D%8F%E8%AE%AE%E5%B1%82%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="1.前言本文分享了Linux内核网络数据包发送在UDP协议层的处理，主要分析了udp_sendmsg和udp_send_skb函数，并分享了UDP层的数据统计和监控以及套接字发送大小的调优。 2.udp_sendmsg这个函数定义在net &#x2F; ipv4 &#x2F; udp.c，函数很长，分段来看。 2.1 UDP插入UDP udp_sendmsg corking是一项优化技术，允许内核">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.421Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9Cudp%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81%EF%BC%88%E4%BA%8C%EF%BC%89-UDP%E5%8D%8F%E8%AE%AE%E5%B1%82%E5%88%86%E6%9E%90/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux内核网络udp数据包发送（二）-UDP协议层分析',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux内核网络udp数据包发送（二）-UDP协议层分析</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.421Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux内核网络udp数据包发送（二）-UDP协议层分析"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1.前言"></a>1.前言</h2><p>本文分享了Linux内核网络数据包发送在UDP协议层的处理，主要分析了udp_sendmsg和udp_send_skb函数，并分享了UDP层的数据统计和监控以及套接字发送大小的调优。</p>
+<h2 id="2-udp-sendmsg"><a href="#2-udp-sendmsg" class="headerlink" title="2.udp_sendmsg"></a>2.udp_sendmsg</h2><p>这个函数定义在net &#x2F; ipv4 &#x2F; udp.c，函数很长，分段来看。</p>
+<h3 id="2-1-UDP插入"><a href="#2-1-UDP插入" class="headerlink" title="2.1 UDP插入"></a>2.1 UDP插入</h3><p>UDP udp_sendmsg corking是一项优化技术，允许内核将多个数据累积成一体的数据报发送。在用户程序中有两种方法可以启用此选项：</p>
+<ul>
+<li>使用 setsockopt 系统调用设置socket的 UDP_CORK 选项</li>
+<li>程序调用 send，sendto 或 sendmsg 时，带 MSG_MORE 参数</li>
+</ul>
+<p>udp_sendmsg 代码检查 up-&gt;pending 套接字socket当前是否已被塞住（corked），如果是，则直接跳到 do_append_data 进行数据追加（append）。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">udp_sendmsg</span><span class="params">(<span class="keyword">struct</span> kiocb *iocb, <span class="keyword">struct</span> sock *sk, <span class="keyword">struct</span> msghdr *msg,</span></span><br><span class="line"><span class="params">                <span class="type">size_t</span> len)</span></span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* variables and error checking ... */</span></span><br><span class="line"></span><br><span class="line">  fl4 = &amp;inet-&gt;cork.fl.u.ip4;</span><br><span class="line">  <span class="keyword">if</span> (up-&gt;pending) &#123;</span><br><span class="line">          <span class="comment">/*</span></span><br><span class="line"><span class="comment">           * There are pending frames.</span></span><br><span class="line"><span class="comment">           * The socket lock must be held while it&#x27;s corked.</span></span><br><span class="line"><span class="comment">           */</span></span><br><span class="line">          lock_sock(sk);</span><br><span class="line">          <span class="keyword">if</span> (likely(up-&gt;pending)) &#123;</span><br><span class="line">                  <span class="keyword">if</span> (unlikely(up-&gt;pending != AF_INET)) &#123;</span><br><span class="line">                          release_sock(sk);</span><br><span class="line">                          <span class="keyword">return</span> -EINVAL;</span><br><span class="line">                  &#125;</span><br><span class="line">                  <span class="keyword">goto</span> do_append_data;</span><br><span class="line">          &#125;</span><br><span class="line">          release_sock(sk);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="2-2获取目的IP地址和端口"><a href="#2-2获取目的IP地址和端口" class="headerlink" title="2.2获取目的IP地址和端口"></a>2.2获取目的IP地址和端口</h2><p>接下来获取目的IP地址和端口，有两个可能的来源：</p>
+<ul>
+<li>如果之前socket已经建立连接，那socket本身就存储了目标地址</li>
+<li>地址通过辅助结构（struct msghdr）预测，逐步我们在 sendto 的内核代码中看到的那样</li>
+</ul>
+<p>具体逻辑：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> *      Get and verify the address.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">  <span class="keyword">if</span> (msg-&gt;msg_name) &#123;</span><br><span class="line">          <span class="class"><span class="keyword">struct</span> <span class="title">sockaddr_in</span> *<span class="title">usin</span> =</span> (<span class="keyword">struct</span> sockaddr_in *)msg-&gt;msg_name;</span><br><span class="line">          <span class="keyword">if</span> (msg-&gt;msg_namelen &lt; <span class="keyword">sizeof</span>(*usin))</span><br><span class="line">                  <span class="keyword">return</span> -EINVAL;</span><br><span class="line">          <span class="keyword">if</span> (usin-&gt;sin_family != AF_INET) &#123;</span><br><span class="line">                  <span class="keyword">if</span> (usin-&gt;sin_family != AF_UNSPEC)</span><br><span class="line">                          <span class="keyword">return</span> -EAFNOSUPPORT;</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          daddr = usin-&gt;sin_addr.s_addr;</span><br><span class="line">          dport = usin-&gt;sin_port;</span><br><span class="line">          <span class="keyword">if</span> (dport == <span class="number">0</span>)</span><br><span class="line">                  <span class="keyword">return</span> -EINVAL;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">if</span> (sk-&gt;sk_state != TCP_ESTABLISHED)</span><br><span class="line">                  <span class="keyword">return</span> -EDESTADDRREQ;</span><br><span class="line">          daddr = inet-&gt;inet_daddr;</span><br><span class="line">          dport = inet-&gt;inet_dport;</span><br><span class="line">          <span class="comment">/* Open fast path for connected socket.</span></span><br><span class="line"><span class="comment">             Route will not be used, if at least one option is set.</span></span><br><span class="line"><span class="comment">           */</span></span><br><span class="line">          connected = <span class="number">1</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>UDP代码中出现了 TCP_ESTABLISHED！UDP套接字的状态使用了TCP状态来描述。的上面显示代码了内核如何解析该变量以便设置 daddr 状语从句：  dport。</p>
+<p>如果没有 struct msghdr 变量，内核函数到达 udp_sendmsg 函数时，会从socket本身检索目的地址和端口，插入socket标记为“已连接”。</p>
+<h3 id="2-3套接字发送：簿记和打合并"><a href="#2-3套接字发送：簿记和打合并" class="headerlink" title="2.3套接字发送：簿记和打合并"></a>2.3套接字发送：簿记和打合并</h3><p>接下来，获取存储在插座上的源地址，设备索引（设备索引）和时间戳选项（例如SOCK_TIMESTAMPING_TX_HARDWARE，  SOCK_TIMESTAMPING_TX_SOFTWARE，  SOCK_WIFI_STATUS）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ipc.addr = inet-&gt;inet_saddr;</span><br><span class="line"></span><br><span class="line">ipc.oif = sk-&gt;sk_bound_dev_if;</span><br><span class="line"></span><br><span class="line">sock_tx_timestamp(sk, &amp;ipc.tx_flags);</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-4辅助消息（辅助消息）"><a href="#2-4辅助消息（辅助消息）" class="headerlink" title="2.4辅助消息（辅助消息）"></a>2.4辅助消息（辅助消息）</h3><p>除了发送或接收数据包之外，sendmsg 状语从句： recvmsg 系统-调用还网求允许用户设置或请求辅助数据。程序用户可以通过将请求信息组织分类中翻译 struct msghdr 类型变量来利用此辅助数据。一些辅助数据类型记录在IP手册页中。</p>
+<p>辅助数据的一个常见例子是 IP_PKTINFO，对于 sendmsg，IP_PKTINFO 网求允许程序在发送数据时设置一个 in_pktinfo 变量。可以程序通过填写回复时 struct in_pktinfo 变量中的字段来指定要在包上使用的源地址。如果程序是监听多个IP地址的服务端程序，那这是一个很有用的选项。在这种情况下，服务端可能想使用客户端连接服务端的那个IP地址来回复客户端，IP_PKTINFO 非常适合这种场景。</p>
+<p>setsockopt 可以在套接字级别设置发送包的IP_TTL和IP_TOS。而辅助消息允许在每个数据包级别设置TTL和TOS值。时从qdisc中发送出去。</p>
+<p>可以看到内核如何在UDP套接字上处理 sendmsg 的辅助消息：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (msg-&gt;msg_controllen) &#123;</span><br><span class="line">        err = ip_cmsg_send(sock_net(sk), msg, &amp;ipc,</span><br><span class="line">                           sk-&gt;sk_family == AF_INET6);</span><br><span class="line">        <span class="keyword">if</span> (err)</span><br><span class="line">                <span class="keyword">return</span> err;</span><br><span class="line">        <span class="keyword">if</span> (ipc.opt)</span><br><span class="line">                <span class="built_in">free</span> = <span class="number">1</span>;</span><br><span class="line">        connected = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>解析辅助消息的工作是由 ip_cmsg_send 完成的，定义在net &#x2F; ipv4 &#x2F; ip_sockglue.c。传递一个未初始化的辅助数据，将会把这个套接字标记为“未建立连接的”。</p>
+<h3 id="2-5设置自定义IP选项"><a href="#2-5设置自定义IP选项" class="headerlink" title="2.5设置自定义IP选项"></a>2.5设置自定义IP选项</h3><p>接下来，sendmsg 将检查用户是否通过辅助消息设置了任何自定义IP选项。如果设置了，将使用这些自定义值；如果没有，那就使用socket中（已经在用）的参数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!ipc.opt) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">ip_options_rcu</span> *<span class="title">inet_opt</span>;</span></span><br><span class="line"></span><br><span class="line">        rcu_read_lock();</span><br><span class="line">        inet_opt = rcu_dereference(inet-&gt;inet_opt);</span><br><span class="line">        <span class="keyword">if</span> (inet_opt) &#123;</span><br><span class="line">                <span class="built_in">memcpy</span>(&amp;opt_copy, inet_opt,</span><br><span class="line">                       <span class="keyword">sizeof</span>(*inet_opt) + inet_opt-&gt;opt.optlen);</span><br><span class="line">                ipc.opt = &amp;opt_copy.opt;</span><br><span class="line">        &#125;</span><br><span class="line">        rcu_read_unlock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来，该函数检查是否设置了源记录路由（源记录路由，SRR）IP选项。SRR有两种类型：宽松的源记录路由和严格的源记录路由。地址串联其保存到 faddr，插入套接字标记为“未连接”。这将在后面用到：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ipc.addr = faddr = daddr;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (ipc.opt &amp;&amp; ipc.opt-&gt;opt.srr) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!daddr)</span><br><span class="line">                <span class="keyword">return</span> -EINVAL;</span><br><span class="line">        faddr = ipc.opt-&gt;opt.faddr;</span><br><span class="line">        connected = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>处理完SRR选项后，将处理TOS选项，这可以从辅助消息中获取，或者从socket当前值中获取。然后检查：</p>
+<p>1、是否（使用 setsockopt）在插座上设置了 SO_DONTROUTE，或<br><br>2、是否（调用 sendto 或 sendmsg 时）指定了 MSG_DONTROUTE 标志，或<br><br>3、是否已设置了 is_strictroute，表示需要严格的SRR任何一个为真，tos 扩展的 RTO_ONLINK 位将置1，并且socket被视为“未连接”：<br></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">tos = get_rttos(&amp;ipc, inet);</span><br><span class="line"><span class="keyword">if</span> (sock_flag(sk, SOCK_LOCALROUTE) ||</span><br><span class="line">    (msg-&gt;msg_flags &amp; MSG_DONTROUTE) ||</span><br><span class="line">    (ipc.opt &amp;&amp; ipc.opt-&gt;opt.is_strictroute)) &#123;</span><br><span class="line">        tos |= RTO_ONLINK;</span><br><span class="line">        connected = <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-6多播或单播（多播或单播）"><a href="#2-6多播或单播（多播或单播）" class="headerlink" title="2.6多播或单播（多播或单播）"></a>2.6多播或单播（多播或单播）</h3><p>这有点复杂，因为用户可以通过 IP_PKTINFO 辅助消息来指定发送包的源地址或设备号，如前所述。</p>
+<p>如果目标地址是多播地址：<br><br>1、将多播设备（设备）的索引（索引）设置为发送（写）这个数据包的设备索引，并且<br><br>2、数据包的源地址将设置为多播<br></p>
+<p>如果目标地址不是一个收件人地址，则发送数据包的设备准备为 inet-&gt;uc_index（单播），除非用户使用 IP_PKTINFO 辅助消息覆盖了它。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (ipv4_is_multicast(daddr)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!ipc.oif)</span><br><span class="line">                ipc.oif = inet-&gt;mc_index;</span><br><span class="line">        <span class="keyword">if</span> (!saddr)</span><br><span class="line">                saddr = inet-&gt;mc_addr;</span><br><span class="line">        connected = <span class="number">0</span>;</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (!ipc.oif)</span><br><span class="line">        ipc.oif = inet-&gt;uc_index;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-7路由"><a href="#2-7路由" class="headerlink" title="2.7路由"></a>2.7路由</h3><p>现在开始路由，UDP层中处理路由的代码以快速路径（fast path）开始。如果套接字已连接，则直接尝试获取路由：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (connected)</span><br><span class="line">        rt = (<span class="keyword">struct</span> rtable *)sk_dst_check(sk, <span class="number">0</span>);</span><br></pre></td></tr></table></figure>
+
+<p>如果socket未连接，或者虽然已经连接，但sk_dst_check 路由辅助 功能已确定路由已过期，则代码将进入慢速路径（slow path）以生成一条路由记录。首先调用 flowi4_init_output 构造一个描述此UDP流的变量：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (rt == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">net</span> *<span class="title">net</span> =</span> sock_net(sk);</span><br><span class="line"></span><br><span class="line">        fl4 = &amp;fl4_stack;</span><br><span class="line">        flowi4_init_output(fl4, ipc.oif, sk-&gt;sk_mark, tos,</span><br><span class="line">                           RT_SCOPE_UNIVERSE, sk-&gt;sk_protocol,</span><br><span class="line">                           inet_sk_flowi_flags(sk)|FLOWI_FLAG_CAN_SLEEP,</span><br><span class="line">                           faddr, saddr, dport, inet-&gt;inet_sport);</span><br><span class="line"></span><br><span class="line">````</span><br><span class="line"></span><br><span class="line">然后，socket为此流程实例实例传递给安全实例，这样SELinux或SMACK这样的系统就可以在流程实例上设置安全ID。接下来，ip_route_output_flow 将调用IP路由代码，创建一个路由实例：</span><br><span class="line"></span><br><span class="line">```c</span><br><span class="line"><span class="title function_">security_sk_classify_flow</span><span class="params">(sk, flowi4_to_flowi(fl4))</span>;</span><br><span class="line">rt = ip_route_output_flow(net, fl4, sk);</span><br></pre></td></tr></table></figure>
+
+<p>如果创建路由实例失败，并且返回码是 ENETUNREACH，则 OUTNOROUTES 计数器将会加1。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (IS_ERR(rt)) &#123;</span><br><span class="line">  err = PTR_ERR(rt);</span><br><span class="line">  rt = <span class="literal">NULL</span>;</span><br><span class="line">  <span class="keyword">if</span> (err == -ENETUNREACH)</span><br><span class="line">    IP_INC_STATS(net, IPSTATS_MIB_OUTNOROUTES);</span><br><span class="line">  <span class="keyword">goto</span> out;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这些统计计数器所在的源文件，其他可用的计数器及其含义，将在下面的UDP监控部分共享。</p>
+<p>接下来，如果是广播路由，但socket的 SOCK_BROADCAST 选项未设置，则处理过程终止。如果socket被视为“已连接”，则路由实例将缓存到socket上：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">err = -EACCES;</span><br><span class="line"><span class="keyword">if</span> ((rt-&gt;rt_flags &amp; RTCF_BROADCAST) &amp;&amp;</span><br><span class="line">    !sock_flag(sk, SOCK_BROADCAST))</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"><span class="keyword">if</span> (connected)</span><br><span class="line">        sk_dst_set(sk, dst_clone(&amp;rt-&gt;dst));</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-8-MSG-CONFIRM：阻止ARP缓存过期"><a href="#2-8-MSG-CONFIRM：阻止ARP缓存过期" class="headerlink" title="2.8 MSG_CONFIRM：阻止ARP缓存过期"></a>2.8 MSG_CONFIRM：阻止ARP缓存过期</h3><p>如果调用 send， sendto 或 sendmsg 的时候指定了 MSG_CONFIRM 参数，UDP协议层将会如下处理：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (msg-&gt;msg_flags&amp;MSG_CONFIRM)</span><br><span class="line">          <span class="keyword">goto</span> do_confirm;</span><br><span class="line">back_from_confirm:</span><br></pre></td></tr></table></figure>
+
+<p>该标志提示系统去确认一下ARP缓存缓存是否仍然有效，防止其被垃圾回收。 do_confirm 标签位于此函数末尾处：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">do_confirm:</span><br><span class="line">        dst_confirm(&amp;rt-&gt;dst);</span><br><span class="line">        <span class="keyword">if</span> (!(msg-&gt;msg_flags&amp;MSG_PROBE) || len)</span><br><span class="line">                <span class="keyword">goto</span> back_from_confirm;</span><br><span class="line">        err = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br></pre></td></tr></table></figure>
+
+<p>dst_confirm 函数只是在相应的缓存缓存上设置一个标记位，稍后当查询邻居缓存并找到放置时将检查该标志，我们后面一些会看到。此功能通常用于UDP网络应用程序，以减少不必要的ARP流量。此代码确认缓存并然后跳回 back_from_confirm 标签。一旦 do_confirm 代码跳回到 back_from_confirm（或者之前就没有执行到 do_confirm ），代码接下来将处理UDP软木塞和未塞木塞的情况。</p>
+<h3 id="2-9-uncorked-UDP套接字快速路径：准备待发送数据"><a href="#2-9-uncorked-UDP套接字快速路径：准备待发送数据" class="headerlink" title="2.9 uncorked UDP套接字快速路径：准备待发送数据"></a>2.9 uncorked UDP套接字快速路径：准备待发送数据</h3><p>如果不需要corking，数据就可以封装到一个 struct sk_buff 实例中并传递给 udp_send_skb，离IP协议层更进了一步。这是通过调用 ip_make_skb 来完成的。</p>
+<p>先前通过调用ip_route_output_flow 生成的路由可能也会 一起传进来，并保存到skb里。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Lockless fast path for the non-corking case. */</span></span><br><span class="line"><span class="keyword">if</span> (!corkreq) &#123;</span><br><span class="line">        skb = ip_make_skb(sk, fl4, getfrag, msg-&gt;msg_iov, ulen,</span><br><span class="line">                          <span class="keyword">sizeof</span>(<span class="keyword">struct</span> udphdr), &amp;ipc, &amp;rt,</span><br><span class="line">                          msg-&gt;msg_flags);</span><br><span class="line">        err = PTR_ERR(skb);</span><br><span class="line">        <span class="keyword">if</span> (!IS_ERR_OR_NULL(skb))</span><br><span class="line">                err = udp_send_skb(skb, fl4);</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ip_make_skb 函数将创建一个skb，其中需要考虑到很多的事情，例如：</p>
+<ul>
+<li>MTU</li>
+<li>UDP阻塞（如果启用）</li>
+<li>UDP分片卸载（UFO）</li>
+<li>Fragmentation（分片）：如果硬件不支持UFO，但是要传输的数据大于MTU，需要软件做分片</li>
+</ul>
+<p>大多数网络设备驱动程序不支持UFO，因为网络硬件本身不支持此功能。</p>
+<h4 id="2-9-1-ip-make-skb"><a href="#2-9-1-ip-make-skb" class="headerlink" title="2.9.1 ip_make_skb"></a>2.9.1 ip_make_skb</h4><p>定义在net &#x2F; ipv4 &#x2F; ip_output.c，这个函数有点复杂。</p>
+<p>构建SKB的时候，ip_make_skb 依赖的底层代码需要使用一个加塞变量和一个队列变量，SKB将通过队列变量传入。如果插座未被软木，则会传入一个假的加塞变量和一个空队列。</p>
+<p>现在来看看假corking变量和空数值是如何初始化的：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> sk_buff *<span class="title function_">ip_make_skb</span><span class="params">(<span class="keyword">struct</span> sock *sk, <span class="comment">/* more args */</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">inet_cork</span> <span class="title">cork</span>;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">sk_buff_head</span> <span class="title">queue</span>;</span></span><br><span class="line">        <span class="type">int</span> err;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (flags &amp; MSG_PROBE)</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">        __skb_queue_head_init(&amp;<span class="built_in">queue</span>);</span><br><span class="line"></span><br><span class="line">        cork.flags = <span class="number">0</span>;</span><br><span class="line">        cork.addr = <span class="number">0</span>;</span><br><span class="line">        cork.opt = <span class="literal">NULL</span>;</span><br><span class="line">        err = ip_setup_cork(sk, &amp;cork, <span class="comment">/* more args */</span>);</span><br><span class="line">        <span class="keyword">if</span> (err)</span><br><span class="line">                <span class="keyword">return</span> ERR_PTR(err);</span><br></pre></td></tr></table></figure>
+
+<p>如上所示，cork和queue都是在栈上分配的，ip_make_skb 根本不需要它。 ip_setup_cork 初始化cork变量。然后，调用__ip_append_data 并调用cork和queue变量：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">err = __ip_append_data(sk, fl4, &amp;<span class="built_in">queue</span>, &amp;cork,</span><br><span class="line">                       &amp;current-&gt;task_frag, getfrag,</span><br><span class="line">                       from, length, transhdrlen, flags);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>我们将在后面看到这个函数是如何工作的，因为无论socket是否被软木塞，最后都会执行它。</p>
+<p>现在，我们只需要知道__ip_append_data 将创建一个skb，向其追加数据，转化为该skb添加到队列的队列变量中。如果追加数据失败，则__ip_flush_pending_frame 调用数据并向上返回错误（指针类型）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (err) &#123;</span><br><span class="line">        __ip_flush_pending_frames(sk, &amp;<span class="built_in">queue</span>, &amp;cork);</span><br><span class="line">        <span class="keyword">return</span> ERR_PTR(err);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后，如果没有发生错误，__ip_make_skb 将skb出队，添加IP选项，并返回一个准备好传递给更连续发送的skb：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">return __ip_make_skb(sk, fl4, &amp;queue, &amp;cork);</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-9-2发送数据"><a href="#2-9-2发送数据" class="headerlink" title="2.9.2发送数据"></a>2.9.2发送数据</h4><p>如果没有错误，skb将会交给 udp_send_skb，附属会继续将其传给下一层协议，IP协议：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">err = PTR_ERR(skb);</span><br><span class="line"><span class="keyword">if</span> (!IS_ERR_OR_NULL(skb))</span><br><span class="line">        err = udp_send_skb(skb, fl4);</span><br><span class="line"><span class="keyword">goto</span> out;</span><br></pre></td></tr></table></figure>
+
+<p>如果有错误，错误计数就会有相应增加。后面的“错误计数”部分会详细介绍。</p>
+<h3 id="2-10没有被软木的数据时的慢路径"><a href="#2-10没有被软木的数据时的慢路径" class="headerlink" title="2.10没有被软木的数据时的慢路径"></a>2.10没有被软木的数据时的慢路径</h3><p>如果使用了UDP corking，但之前没有数据被cork，则慢路径开始：</p>
+<p>对插座加锁</p>
+<p>检查应用程序是否有bug：已经被cork的socket是否再次被cork</p>
+<p>设置该UDP流的一些参数，为corking做准备</p>
+<p>将要发送的数据追加到现有数据</p>
+<p>udp_sendmsg 代码继续向下看，就是这一逻辑：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">lock_sock(sk);</span><br><span class="line">  <span class="keyword">if</span> (unlikely(up-&gt;pending)) &#123;</span><br><span class="line">          <span class="comment">/* The socket is already corked while preparing it. */</span></span><br><span class="line">          <span class="comment">/* ... which is an evident application bug. --ANK */</span></span><br><span class="line">          release_sock(sk);</span><br><span class="line"></span><br><span class="line">          LIMIT_NETDEBUG(KERN_DEBUG pr_fmt(<span class="string">&quot;cork app bug 2\n&quot;</span>));</span><br><span class="line">          err = -EINVAL;</span><br><span class="line">          <span class="keyword">goto</span> out;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">   *      Now cork the socket to pend data.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  fl4 = &amp;inet-&gt;cork.fl.u.ip4;</span><br><span class="line">  fl4-&gt;daddr = daddr;</span><br><span class="line">  fl4-&gt;saddr = saddr;</span><br><span class="line">  fl4-&gt;fl4_dport = dport;</span><br><span class="line">  fl4-&gt;fl4_sport = inet-&gt;inet_sport;</span><br><span class="line">  up-&gt;pending = AF_INET;</span><br><span class="line"></span><br><span class="line">do_append_data:</span><br><span class="line">  up-&gt;len += ulen;</span><br><span class="line">  err = ip_append_data(sk, fl4, getfrag, msg-&gt;msg_iov, ulen,</span><br><span class="line">                       <span class="keyword">sizeof</span>(<span class="keyword">struct</span> udphdr), &amp;ipc, &amp;rt,</span><br><span class="line">                       corkreq ? msg-&gt;msg_flags|MSG_MORE : msg-&gt;msg_flags);</span><br><span class="line">                       </span><br></pre></td></tr></table></figure>
+
+<h4 id="2-10-1-ip-append-data"><a href="#2-10-1-ip-append-data" class="headerlink" title="2.10.1 ip_append_data"></a>2.10.1 ip_append_data</h4><p>这个函数简单封装了__ip_append_data，在调用之前之前，做了两件重要的事情：</p>
+<p>检查是否从用户指定了 MSG_PROBE 标志。该标志表示用户不想真正发送数据，只是做路径探测（例如，确定PMTU）</p>
+<p>检查socket的发送物理是否为空。如果为空，则意味着没有cork数据等待处理，因此调用ip_setup_cork 来设置corking </p>
+<p>一旦处理了上述条件，就调用__ip_append_data 函数，该函数包含用于将数据处理成数据包的大量逻辑。</p>
+<h4 id="2-10-2-ip-append-data"><a href="#2-10-2-ip-append-data" class="headerlink" title="2.10.2 __ip_append_data"></a>2.10.2 __ip_append_data</h4><p>如果插座是塞住，则从 ip_append_data 调用此函数;如果插座未被软木，则从 ip_make_skb 。调用此函数在任何一种情况下，函数都将分配一个新缓冲区来存储传入的数据，或者将数据附加到现有数据中。这种工作的方式围绕socket的发送序列。等待发送的现有数据（例如，如果socket被软木塞）将在一部分中有一个对应的对应，可以被追加数据。</p>
+<p>这个函数很复杂，它执行很多计算逐步如何构造传递给下面的网络层的skb。</p>
+<p>该函数的重点包括：</p>
+<p>如果硬件支持，则处理UDP分段卸载（UFO）。绝大多数网络硬件不支持UFO。如果你的网卡驱动程序支持它，设置它将 NETIF_F_UFO 标记位</p>
+<p>处理支持分散&#x2F;收集（分散&#x2F;聚集）IO的网卡许多卡都支持此功能，并使用。 NETIF_F_SG 标志进行通告支持该特性的网卡可以处理数据被分散到多个缓冲器的数据包;内核不需要花时间将避免这种额外的复制会提升性能，大多数网卡都支持此功能</p>
+<p>通过调用sock_wmalloc 跟踪发送帧 的大小。当分配新的skb时，skb的大小由创建它的socket计费（charge），并计入socket发送的已分配字节数。 （超过计费限制），则skb并分配失败并返回错误。我们将在下面的调优部分中看到如何设置socket发送大小（txqueuelen）</p>
+<p>更新错误统计信息。此函数中的任何错误都会增加“丢弃”计数。</p>
+<p>函数执行成功后返回0，以及一个适用于网络设备传输的skb。</p>
+<p>在unorked情况下，持有skb的队列被作为参数传递给上面描述的__ip_make_skb，在那里它被出队并通过 udp_send_skb 发送到更轻松。</p>
+<p>在软木的情况下，__ip_append_data 的返回值向上传递。数据位于发送队列中，直到 udp_sendmsg 确定的英文时候调用 udp_push_pending_frames 来完成SKB，后者会进一步调用 udp_send_skb。</p>
+<h4 id="2-10-3冲洗软木塞"><a href="#2-10-3冲洗软木塞" class="headerlink" title="2.10.3冲洗软木塞"></a>2.10.3冲洗软木塞</h4><p>现在，udp_sendmsg 会继续，检查__ip_append_skb 的返回值（错误码）：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (err)</span><br><span class="line">        udp_flush_pending_frames(sk);</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (!corkreq)</span><br><span class="line">        err = udp_push_pending_frames(sk);</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (unlikely(skb_queue_empty(&amp;sk-&gt;sk_write_queue)))</span><br><span class="line">        up-&gt;pending = <span class="number">0</span>;</span><br><span class="line">release_sock(sk);</span><br></pre></td></tr></table></figure>
+
+<p>我们来看看每个情况：</p>
+<p>如果出现错误（错误为非零），则调用 udp_flush_pending_frames，这将取消cork并从socket的发送数据中删除所有数据</p>
+<p>如果在未指定 MSG_MORE 的情况下发送此数据，则调用 udp_push_pending_frames，则数据传递到更下面的网络层</p>
+<p>如果发送轴向为空，替换套接字标记为不再软木</p>
+<p>如果追加操作完成并且有更多数据要进入cork，则代码将做一些清理工作，并返回追加数据的长度：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ip_rt_put(rt);</span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">free</span>)</span><br><span class="line">        kfree(ipc.opt);</span><br><span class="line"><span class="keyword">if</span> (!err)</span><br><span class="line">        <span class="keyword">return</span> len;</span><br></pre></td></tr></table></figure>
+
+<p>这就是内核如何处理</p>
+<h3 id="2-11错误会计"><a href="#2-11错误会计" class="headerlink" title="2.11错误会计"></a>2.11错误会计</h3><p>如果：</p>
+<p>non-corking快速路径创建skb失败，或 udp_send_skb 返回错误，或</p>
+<p>ip_append_data 无法将数据附加到corked UDP套接字，或</p>
+<p>当 udp_push_pending_frames 调用 udp_send_skb 发送corked skb时间返回错误</p>
+<p>仅当返回的错误是 ENOBUFS（内核无可用内存）或套接字已设置 SOCK_NOSPACE（发送串行已满）时，SNDBUFERRORS 统计信息才会增加：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * ENOBUFS = no kernel mem, SOCK_NOSPACE = no sndbuf space.  Reporting</span></span><br><span class="line"><span class="comment"> * ENOBUFS might not be good (it&#x27;s not tunable per se), but otherwise</span></span><br><span class="line"><span class="comment"> * we don&#x27;t have a good statistic (IpOutDiscards but it can be too many</span></span><br><span class="line"><span class="comment"> * things).  We could add another new stat but at least for now that</span></span><br><span class="line"><span class="comment"> * seems like overkill.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">if</span> (err == -ENOBUFS || test_bit(SOCK_NOSPACE, &amp;sk-&gt;sk_socket-&gt;flags)) &#123;</span><br><span class="line">        UDP_INC_STATS_USER(sock_net(sk),</span><br><span class="line">                        UDP_MIB_SNDBUFERRORS, is_udplite);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> err;</span><br></pre></td></tr></table></figure>
+
+<p>我们接下来会在后面的数据监控里看到如何读取这些计数。</p>
+<h3 id="3-udp-send-skb"><a href="#3-udp-send-skb" class="headerlink" title="3. udp_send_skb"></a>3. udp_send_skb</h3><p>udp_sendmsg 通过调用 udp_send_skb 函数将skb转到下一网络层，在这里中是IP协议层。</p>
+<p>向skb添加UDP头</p>
+<p>处理校验和：软件校验和，硬件校验和或无校​​验和（如果替换）</p>
+<p>调用 ip_send_skb 将skb发送到IP协议层</p>
+<p>更新发送成功或失败的统计计数器</p>
+<p>首先，创建UDP头：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">udp_send_skb</span><span class="params">(<span class="keyword">struct</span> sk_buff *skb, <span class="keyword">struct</span> flowi4 *fl4)</span></span><br><span class="line">&#123;</span><br><span class="line">                <span class="comment">/* useful variables ... */</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Create a UDP header</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        uh = udp_hdr(skb);</span><br><span class="line">        uh-&gt;source = inet-&gt;inet_sport;</span><br><span class="line">        uh-&gt;dest = fl4-&gt;fl4_dport;</span><br><span class="line">        uh-&gt;len = htons(len);</span><br><span class="line">        uh-&gt;check = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>接下来，处理校验和。有几种情况：</p>
+<p>首先处理UDP-Lite验证和</p>
+<p>接下来，如果socket校正和选项被关闭（setsockopt 带 SO_NO_CHECK 参数），则被标记为校验和关闭</p>
+<p>接下来，如果硬件支持UDP校验和，则将调用 udp4_hwcsum 来设置它。请注意，如果数据包是分段的，内核将在软件中生成校正和，可以在udp4_hwcsum的源代码中看到这一点</p>
+<p>最后，通过调用 udp_csum 生成软件校验和</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (is_udplite)                                  <span class="comment">/*     UDP-Lite      */</span></span><br><span class="line">        csum = udplite_csum(skb);</span><br><span class="line"></span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (sk-&gt;sk_no_check == UDP_CSUM_NOXMIT) &#123;   <span class="comment">/* UDP csum disabled */</span></span><br><span class="line"></span><br><span class="line">        skb-&gt;ip_summed = CHECKSUM_NONE;</span><br><span class="line">        <span class="keyword">goto</span> send;</span><br><span class="line"></span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (skb-&gt;ip_summed == CHECKSUM_PARTIAL) &#123; <span class="comment">/* UDP hardware csum */</span></span><br><span class="line"></span><br><span class="line">        udp4_hwcsum(skb, fl4-&gt;saddr, fl4-&gt;daddr);</span><br><span class="line">        <span class="keyword">goto</span> send;</span><br><span class="line"></span><br><span class="line">&#125; <span class="keyword">else</span></span><br><span class="line">        csum = udp_csum(skb);</span><br></pre></td></tr></table></figure>
+
+<p>接下来，添加了伪头：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">uh-&gt;check = csum_tcpudp_magic(fl4-&gt;saddr, fl4-&gt;daddr, len,</span><br><span class="line">                              sk-&gt;sk_protocol, csum);</span><br><span class="line"><span class="keyword">if</span> (uh-&gt;check == <span class="number">0</span>)</span><br><span class="line">        uh-&gt;check = CSUM_MANGLED_0;</span><br></pre></td></tr></table></figure>
+
+<p>如果校验和为0，则根据RFC 768，校验为全1（全部传输（等效于补码算术））。最后，将skb传递给IP协议层并增加统计计数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">send:</span><br><span class="line">  err = ip_send_skb(sock_net(sk), skb);</span><br><span class="line">  <span class="keyword">if</span> (err) &#123;</span><br><span class="line">          <span class="keyword">if</span> (err == -ENOBUFS &amp;&amp; !inet-&gt;recverr) &#123;</span><br><span class="line">                  UDP_INC_STATS_USER(sock_net(sk),</span><br><span class="line">                                     UDP_MIB_SNDBUFERRORS, is_udplite);</span><br><span class="line">                  err = <span class="number">0</span>;</span><br><span class="line">          &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span></span><br><span class="line">          UDP_INC_STATS_USER(sock_net(sk),</span><br><span class="line">                             UDP_MIB_OUTDATAGRAMS, is_udplite);</span><br><span class="line">  <span class="keyword">return</span> err;</span><br></pre></td></tr></table></figure>
+
+<p>如果 ip_send_skb 成功，将更新 OUTDATAGRAMS 统计。如果IP协议层报告错误，并且错误是 ENOBUFS（内核内核内存）而且错误queue（inet-&gt;recverr）没有启用，则更新 SNDBUFERRORS。</p>
+<p>接下来看看如何在Linux内核中监视和调优UDP协议层。</p>
+<h3 id="4-监控：UDP层统计"><a href="#4-监控：UDP层统计" class="headerlink" title="4.监控：UDP层统计"></a>4.监控：UDP层统计</h3><p>两个非常有用的获取UDP协议统计文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">/proc/net/snmp</span><br><span class="line">/proc/net/udp</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-1-proc-net-snmp"><a href="#4-1-proc-net-snmp" class="headerlink" title="4.1 &#x2F; proc &#x2F; net &#x2F; snmp"></a>4.1 &#x2F; proc &#x2F; net &#x2F; snmp</h4><p>监控UDP协议层统计：</p>
+<pre><code>cat /proc/net/snmp | grep Udp\:
+</code></pre>
+<p>要准确地理解这些计数，需要仔细地阅读内核代码。一些类型的错误计数并不是只出现在一种计数中，而可能是出现在多个计数中。</p>
+<ul>
+<li>InDatagrams：当userland程序使用recvmsg读取数据报时增加。当UDP数据包被封装并发回进行处理时，该值也会增加。</li>
+<li>NoPorts：当UDP数据包到达没有程序正在侦听的端口时增加。</li>
+<li>InErrors：在以下几种情况下增加：在接收队列中没有内存，看到错误的校验和，以及sk_add_backlog无法添加数据报。</li>
+<li>OutDatagrams：当将UDP数据包无误传递到要发送的IP协议层时增加。</li>
+<li>RcvbufErrors：当sock_queue_rcv_skb报告没有可用的内存时增加；如果sk-&gt; sk_rmem_alloc大于或等于sk-&gt; sk_rcvbuf，则会发生这种情况。</li>
+<li>SndbufErrors：如果IP协议层在尝试发送数据包时报告错误，并且未设置错误队列，则增加。如果没有发送队列空间或内核内存可用，也将增加。</li>
+<li>InCsumErrors：当检测到UDP校验和失败时增加。请注意，在所有情况下，我都能发现InCsumErrors与InErrors同时增加。因此，InErrors-InCsumErros应该在接收端产生与内存相关的错误计数。</li>
+</ul>
+<p>UDP协议层发现的某些错误会出现在其他协议层的统计信息中。一个例子：路由错误。 udp_sendmsg 发现的路由错误将导致IP协议层的 OutNoRoutes 统计增加。</p>
+<h4 id="4-2-proc-net-udp"><a href="#4-2-proc-net-udp" class="headerlink" title="4.2 &#x2F; proc &#x2F; net &#x2F; udp"></a>4.2 &#x2F; proc &#x2F; net &#x2F; udp</h4><p>监控UDP套接字统计：</p>
+<pre><code>cat /proc/net/udp
+</code></pre>
+<p>每一列的意思：</p>
+<ul>
+<li>sl：套接字的内核哈希槽</li>
+<li>local_address：套接字的十六进制本地地址和端口号，以：分隔。</li>
+<li>rem_address：套接字的十六进制远程地址和端口号，以：分隔。</li>
+<li>st：套接字的状态。奇怪的是，UDP协议层似乎使用了某些TCP套接字状态。在上面的示例中，7是TCP_CLOSE。</li>
+<li>tx_queue：在内核中为传出UDP数据报分配的内存量。</li>
+<li>rx_queue：在内核中为传入的UDP数据报分配的内存量。</li>
+<li>tr，tm-&gt; when，retrnsmt：UDP协议层未使用这些字段。</li>
+<li>uid：创建此套接字的用户的有效用户ID。</li>
+<li>timeout：未由UDP协议层使用。</li>
+<li>inode：与此套接字相对应的inode编号。您可以使用它来帮助您确定哪个用户进程打开了此套接字。检查&#x2F; proc &#x2F; [pid] &#x2F; fd，其中将包含指向socket [：inode]的符号链接。</li>
+<li>ref：套接字的当前引用计数。</li>
+<li>pointer：struct sock内核中的内存地址。</li>
+<li>drops：与此套接字关联的数据报丢弃数。请注意，这不包括与发送数据报有关的任何丢弃（在已塞好的UDP套接字上或以其他方式）；从本博客文章所检查的内核版本开始，该值仅在接收路径中递增。</li>
+</ul>
+<p>打印这些计数的代码在net &#x2F; ipv4 &#x2F; udp.c。</p>
+<h3 id="5-调优：socket发送收发内存大小"><a href="#5-调优：socket发送收发内存大小" class="headerlink" title="5.调优：socket发送收发内存大小"></a>5.调优：socket发送收发内存大小</h3><p>发送副本（也叫“写类别”）的副本可以通过设置 net.core.wmem_max sysctl 进行修改。</p>
+<pre><code>$ sudo sysctl -w net.core.wmem_max=8388608
+</code></pre>
+<p>sk-&gt;sk_write_queue 用 net.core.wmem_default 初始化，这个值也可以调整。</p>
+<p>调整初始发送缓冲区大小：</p>
+<pre><code>$ sudo sysctl -w net.core.wmem_default=8388608
+</code></pre>
+<p>也可以通过从应用程序调用 setsockopt 并传递 SO_SNDBUF 来设置 sk-&gt;sk_write_queue 。通过 setsockopt 设置的可选是 net.core.wmem_max。</p>
+<p>不过，可以通过 setsockopt 并传递传递 SO_SNDBUFFORCE 覆盖 net.core.wmem_max 限制，这需要 CAP_NET_ADMIN 权限。</p>
+<p>每次调用__ip_append_data 分配skb时，sk-&gt;sk_wmem_alloc 都会增长。预先我们所看到的，UDP数据报传输速度很快，通常不会在发送当中花费了太多时间。</p>
+<h3 id="6-总结"><a href="#6-总结" class="headerlink" title="6.总结"></a>6.总结</h3><p>本文重点分析了数据包在传输层（UDP协议）的发送过程，并进行了监控和调优，后面的数据包将到达IP协议层，下次再分享，感谢阅读。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9Cudp%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81%EF%BC%88%E4%BA%8C%EF%BC%89-UDP%E5%8D%8F%E8%AE%AE%E5%B1%82%E5%88%86%E6%9E%90/">https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9Cudp%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81%EF%BC%88%E4%BA%8C%EF%BC%89-UDP%E5%8D%8F%E8%AE%AE%E5%B1%82%E5%88%86%E6%9E%90/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9Cudp%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81(%E4%B8%80)/" title="Linux内核网络udp数据包发送(一)"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux内核网络udp数据包发送(一)</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%A4%84%E7%90%86/" title="Linux内核网络中断下半部处理"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux内核网络中断下半部处理</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">1.前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-udp-sendmsg"><span class="toc-number">2.</span> <span class="toc-text">2.udp_sendmsg</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-UDP%E6%8F%92%E5%85%A5"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 UDP插入</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2%E8%8E%B7%E5%8F%96%E7%9B%AE%E7%9A%84IP%E5%9C%B0%E5%9D%80%E5%92%8C%E7%AB%AF%E5%8F%A3"><span class="toc-number">3.</span> <span class="toc-text">2.2获取目的IP地址和端口</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3%E5%A5%97%E6%8E%A5%E5%AD%97%E5%8F%91%E9%80%81%EF%BC%9A%E7%B0%BF%E8%AE%B0%E5%92%8C%E6%89%93%E5%90%88%E5%B9%B6"><span class="toc-number">3.1.</span> <span class="toc-text">2.3套接字发送：簿记和打合并</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4%E8%BE%85%E5%8A%A9%E6%B6%88%E6%81%AF%EF%BC%88%E8%BE%85%E5%8A%A9%E6%B6%88%E6%81%AF%EF%BC%89"><span class="toc-number">3.2.</span> <span class="toc-text">2.4辅助消息（辅助消息）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5%E8%AE%BE%E7%BD%AE%E8%87%AA%E5%AE%9A%E4%B9%89IP%E9%80%89%E9%A1%B9"><span class="toc-number">3.3.</span> <span class="toc-text">2.5设置自定义IP选项</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-6%E5%A4%9A%E6%92%AD%E6%88%96%E5%8D%95%E6%92%AD%EF%BC%88%E5%A4%9A%E6%92%AD%E6%88%96%E5%8D%95%E6%92%AD%EF%BC%89"><span class="toc-number">3.4.</span> <span class="toc-text">2.6多播或单播（多播或单播）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-7%E8%B7%AF%E7%94%B1"><span class="toc-number">3.5.</span> <span class="toc-text">2.7路由</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-8-MSG-CONFIRM%EF%BC%9A%E9%98%BB%E6%AD%A2ARP%E7%BC%93%E5%AD%98%E8%BF%87%E6%9C%9F"><span class="toc-number">3.6.</span> <span class="toc-text">2.8 MSG_CONFIRM：阻止ARP缓存过期</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-9-uncorked-UDP%E5%A5%97%E6%8E%A5%E5%AD%97%E5%BF%AB%E9%80%9F%E8%B7%AF%E5%BE%84%EF%BC%9A%E5%87%86%E5%A4%87%E5%BE%85%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE"><span class="toc-number">3.7.</span> <span class="toc-text">2.9 uncorked UDP套接字快速路径：准备待发送数据</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-9-1-ip-make-skb"><span class="toc-number">3.7.1.</span> <span class="toc-text">2.9.1 ip_make_skb</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-9-2%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE"><span class="toc-number">3.7.2.</span> <span class="toc-text">2.9.2发送数据</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-10%E6%B2%A1%E6%9C%89%E8%A2%AB%E8%BD%AF%E6%9C%A8%E7%9A%84%E6%95%B0%E6%8D%AE%E6%97%B6%E7%9A%84%E6%85%A2%E8%B7%AF%E5%BE%84"><span class="toc-number">3.8.</span> <span class="toc-text">2.10没有被软木的数据时的慢路径</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-10-1-ip-append-data"><span class="toc-number">3.8.1.</span> <span class="toc-text">2.10.1 ip_append_data</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-10-2-ip-append-data"><span class="toc-number">3.8.2.</span> <span class="toc-text">2.10.2 __ip_append_data</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-10-3%E5%86%B2%E6%B4%97%E8%BD%AF%E6%9C%A8%E5%A1%9E"><span class="toc-number">3.8.3.</span> <span class="toc-text">2.10.3冲洗软木塞</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-11%E9%94%99%E8%AF%AF%E4%BC%9A%E8%AE%A1"><span class="toc-number">3.9.</span> <span class="toc-text">2.11错误会计</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-udp-send-skb"><span class="toc-number">3.10.</span> <span class="toc-text">3. udp_send_skb</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E7%9B%91%E6%8E%A7%EF%BC%9AUDP%E5%B1%82%E7%BB%9F%E8%AE%A1"><span class="toc-number">3.11.</span> <span class="toc-text">4.监控：UDP层统计</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-proc-net-snmp"><span class="toc-number">3.11.1.</span> <span class="toc-text">4.1 &#x2F; proc &#x2F; net &#x2F; snmp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-proc-net-udp"><span class="toc-number">3.11.2.</span> <span class="toc-text">4.2 &#x2F; proc &#x2F; net &#x2F; udp</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E8%B0%83%E4%BC%98%EF%BC%9Asocket%E5%8F%91%E9%80%81%E6%94%B6%E5%8F%91%E5%86%85%E5%AD%98%E5%A4%A7%E5%B0%8F"><span class="toc-number">3.12.</span> <span class="toc-text">5.调优：socket发送收发内存大小</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E6%80%BB%E7%BB%93"><span class="toc-number">3.13.</span> <span class="toc-text">6.总结</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

@@ -1,32 +1,205 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>多核心Linux内核路径优化的不二法门之-slab与伙伴系统 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Linux内核的slab来自一种很简单的思想，即事先准备好一些会频繁分配，释放的数据结构。然而标准的slab实现太复杂且维护开销巨大，因此便分化 出了更加小巧的slub，因此本文讨论的就是slub，后面所有提到slab的地方，指的都是slub。另外又由于本文主要描述内核优化方面的内容，并不 是基本原理介绍，因此想了解slab细节以及代码实现的请自行百度或者看源码。 单CPU上单纯的slab下图给出">
+<meta property="og:type" content="article">
+<meta property="og:title" content="多核心Linux内核路径优化的不二法门之-slab与伙伴系统">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%A4%9A%E6%A0%B8%E5%BF%83Linux%E5%86%85%E6%A0%B8%E8%B7%AF%E5%BE%84%E4%BC%98%E5%8C%96%E7%9A%84%E4%B8%8D%E4%BA%8C%E6%B3%95%E9%97%A8%E4%B9%8B-slab%E4%B8%8E%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="Linux内核的slab来自一种很简单的思想，即事先准备好一些会频繁分配，释放的数据结构。然而标准的slab实现太复杂且维护开销巨大，因此便分化 出了更加小巧的slub，因此本文讨论的就是slub，后面所有提到slab的地方，指的都是slub。另外又由于本文主要描述内核优化方面的内容，并不 是基本原理介绍，因此想了解slab细节以及代码实现的请自行百度或者看源码。 单CPU上单纯的slab下图给出">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127661860-7794aa49-2c58-4a3b-b04e-6e4606a7bc53.png">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.417Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/127661860-7794aa49-2c58-4a3b-b04e-6e4606a7bc53.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%A4%9A%E6%A0%B8%E5%BF%83Linux%E5%86%85%E6%A0%B8%E8%B7%AF%E5%BE%84%E4%BC%98%E5%8C%96%E7%9A%84%E4%B8%8D%E4%BA%8C%E6%B3%95%E9%97%A8%E4%B9%8B-slab%E4%B8%8E%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '多核心Linux内核路径优化的不二法门之-slab与伙伴系统',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://user-images.githubusercontent.com/87457873/127661860-7794aa49-2c58-4a3b-b04e-6e4606a7bc53.png')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">多核心Linux内核路径优化的不二法门之-slab与伙伴系统</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.417Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">linux-doc 内存管理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="多核心Linux内核路径优化的不二法门之-slab与伙伴系统"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>Linux内核的slab来自一种很简单的思想，即事先准备好一些会频繁分配，释放的数据结构。然而标准的slab实现太复杂且维护开销巨大，因此便分化 出了更加小巧的slub，因此本文讨论的就是slub，后面所有提到slab的地方，指的都是slub。另外又由于本文主要描述内核优化方面的内容，并不 是基本原理介绍，因此想了解slab细节以及代码实现的请自行百度或者看源码。</p>
+<h2 id="单CPU上单纯的slab"><a href="#单CPU上单纯的slab" class="headerlink" title="单CPU上单纯的slab"></a>单CPU上单纯的slab</h2><p>下图给出了单CPU上slab在分配和释放对象时的情景序列：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127661860-7794aa49-2c58-4a3b-b04e-6e4606a7bc53.png" alt="image"></p>
+<p>可以看出，非常之简单，而且完全达到了slab设计之初的目标。</p>
+<h2 id="扩展到多核心CPU"><a href="#扩展到多核心CPU" class="headerlink" title="扩展到多核心CPU"></a>扩展到多核心CPU</h2><p>现在我们简单的将上面的模型扩展到多核心CPU，同样差不多的分配序列如下图所示：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127661919-4dd9f2f0-77e6-476b-8ebf-915761f9580d.png" alt="image"></p>
+<p>我们看到，在只有单一slab的时候，如果多个CPU同时分配对象，冲突是不可避免的，解决冲突的几乎是唯一的办法就是加锁排队，然而这将大大增加延迟，我们看到，申请单一对象的整个时延从T0开始，到T4结束，这太久了。</p>
+<p>多CPU无锁化并行化操作的直接思路-复制给每个CPU一套相同的数据结构。</p>
+<p>不二法门就是增加“每CPU变量”。对于slab而言，可以扩展成下面的样子：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127661976-071e27e8-9ffc-4a34-bd16-be02ba3a33fd.png" alt="image"></p>
+<p>如果以为这么简单就结束了，那这就太没有意义了。</p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>首先，我们来看一个简单的问题，如果单独的某个CPU的slab缓存没有对象可分配了，但是其它CPU的slab缓存仍有大量空闲对象的情况，如下图所示：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127662044-3b803ad9-f37a-4a84-9538-76168bc440da.png" alt="image"></p>
+<p>这 是可能的，因为对单独一种slab的需求是和该CPU上执行的进程&#x2F;线程紧密相关的，比如如果CPU0只处理网络，那么它就会对skb等数据结构有大量的 需求，对于上图最后引出的问题，如果我们选择从伙伴系统中分配一个新的page(或者pages，取决于对象大小以及slab cache的order)，那么久而久之就会造成slab在CPU间分布的不均衡，更可能会因此吃掉大量的物理内存，这都是不希望看到的。</p>
+<p>在继续之前，首先要明确的是，我们需要在CPU间均衡slab，并且这些必须靠slab内部的机制自行完成，这个和进程在CPU间负载均衡是完全不同的， 对进程而言，拥有一个核心调度机制，比如基于时间片，或者虚拟时钟的步进速率等，但是对于slab，完全取决于使用者自身，只要对象仍然在使用，就不能剥 夺使用者继续使用的权利，除非使用者自己释放。因此slab的负载均衡必须设计成合作型的，而不是抢占式的。</p>
+<p>好了。现在我们知道，从伙伴系统重新分配一个page(s)并不是一个好主意，它应该是最终的决定，在执行它之前，首先要试一下别的路线。</p>
+<p>现在，我们引出第二个问题，如下图所示：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127662092-f5c14a2e-5124-4231-95db-841f74e7395f.png" alt="image"></p>
+<p>谁也不能保证分配slab对象的CPU和释放slab对象的CPU是同一个CPU，谁也不能保证一个CPU在一个slab对象的生命周期内没有分配新的 page(s)，这期间的复杂操作谁也没有规定。这些问题该怎么解决呢？事实上，理解了这些问题是怎么解决的，一个slab框架就彻底理解了。</p>
+<h2 id="问题的解决-分层slab-cache"><a href="#问题的解决-分层slab-cache" class="headerlink" title="问题的解决-分层slab cache"></a>问题的解决-分层slab cache</h2><p>无级变速总是让人向往。</p>
+<p>如果一个CPU的slab缓存满了，直接去抢同级别的别的CPU的slab缓存被认为是一种鲁莽且不道义的做法。那么为何不设置另外一个slab缓存，获 取它里面的对象不像直接获取CPU的slab缓存那么简单且直接，但是难度却又不大，只是稍微增加一点消耗，这不是很好吗？事实上，CPU的 L1，L2，L3 cache不就是这个方案设计的吗？这事实上已经成为cache设计的不二法门。这个设计思想同样作用于slab，就是Linux内核的slub实现。<br>现在可以给出概念和解释了。</p>
+<ul>
+<li>Linux kernel slab cache：一个分为3层的对象cache模型。</li>
+<li>Level 1 slab cache：一个空闲对象链表，每个CPU一个的独享cache，分配释放对象无需加锁。</li>
+<li>Level 2 slab cache：一个空闲对象链表，每个CPU一个的共享page(s) cache，分配释放对象时仅需要锁住该page(s)，与Level 1 slab cache互斥，不互相包容。</li>
+<li>Level 3 slab cache：一个page(s)链表，每个NUMA NODE的所有CPU共享的cache，单位为page(s)，获取后被提升到对应CPU的Level 1 slab cache，同时该page(s)作为Level 2的共享page(s)存在。</li>
+<li>共享page(s)：该page(s)被一个或者多个CPU占 有，每一个CPU在该page(s)上都可以拥有互相不充图的空闲对象链表，该page(s)拥有一个唯一的Level 2 slab cache空闲链表，该链表与上述一个或多个Level 1 slab cache空闲链表亦不冲突，多个CPU获取该Level 2 slab cache时必须争抢，获取后可以将该链表提升成自己的Level 1 slab cache。</li>
+</ul>
+<p>该slab cache的图示如下：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127869263-b574e7ef-21ba-4633-a048-926e8489b11a.png" alt="127662257-9c2ec8e1-7989-40f7-8413-a8016b86394c"></p>
+<p>其行为如下图所示：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127662299-8e03a0bb-2917-44ba-a219-51d12674ee5a.png" alt="image"></p>
+<h2 id="2个场景"><a href="#2个场景" class="headerlink" title="2个场景"></a>2个场景</h2><p>对于常规的对象分配过程，下图展示了其细节：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127662336-7c93e32e-dfd5-4d6b-9696-866f1ead7d28.png" alt="image"></p>
+<p>事实上，对于多个CPU共享一个page(s)的情况，还可以有另一种玩法，如下图所示：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127662366-177b02d9-895b-4717-8b13-17dbbb59e8ee.png" alt="image"></p>
+<h2 id="伙伴系统"><a href="#伙伴系统" class="headerlink" title="伙伴系统"></a>伙伴系统</h2><p>前面我们简短的体会了Linux内核的slab设计,不宜过长,太长了不易理解.但是最后,如果Level 3也没有获取page(s)，那么最终会落到终极的伙伴系统。</p>
+<p>伙伴系统是为了防内存分配碎片化的，所以它尽可能地做两件事：</p>
+<p><strong>1).尽量分配尽可能大的内存</strong><br><br><strong>2).尽量合并连续的小块内存成一块大内存</strong><br></p>
+<p>我们可以通过下面的图解来理解上面的原则：</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127662869-feeea0d4-1e27-47bd-ab30-ff9c04dc00fb.jpg" alt="wKiom1X4ieTC39RgAAWN9sx0r2g463"></p>
+<p>注意，本文是关于优化的，不是伙伴系统的科普，所以我假设大家已经理解了伙伴系统。</p>
+<p>鉴于slab缓存对象大多数都是不超过1个页面的小结构(不仅仅slab系统，超过1个页面的内存需求相比1个页面的内存需求，很少)，因此会有大量的针 对1个页面的内存分配需求。从伙伴系统的分配原理可知，如果持续大量分配单一页面，会有大量的order大于0的页面分裂成单一页面，在单核心CPU上， 这不是问题，但是在多核心CPU上，由于每一个CPU都会进行此类分配，而伙伴系统的分裂，合并操作会涉及大量的链表操作，这个锁开销是巨大的，因此需要 优化！</p>
+<p>Linux内核对伙伴系统针对单一页面的分配需求采取的批量分配“每CPU单一页面缓存”的方式！</p>
+<p>每一个CPU拥有一个单一页面缓存池，需要单一页面的时候，可以无需加锁从当前CPU对应的页面池中获取页面。而当池中页面不足时，系统会批量从伙伴系统中拉取一堆页面到池中，反过来，在单一页面释放的时候，会择优将其释放到每CPU的单一页面缓存中。</p>
+<p>为了维持“每CPU单一页面缓存”中页面的数量不会太多或太少(太多会影响伙伴系统，太少会影响CPU的需求)，系统保持了两个值，当缓存页面数量低于 low值的时候，便从伙伴系统中批量获取页面到池中，而当缓存页面数量大于high的时候，便会释放一些页面到伙伴系统中。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>多 CPU操作系统内核中，关键的开销就是锁的开销。我认为这是一开始的设计导致的，因为一开始，多核CPU并没有出现，单核CPU上的共享保护几乎都是可以 用“禁中断”，“禁抢占”来简单实现的，到了多核时代，操作系统同样简单平移到了新的平台，因此同步操作是在单核的基础上后来添加的。简单来讲，目前的主 流操作系统都是在单核年代创造出来的，因此它们都是顺应单核环境的，对于多核环境，可能它们一开始的设计就有问题。</p>
+<p>不管怎么说，优化操作的不二法门就是禁止或者尽量减少锁的操作。随之而来的思路就是为共享的关键数据结构创建”每CPU的缓存“，而这类缓存分为两种类型：</p>
+<p>1).数据通路缓存。<br><br>比如路由表之类的数据结构，你可以用RCU锁来保护，当然如果为每一个CPU都创建一个本地路由表缓存，也是不错的，现在的问题是何时更新它们，因为所有的缓存都是平级的，因此一种批量同步的机制是必须的。<br><br>2).管理机制缓存。<br><br>比 如slab对象缓存这类，其生命周期完全取决于使用者，因此不存在同步问题，然而却存在管理问题。采用分级cache的思想是好的，这个非常类似于CPU 的L1&#x2F;L2&#x2F;L3缓存，采用这种平滑的开销逐渐增大，容量逐渐增大的机制，并配合以设计良好的换入&#x2F;换出等算法，效果是非常明显的。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%A4%9A%E6%A0%B8%E5%BF%83Linux%E5%86%85%E6%A0%B8%E8%B7%AF%E5%BE%84%E4%BC%98%E5%8C%96%E7%9A%84%E4%B8%8D%E4%BA%8C%E6%B3%95%E9%97%A8%E4%B9%8B-slab%E4%B8%8E%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F/">https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%A4%9A%E6%A0%B8%E5%BF%83Linux%E5%86%85%E6%A0%B8%E8%B7%AF%E5%BE%84%E4%BC%98%E5%8C%96%E7%9A%84%E4%B8%8D%E4%BA%8C%E6%B3%95%E9%97%A8%E4%B9%8B-slab%E4%B8%8E%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://user-images.githubusercontent.com/87457873/127661860-7794aa49-2c58-4a3b-b04e-6e4606a7bc53.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B9%8B%E5%88%86%E9%A1%B5/" title="内存管理之分页"><img class="cover" src="https://user-images.githubusercontent.com/87457873/128138153-fce61fa0-babc-41b5-8670-a255ba315b71.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">内存管理之分页</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%B0%BD%E6%83%85%E9%98%85%E8%AF%BB%EF%BC%8C%E6%8A%80%E6%9C%AF%E8%BF%9B%E9%98%B6%EF%BC%8C%E8%AF%A6%E8%A7%A3mmap%E5%8E%9F%E7%90%86/" title="尽情阅读，技术进阶，详解mmap原理"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127429281-171f23f8-7e9c-41da-92d5-1cc1ca388e75.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">尽情阅读，技术进阶，详解mmap原理</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95CPU%E4%B8%8A%E5%8D%95%E7%BA%AF%E7%9A%84slab"><span class="toc-number">1.</span> <span class="toc-text">单CPU上单纯的slab</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%A9%E5%B1%95%E5%88%B0%E5%A4%9A%E6%A0%B8%E5%BF%83CPU"><span class="toc-number">2.</span> <span class="toc-text">扩展到多核心CPU</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98"><span class="toc-number">3.</span> <span class="toc-text">问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3-%E5%88%86%E5%B1%82slab-cache"><span class="toc-number">4.</span> <span class="toc-text">问题的解决-分层slab cache</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E4%B8%AA%E5%9C%BA%E6%99%AF"><span class="toc-number">5.</span> <span class="toc-text">2个场景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F"><span class="toc-number">6.</span> <span class="toc-text">伙伴系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

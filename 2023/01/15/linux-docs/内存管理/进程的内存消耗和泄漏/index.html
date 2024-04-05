@@ -1,32 +1,202 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>进程的内存消耗和泄漏 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="进程的内存消耗和泄漏 进程的VMA 进程内存消耗的4个概念： vss、rss、pss和uss page fault的几种可能性， major 和 minor 应用内存泄漏的界定方法 应用内存泄漏的检测方法：valgrind 和 addresssanitizer  本节重点阐述 Linux的应用程序究竟消耗了多少内存？ 一是，看到的内存消耗，并不是一定是真的消耗。 二是，Linux存在大量的内存共享">
+<meta property="og:type" content="article">
+<meta property="og:title" content="进程的内存消耗和泄漏">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E6%B6%88%E8%80%97%E5%92%8C%E6%B3%84%E6%BC%8F/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="进程的内存消耗和泄漏 进程的VMA 进程内存消耗的4个概念： vss、rss、pss和uss page fault的几种可能性， major 和 minor 应用内存泄漏的界定方法 应用内存泄漏的检测方法：valgrind 和 addresssanitizer  本节重点阐述 Linux的应用程序究竟消耗了多少内存？ 一是，看到的内存消耗，并不是一定是真的消耗。 二是，Linux存在大量的内存共享">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127090169-f784d99c-da06-40cb-b500-ed48b1be83ac.png">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.417Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/127090169-f784d99c-da06-40cb-b500-ed48b1be83ac.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E6%B6%88%E8%80%97%E5%92%8C%E6%B3%84%E6%BC%8F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '进程的内存消耗和泄漏',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://user-images.githubusercontent.com/87457873/127090169-f784d99c-da06-40cb-b500-ed48b1be83ac.png')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">进程的内存消耗和泄漏</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.417Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">linux-doc 内存管理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="进程的内存消耗和泄漏"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="进程的内存消耗和泄漏"><a href="#进程的内存消耗和泄漏" class="headerlink" title="进程的内存消耗和泄漏"></a>进程的内存消耗和泄漏</h2><ul>
+<li>进程的VMA</li>
+<li>进程内存消耗的4个概念： vss、rss、pss和uss</li>
+<li>page fault的几种可能性， major 和 minor</li>
+<li>应用内存泄漏的界定方法</li>
+<li>应用内存泄漏的检测方法：valgrind 和 addresssanitizer</li>
+</ul>
+<p>本节重点阐述 Linux的应用程序究竟消耗了多少内存？</p>
+<p>一是，看到的内存消耗，并不是一定是真的消耗。</p>
+<p>二是，Linux存在大量的内存共享的情况。<br><br>动态链接库的特点：代码段共享内存，数据段写时拷贝。<br><br>把一个应用程序跑两个进程，这两个进程的代码段也是共享的。<br></p>
+<p>当我们评估进程消耗多少内存时，就是指在用户空间消耗的内存，即虚拟地址在0～3G的部分，对应的物理地址内存。内核空间的内存消耗属于内核，系统调用申请了很多内存，这些内存是不属于进程消耗的。</p>
+<h3 id="进程的虚拟地址空间VMA"><a href="#进程的虚拟地址空间VMA" class="headerlink" title="进程的虚拟地址空间VMA"></a>进程的虚拟地址空间VMA</h3><p><img src="https://user-images.githubusercontent.com/87457873/127090169-f784d99c-da06-40cb-b500-ed48b1be83ac.png" alt="image"></p>
+<p>task_struct里面有个mm_struct指针， 它代表进程的内存资源。pgd，代表 页表的地址； mmap 指向vm_area_struct 链表。 vm_area_struct 的每一段代表进程的一个虚拟地址空间。vma的每一段，都可能是可执行程序的某个数据段、某个代码段，堆、或栈。一个进程的虚拟地址，是在0～3G之间任意分布的。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127090189-b6bc651a-d82d-444d-bff6-cdf6a7141069.png" alt="image"></p>
+<p>上图 提供三种方式，看到进程的VMA空间。</p>
+<p>pmap 3474</p>
+<p>基地址，size, 权限，</p>
+<p>通过以上的方式，可以看到进程的虚拟地址空间，分布在0～3G，任意一小段一小段分布的。</p>
+<p>应用程序运行起来，就是一堆各种各样的VMA。VMA对应着 堆、栈、代码段、数据段、等，不在任何段里的虚拟地址空间，被认为是非法的。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127090214-f0f9dfd2-7899-43ae-816e-34403c36ac1d.png" alt="image"></p>
+<p>当指针访问地址时，落在一个非法的地址，即不在任何一个VMA区域。相当于访问一个非法的地址，这些虚拟地址没有对应的物理地址。应用程序收到page fault，查看原因，访问非法位置，返回segv。</p>
+<p>在VMA的东西，不等于在内存。调malloc申请了100M内存，立马会多出一个100M的 VMA，代表这段vma区域有r+w权限。</p>
+<p><strong>应用程序访问内存，必须落在一个VMA里。其次，落在一个VMA里也不一定对。把100M的堆申请出来，100M内存页全部映射为0页。页表里每一页写的只读，页表和硬件对应，MMU只查页表。而在页表项中指向物理地址的权限是只读，所以在任何时候，去写其中任何一页，硬件都会发生缺页中断。</strong></p>
+<p><strong>Linux 内核在缺页中断的处理程序，通过MMU寄存器读出发生page fault的地址和原因。发现此时page fault的原因是写一个页表里记录只读的物理地址，而vma记录的虚拟地址又是r+w，此时，linux会申请一页内存。同时把页表中的权限改为r+w。</strong></p>
+<p>总结：<br><br>Linux 内核通过VMA管理进程每一段虚拟地址空间和权限。一旦发生page fault，如果没有落在任何一个vma区域，会干掉。</p>
+<p>VMA的起始地址+size，用来限定程序访问的地址是否合法。VMA中每一段的权限，是来界定访问这段地址是否使用正确的方式访问。</p>
+<p>把所有的vma加起来，构成进程的虚拟地址空间，但这并不代表进程真实耗费的内存。拿到之后才是真实耗费的内存，RSS。耗费的虚拟内存，是VSS。</p>
+<h3 id="page-fault的几种可能性"><a href="#page-fault的几种可能性" class="headerlink" title="page fault的几种可能性"></a>page fault的几种可能性</h3><p><img src="https://user-images.githubusercontent.com/87457873/127090458-dafe02a1-0fc1-4e2c-959e-746b169d2487.png" alt="image"></p>
+<p>1、申请堆内存vma，第一次写，页表里的权限是R ，发生page fault，linux会去申请一页内存，此时把页表权限设置为 R+W。<br><br>2、内存访问落在空白非法区域，程序收到segv段错误。<br><br>3、代码段在VMA记录是R+X，此时如果对代码段执行写，程序会收到segv段错误。<br></p>
+<h4 id="minor-和major-缺页"><a href="#minor-和major-缺页" class="headerlink" title="minor 和major 缺页"></a>minor 和major 缺页</h4><p>缺页，分为两种情况：主缺页 和次缺页。</p>
+<p>主缺页 和次缺页，区别就是 申请内存时，是否需要读硬盘。前者需要。</p>
+<p>如上图第4种情况，在代码段里执行时，出现缺页。linux申请一页内存，而且要从硬盘中读取代码段的内容，此时产生了IO，称为 major缺页。</p>
+<p>无论是代码段还是堆，都是边执行边产生缺页中断，申请实际的内存给代码段，且从硬盘中读取代码段的内容到内存。这个过程时间比较长。</p>
+<p>minor： malloc的内存，产生缺页中断。去申请一页内存，没有产生IO的行为。major缺页处理时间，远大于minor。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127090530-49373bbd-8d2e-4170-a46d-80b4b462548b.png" alt="image"></p>
+<h3 id="vss、rss、pss和uss的区别"><a href="#vss、rss、pss和uss的区别" class="headerlink" title="vss、rss、pss和uss的区别"></a>vss、rss、pss和uss的区别</h3><p><img src="https://user-images.githubusercontent.com/87457873/127090546-05a8c508-77cb-4a43-a792-7109461eeed0.png" alt="image"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">VSS - Virtual Set Size</span><br><span class="line">RSS - Resident Set Size</span><br><span class="line">PSS - Proportional Set Size</span><br><span class="line">USS - Unique Set Size</span><br><span class="line">ASAN - AddressSanitizer</span><br><span class="line">LSAN - LeakSanitizer</span><br></pre></td></tr></table></figure>
+
+<p>如上图，中间是一根内存条。三个进程分别是1044，1045，1054, 每一个进程对应一个page table，页表项记录虚拟地址如何往物理地址转换。硬件里的寄存器，记录页表的物理地址。当linux做进程上下文切换时，页表也跟着一起切换。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127090569-cc475c78-4c51-4492-b228-80f25b5b6f02.png" alt="image"></p>
+<p>三个进程都需要使用libc的代码段。<br><br>VSS ＝ 1 +2 +3<br><br>RSS &#x3D; 4 +5 +6<br><br>PSS&#x3D; 4&#x2F;3 + 5&#x2F;2 + 6 比例化的<br><br>USS＝ 6 独占且驻留的</p>
+<p>工具：smem ，查看进程使用内存的情况。<br><br>一般来讲，进程使用的内存量，还是看PSS，强调公平性。看内存泄漏看USS 就好了。</p>
+<h3 id="内存泄漏-界定和检测方法"><a href="#内存泄漏-界定和检测方法" class="headerlink" title="内存泄漏 界定和检测方法"></a>内存泄漏 界定和检测方法</h3><p>界定：连续多点采样法，随着时间越久，进程耗费内存越多。</p>
+<p>主要由内存申请和释放不是成对引起。RSS&#x2F;USS曲线，</p>
+<p>观察方法：使用smem工具查看多次进程使用内存，USS使用量。</p>
+<p>检查工具：<br><br>1、valgrind ，会跑一个虚拟机，运行时检查进程的内存行为。会放慢程序的速度。不需要重新编译程序。<br><br>2、addressanitizer，需要重新编译程序。编译时加参数，-fsanitize<br><br>gcc 4.9才支持，只会放慢程序速度2～3倍。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E6%B6%88%E8%80%97%E5%92%8C%E6%B3%84%E6%BC%8F/">https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E6%B6%88%E8%80%97%E5%92%8C%E6%B3%84%E6%BC%8F/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://user-images.githubusercontent.com/87457873/127090169-f784d99c-da06-40cb-b500-ed48b1be83ac.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E7%A1%AC%E4%BB%B6%E5%8E%9F%E7%90%86%20%E5%92%8C%20%E5%88%86%E9%A1%B5%E7%AE%A1%E7%90%86/" title="硬件原理 和 分页管理"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127086457-a68a78f3-b6c5-45e8-833e-fd1dbdd51dc8.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">硬件原理 和 分页管理</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/Linux%20IO%20%E4%B9%8B%20%E5%9D%97IO%E6%B5%81%E7%A8%8B%E4%B8%8EIO%E8%B0%83%E5%BA%A6%E5%99%A8/" title="Linux IO 之 块IO流程与IO调度器"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux IO 之 块IO流程与IO调度器</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E5%AD%98%E6%B6%88%E8%80%97%E5%92%8C%E6%B3%84%E6%BC%8F"><span class="toc-number">1.</span> <span class="toc-text">进程的内存消耗和泄漏</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4VMA"><span class="toc-number">1.1.</span> <span class="toc-text">进程的虚拟地址空间VMA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#page-fault%E7%9A%84%E5%87%A0%E7%A7%8D%E5%8F%AF%E8%83%BD%E6%80%A7"><span class="toc-number">1.2.</span> <span class="toc-text">page fault的几种可能性</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#minor-%E5%92%8Cmajor-%E7%BC%BA%E9%A1%B5"><span class="toc-number">1.2.1.</span> <span class="toc-text">minor 和major 缺页</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#vss%E3%80%81rss%E3%80%81pss%E5%92%8Cuss%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">1.3.</span> <span class="toc-text">vss、rss、pss和uss的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F-%E7%95%8C%E5%AE%9A%E5%92%8C%E6%A3%80%E6%B5%8B%E6%96%B9%E6%B3%95"><span class="toc-number">1.4.</span> <span class="toc-text">内存泄漏 界定和检测方法</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

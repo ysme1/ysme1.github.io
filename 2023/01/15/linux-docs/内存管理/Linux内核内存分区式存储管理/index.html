@@ -1,32 +1,274 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux内核内存分区式存储管理 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言分区式存储管理最大的缺点是碎片问题严重，内存利用率低。究其原因，主要在于连续分配的限制，即它要求每个作用在内存中必须占一个连续的分区。 如果允许将一个进程分散地装入到许多不相邻的分区中，便可充分地利用内存，而无需再进行“紧凑”。 基于这一思想，产生了“非连续分配方式”，或者称为“离散分配方式”。  连续分配：为用户进程分配的必须是一个连续的内存空间。 非连续分配：为用户进程分配的可以是一些分散">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核内存分区式存储管理">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E5%88%86%E5%8C%BA%E5%BC%8F%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="前言分区式存储管理最大的缺点是碎片问题严重，内存利用率低。究其原因，主要在于连续分配的限制，即它要求每个作用在内存中必须占一个连续的分区。 如果允许将一个进程分散地装入到许多不相邻的分区中，便可充分地利用内存，而无需再进行“紧凑”。 基于这一思想，产生了“非连续分配方式”，或者称为“离散分配方式”。  连续分配：为用户进程分配的必须是一个连续的内存空间。 非连续分配：为用户进程分配的可以是一些分散">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-1de81658ba2a37163cdc8f15c3cf57b0_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.417Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic1.zhimg.com/80/v2-1de81658ba2a37163cdc8f15c3cf57b0_720w.webp"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E5%88%86%E5%8C%BA%E5%BC%8F%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux内核内存分区式存储管理',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://pic1.zhimg.com/80/v2-1de81658ba2a37163cdc8f15c3cf57b0_720w.webp')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux内核内存分区式存储管理</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.417Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">linux-doc 内存管理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux内核内存分区式存储管理"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>分区式存储管理最大的缺点是碎片问题严重，内存利用率低。究其原因，主要在于连续分配的限制，即它要求每个作用在内存中必须占一个连续的分区。</p>
+<p><strong>如果允许将一个进程分散地装入到许多不相邻的分区中，便可充分地利用内存，而无需再进行“紧凑”。</strong></p>
+<p><strong>基于这一思想，产生了“非连续分配方式”，或者称为“离散分配方式”。</strong></p>
+<p><img src="https://pic1.zhimg.com/80/v2-1de81658ba2a37163cdc8f15c3cf57b0_720w.webp" alt="img"></p>
+<p><strong>连续分配：</strong>为用户进程分配的必须是一个<strong>连续的内存空间。</strong></p>
+<p><strong>非连续分配：</strong>为用户进程分配的可以是一些<strong>分散的内存空间。</strong></p>
+<p>分页存储管理的思想：把内存分为一个个相等的小分区，再按照分区大小把进程拆分成一个个小部分。</p>
+<p>分页存储管理分为：实分页存储管理和虚分页存储管理</p>
+<h2 id="1、实分页式存储管理"><a href="#1、实分页式存储管理" class="headerlink" title="1、实分页式存储管理"></a>1、实分页式存储管理</h2><p>实分页式存储最大的优点是内存利用率高，与目前流行的虚分页存储管理相比，具有实现简单，程序运行快的优点。目前，飞速发展的硬件制造技术使得物理内存越来越大，因此我们认为，实分页式存储管理将是一种最有发展前途的存储管理方式。</p>
+<h3 id="1-1基本原理"><a href="#1-1基本原理" class="headerlink" title="1.1基本原理"></a>1.1基本原理</h3><p>假设一个大型饭店，所有的客房都是标准的双人间，部分客房已经住进客人，现在又有一个旅游团要求入住。接待员统计了一下，对旅游团领队说：“贵团全体成员都能住下，两人一个房间，但是不能住在同一楼层了，因为每层空着的客房不够，更没有几个挨着的。请原谅！”。对于这样的安排，一般人不会感到奇怪。因为旅游团本来就是由一位位个人或夫妻等组成的，而饭店的客房本来也是两人一间的，两人一组正好可以住在一个客房里；另外，饭店几乎每天都有入住和退房的客人，想在同一楼层找几间挨着的客房实在不容易。</p>
+<p>①将整个系统的内存空间划分成一系列<strong>大小相等的块</strong>，每一块称为一个<strong>物理块</strong>、<strong>物理页</strong>或<strong>实页</strong>，<strong>页架</strong>或<strong>页帧（frame）</strong>，可简称为<strong>块（block）</strong>。所有地块按物理地址递增顺序连续编号为0、1、2、……。<br>这里地块相当于饭店的客房，系统对内存分块相当于饭店把大楼所有的客房都设计成标准的双人间。<br>②每个作业的地址空间也划分成一系列与内存块一样大小地块，每一块称为一个<strong>逻辑页</strong>或<strong>虚页</strong>，也有人叫<strong>页面</strong>，可简称为<strong>页（page）</strong>。所有的页按照逻辑地址递增顺序连续编号为0、1、2、……。<br>这里，作业地址空间分页就相当于把旅游团成员分成两人一组。</p>
+<p>③一个作业，只要它的总页数不大于内存中的可用块数，系统就可以对它实施分配。系统装入作业时，以页为单位分配内存，一页分配一个块，作业所有的页所占地块可以不连续。系统同时为这个作业建立一个页号与块号的对照表，称为页表。<br>这就像饭店有个记录客户入住情况的客户登记表一样。另外，饭店安排客户入住是要查看全部客房的使用情况一览表，相应的系统给作业分配内存时要查看主存分配表或者内存块说明表。‘<br>④每个块的大小是固定的，一般是个1&#x2F;2KB～4KB之间的数值（请读者思考：块尺寸为什么太大或太小都不好），而且必须是个2的幂次。<br>对块尺寸这样规定相当于饭店规定客房是双人间。可以设想一下，如果上例中饭店所有的客房都是十人间的话，效益肯定不如全是双人间的好</p>
+<p><img src="https://pic3.zhimg.com/80/v2-f1784ec50ced23b196ef09f0cde2ef82_720w.webp" alt="img"></p>
+<p><strong>实模式下分页存储管理的基本原理：</strong><br>操作系统<strong>以页框为单位为各个进程分配内存空间</strong>。系统自动地将作业的地址空间分页，将系统的主存空间分块，页与块等大小，在作业运行时，一次性把作业的全部页面装入内存，<strong>各个页所占的内存块可以不连续，也不必按先后顺序，可以放到不相邻的各个页框中</strong>。<br>这实际是个把作业从地址空间映射到存储空间的过程</p>
+<h3 id="1-2页表"><a href="#1-2页表" class="headerlink" title="1.2页表"></a>1.2页表</h3><p>页面的划分完全是一种系统硬件的行为，一个逻辑地址放到这种地址结构中，自然就分成了页号和页内单元号两部分。</p>
+<p><img src="https://pic3.zhimg.com/80/v2-8eb583876cbdd61655a5de2d8d09243a_720w.webp" alt="img"></p>
+<p>页面大小为：4KB</p>
+<p>在分页系统中，允许将作业（进程）的任一页装入到内存中的任一可用的物理块中，但进程的地址空间本来是连续的，若把他分页后装入到不相邻的物理块中，要保证系统仍能正确运行，就要<strong>实现从进程的逻辑地址变换为内存的物理地址</strong>。</p>
+<p>所以，系统为每个进程建立一张页面映射表，简称页表。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-2c55f64e238f0f23130ccaac5dee8b41_720w.webp" alt="img"></p>
+<h3 id="1-3地址映射"><a href="#1-3地址映射" class="headerlink" title="1.3地址映射"></a>1.3地址映射</h3><p>在系统中设置地址变换机构，能将用户进程地址空间中的逻辑地址变为内存空间中的物理地址。<br>由于页面和物理块的大小相等，页内偏移地址和块内偏移地址是相同的。无须进行从页内地址到块内地址的转换。<br>地址变换机构的任务，关键是将逻辑地址中的页号转换为内存中的物理块号。物理块号内的偏移地址就是页面内偏移地址。<br>页表的作用就是从页号到物理块号的转换，所以地址变换的任务借助于页表来完成的。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-7cbaff5931089ca53224cd756978a4e3_720w.webp" alt="img"></p>
+<p><img src="https://pic3.zhimg.com/80/v2-9c392fa4064349c936bbccd8cc9cc6c2_720w.webp" alt="img"></p>
+<p><strong>如果题目中是用十进制数表示逻辑地址，则：</strong></p>
+<p><img src="https://pic1.zhimg.com/80/v2-97f7b90770d7f3a3d45fff833f4c7218_720w.webp" alt="img"></p>
+<p>例题1：有一系统采用页式存储管理，有一作业大小是8KB，页大小为2KB，依次装入内存的第7、9、10、5块，试将虚地址7145，3412转换成内存地址。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-124eb561d061227e3ecf56d0e3d2e2cd_720w.webp" alt="img"></p>
+<p><strong>虚地址 3412</strong><br>P＝3412 ％ 2048＝1</p>
+<p>W＝3412 mod 2048＝1364<br>MA&#x3D;9*2048+1364&#x3D;19796<br>虚地址3412的内存地址是19796</p>
+<p><strong>虚地址 7145</strong><br>P＝7145 ％ 2048 ＝3<br>W＝7145 mod 2048 ＝1001<br>MA&#x3D;5*2048+1001&#x3D;11241<br>虚地址7145的内存地址是：11241</p>
+<p><img src="https://pic4.zhimg.com/80/v2-95f185565e24cb9a0ee7a67a8cf53e9b_720w.webp" alt="img"></p>
+<h3 id="1-4快表"><a href="#1-4快表" class="headerlink" title="1.4快表"></a>1.4快表</h3><p>因为页表是存放在内存中的，<strong>CPU要存取一个数据，需访问主存两次</strong>。<br>第一次：访内存中的页表，找到该页的的物理块号，将此块号与页内地址拼接形成物理地址；<br>第二次：真正访问该物理地址，存取其中的内容。<br>这样就能把程序的执行速度降低一倍。<br>为了提高存取速度，在地址变换机构中增设一组寄存器，用来存放访问的那些页表。</p>
+<p><strong>快表是一种放存速度比内存快很多的高速缓冲器。</strong><br><strong>把存放在高速缓冲寄存器中的页表叫快表</strong>，这个高速缓冲寄存器又叫<strong>联想存贮器（TLB）。</strong>与此对应，内存中的页表称为慢表。</p>
+<p><strong>当进程访问一页时，系统将页号与快表中的所有项进行并行比较。若访问的页在快表中，即可立即进行地址转换。</strong><br><strong>当被访问的页不在快表中时，去内存中查询页表，同时将页表找到的内存块号与虚页号填入快表中</strong></p>
+<p><img src="https://pic3.zhimg.com/80/v2-c84edd02e05af4fd44e3988acb6bf416_720w.webp" alt="img"></p>
+<p>例题2：</p>
+<p>快表命中率98%，访问时间是10ns， 内存访问时间是100ns， 平均访问时间？<br>平均访问时间&#x3D;98%<em>(10+100)+（1-98%）</em>（10+100+100）</p>
+<p><strong>若快表命中</strong></p>
+<p>联想寄存器检索时间：10ns<br>访问内存1次取数据时间：100ns<br>取数据总时间：110ns</p>
+<p><strong>若快表中未命中</strong><br>联想寄存器检索时间：10ns<br>访问内存1次检索页表时间：100ns<br>访问内存1次取数据时间：100ns<br>取数据总时间：210ns</p>
+<h3 id="1-5两级和多级页表"><a href="#1-5两级和多级页表" class="headerlink" title="1.5两级和多级页表"></a>1.5两级和多级页表</h3><p>现代的大多数计算机系统，都支持非常大的逻辑地址空间(232~264)。页表就变得非常大，要占用相当大的内存空间。可以采用两个方法来解决这一问题：</p>
+<p>① 采用离散分配方式来解决难以找到一块连续的大内存空间的问题：</p>
+<p>② 只将当前需要的部分页表项调入内存，其余的页表项仍驻留在磁盘上，需要时再调入。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-03b14fadc94d6d319bfe859e32ed398d_720w.webp" alt="img"></p>
+<p><strong>二级页表如何实现地址变换？</strong></p>
+<p><img src="https://pic2.zhimg.com/80/v2-e71c7761a80dbf97edce88b67bd21df5_720w.webp" alt="img"></p>
+<h3 id="1-6页的分配与回收"><a href="#1-6页的分配与回收" class="headerlink" title="1.6页的分配与回收"></a>1.6页的分配与回收</h3><p>用一张“位示图”构成主存分配表。位示图的每一位与一个主存块对应，其值为0，表示对应的主存块空闲，其值为1，表示对应的主存块已分配。</p>
+<p>位示图优点是占用内存空间小，可常驻内存，加快分配进程，但缺点是不够直观。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-7b7129ef6bb6539db211ff5113b07fe3_720w.webp" alt="img"></p>
+<p><strong>内存分配过程：</strong></p>
+<p>计算一个作业所需要的总块数N<br>查位示图，看看是否还有N个空闲块<br>如果有足够的空闲块，则页表长度设为N，可填入PCB中；申请页表区，把页表始址填入PCB<br>依次分配N个空闲块，将块号和页号填入页表<br>修改位示图</p>
+<h3 id="1-7存在的问题"><a href="#1-7存在的问题" class="headerlink" title="1.7存在的问题"></a>1.7存在的问题</h3><p>为每个进程配置一张页表，进程逻辑空间非常大，带来的问题？</p>
+<p>可以引入<strong>Inverted page tables(放置页表)</strong><br>反置页表 – 按物理块号排序<br>IBM RT; HP Spectrum…<br>反置页表很大，使用Hash表加快检索<br>所有在内存中的并发进程只有一张页表<br>除了Hash表，联想寄存器也被用来存放最近使用过的页表项</p>
+<p><img src="https://pic2.zhimg.com/80/v2-ebf8811c48d538ddf386fc0766ee3b1d_720w.webp" alt="img"></p>
+<h3 id="1-8分页存储管理方案的评价"><a href="#1-8分页存储管理方案的评价" class="headerlink" title="1.8分页存储管理方案的评价"></a>1.8分页存储管理方案的评价</h3><p><strong>优点：</strong><br>较好地解决了碎片的问题<br>打破了存储分配的连续性要求<br>提高了主存的利用率</p>
+<p><strong>缺点</strong>：<br>页内碎片<br>动态地址变换、方案实施需耗用额外的系统资源<br>存储扩充问题没有解决——作业大小受到限制，可用块数小于作业需求时需等待</p>
+<h2 id="2、虚拟存储器-Virtual-Memory"><a href="#2、虚拟存储器-Virtual-Memory" class="headerlink" title="2、虚拟存储器(Virtual Memory)"></a>2、虚拟存储器(Virtual Memory)</h2><h3 id="2-1局部性原理-principle-of-locality"><a href="#2-1局部性原理-principle-of-locality" class="headerlink" title="2.1局部性原理(principle of locality)"></a>2.1局部性原理(principle of locality)</h3><p>指程序在执行过程中的一个较短时期，所执行的指令地址和指令的操作数地址，分别局限于一定区域。还可以表现为：<br><strong>时间局部性：</strong>一条指令的一次执行和下次执行，一个数据的一次访问和下次访问都集中在一个较短时期内；<br><strong>空间局部性：</strong>当前指令和邻近的几条指令，当前访问的数据和邻近的数据都集中在一个较小区域内。</p>
+<p><strong>局部性原理的具体体现：</strong><br>程序在执行时，大部分是顺序执行的指令，少部分是转移和过程调用指令。<br>过程调用的嵌套深度一般不超过5，因此执行的范围不超过这组嵌套的过程。<br>程序中存在相当多的循环结构，它们由少量指令组成，而被多次执行。<br>程序中存在相当多对一定数据结构的操作，如数组操作，往往局限在较小范围内。</p>
+<h3 id="2-2引入虚拟存储技术的好处"><a href="#2-2引入虚拟存储技术的好处" class="headerlink" title="2.2引入虚拟存储技术的好处"></a>2.2引入虚拟存储技术的好处</h3><p>大程序：可在较小的可用内存中执行较大的用户程序；<br>大的用户空间：提供给用户可用的虚拟内存空间通常大于物理内存(real memory)<br>并发：可在内存中容纳更多程序并发执行；<br>易于开发：与覆盖技术比较，不必影响编程时的程序结构</p>
+<h3 id="2-3虚拟存储技术的特征"><a href="#2-3虚拟存储技术的特征" class="headerlink" title="2.3虚拟存储技术的特征"></a>2.3虚拟存储技术的特征</h3><p>不连续性：物理内存分配的不连续，虚拟地址空间使用的不连续（数据段和栈段之间的空闲空间，共享段和动态链接库占用的空间）<br>部分交换：与交换技术相比较，虚拟存储的调入和调出是对部分虚拟地址空间进行的；<br>大空间：通过物理内存和快速外存相结合，提供大范围的虚拟地址空间</p>
+<h3 id="2-4虚拟存储技术的种类"><a href="#2-4虚拟存储技术的种类" class="headerlink" title="2.4虚拟存储技术的种类"></a>2.4虚拟存储技术的种类</h3><p>虚拟页式<br>虚拟段式<br>虚拟段页式</p>
+<h2 id="3、虚拟页式-virtual-paging-存储管理"><a href="#3、虚拟页式-virtual-paging-存储管理" class="headerlink" title="3、虚拟页式(virtual paging)存储管理"></a>3、虚拟页式(virtual paging)存储管理</h2><h3 id="3-1基本原理"><a href="#3-1基本原理" class="headerlink" title="3.1基本原理"></a>3.1基本原理</h3><p>系统自动地将作业的地址空间分页，将系统的主存空间分块，页与块等大小，在作业运行前，只把初始需要的一部分页面装入内存块里，运行中需要访问自己地址空间中的但当前不在内存的页面时产生缺页中断，由缺页中断服务程序将所需的页面调入内存，若此时内存中没有空闲物理块安置请求调入的新页面，则系统按预定的置换策略自动选择一个或一些在内存的页面，把它们换出到外存。</p>
+<p>虚拟页式存储管理实际是实分页技术与虚拟存储技术相结合的产物，其分页思想与实分页是一样的。</p>
+<p><strong>这里的请求调入和置换功能都是比实分页存储管理增加的内容，是实现虚拟存储的主要功能。</strong></p>
+<p>为实现虚拟页式存储管理:<br>需要置<strong>换技术、请求装入技术和大硬盘</strong>支持，另外：<br>页表表目需要增加<strong>外存块号、状态位、访问位或访问字段、修改位、存取控制字段</strong>等。<br><strong>外存块号</strong>指出该页在外存的地址，供调入该页时用；<br><strong>状态位</strong>指示该页是否在内存；<br><strong>访问位或访问字段</strong>则是该页被访问过的标志或被访问过的次数；<br><strong>修改位</strong>表示该页是否被修改过；<br><strong>存取控制字段</strong>则是用来限制页面被安全共享的。</p>
+<p>作业1在请求分页系统中的存储映像</p>
+<p><img src="https://pic1.zhimg.com/80/v2-91b609d25f9f074773d941efa11b66f0_720w.webp" alt="img"></p>
+<p>当执行 “mov r1，[2120］”时<br>CPU产生的虚地址为2120<br>分页机构得 p&#x3D;2，w&#x3D;72（每页1K）<br>查页表。该页中断位i&#x3D;1，发生缺页中断</p>
+<p>如主存中有空白块，直接调入<br>如主存中无空白块，则需淘汰该作业在主存中的一页</p>
+<h3 id="3-2主存页面分配策略"><a href="#3-2主存页面分配策略" class="headerlink" title="3.2主存页面分配策略"></a>3.2主存页面分配策略</h3><p>在虚拟页式存储管理中，内存分配似实分页方式，但还必须考虑解决下面两个问题：<br>（1）是否对各进程采用平均分配策略？<br>（2）发生缺页中断时，如何为所缺的页面分配内存？</p>
+<p>对问题(2)有一下几种做法：</p>
+<p>a、平均分配。</p>
+<p>b、按进程长度比例分配。</p>
+<p>c、按进程优先级分配。</p>
+<p>d、按进程长度和优先级别分配。</p>
+<p>对问题(2)主要有一下两种做法：</p>
+<p>a、固定分配局部置换。</p>
+<p>b、可变分配全局置换。</p>
+<h3 id="3-3页面调入策略"><a href="#3-3页面调入策略" class="headerlink" title="3.3页面调入策略"></a>3.3页面调入策略</h3><p>（1）请求调入<br>当发生页面故障时进行调度，即当进程访问不在内存的页面引发缺页中断时，由系统根据这种访问请求把所缺页面装入内存。<br><strong>优点：</strong>由请求调入策略装入的页一定会被访问，再加之比较容易实现，故在目前的虚拟存储器中，大多采用此策略。<br><strong>缺点：</strong>每次仅调入一页，增加了磁盘I&#x2F;O的启动频率。</p>
+<p>（ 2）预调入<br>&#x3D;&gt;也称先行调度，即一页面被访问前就已经预先置入内存，以减少今后的缺页率。<br>&#x3D;&gt;主要适于进程的许多页存放在外存的连续区域中的情况。有的系统结合请求调入使用，即每次缺页时装入多个页面。<br><strong>优点：</strong>提高调页的I&#x2F;O效率。<br><strong>缺点：</strong>基于预测，若调入的页在以后很少被访问，则效率低。常用于程序装入时的调页。</p>
+<p><strong>调入页面的来源：</strong></p>
+<p>通常对外存交换区的I&#x2F;O效率比文件区的高。<br>进程装入时，将其全部页面复制到交换区，以后总是从交换区调入。执行时调入速度快，要求交换区空间较大。<br>凡是未被修改的页面，都直接从文件区读入，而被置换时不需调出；已被修改的页面，被置换时需调出到交换区，以后从交换区调入。</p>
+<p><strong>存储分配的安全性考虑:</strong><br>把一个页面分配给进程之前，先要清除页面中的数据（如全部填充为0），以免该进程读取前一进程遗留在页面中的数据；</p>
+<h3 id="3-4页面调度算法"><a href="#3-4页面调度算法" class="headerlink" title="3.4页面调度算法"></a>3.4页面调度算法</h3><p>由缺页中断服务程序将所需的页面调入内存，若此时内存中没有空闲物理块安置请求调入的新页面，则系统按预定的策略自动选择一个（请求调入策略）或一些（预调入策略）在内存的页面，把它们换出到外存。</p>
+<p><strong>a、什么是淘汰策略（置换策略）？</strong></p>
+<p>用来选择淘汰哪一页的规则就叫做置换策略，或称淘汰算法。如何决定淘汰哪一页？根据页面在系统中的表现（如：使用的频繁程度、进入系统时间的长短）</p>
+<p><strong>b、颠簸</strong><br>颠簸(thrashing)，又称为“抖动”。<br>简单地说，导致系统效率急剧下降的主存和辅存之间的频繁页面置换现像称为“抖动”。<br>现象？<strong>淘汰的页面恰好是不久又要访问的页面。</strong></p>
+<p><strong>（1）最佳淘汰算法——OPT(Optimal)</strong><br>这是<strong>Belady贝莱迪</strong>于1966年提出的一种<strong>理论上的算法</strong>。该算法每次都淘汰以后永不使用的，或者过最长的时间后才会被访问的页面。<br>显然，采用<strong>这种算法会保证最低的缺页率，但它是无法实现的</strong>，因为它必须知道页面“将来”的访问情况。不过，该算法仍有一定意义，<strong>可作为衡量其他算法优劣的一个标准</strong>。</p>
+<p>假定系统为某个进程分配了三个物理块，进程的访问顺序为7，0，1，2，0，3，0，4，2，3，0，3，2，1，2</p>
+<p>采用OPT淘汰算法：</p>
+<p><img src="https://pic4.zhimg.com/80/v2-2b09f7a4f32824074caadccb81e85acf_720w.webp" alt="img"></p>
+<p><strong>（2）先进先出淘汰算法——FIFO</strong><br>这是最早出现的淘汰算法。<br>总是淘汰<strong>最先进入内存的页面</strong>。它实现简单，只需把进程中已调入内存的页面，按先后次序链成一个<strong>队列</strong>，并设置一个所谓的替换指针，使它<strong>总是指向内存中最老的页面</strong>。<br>缺点：效率不高，因为它与进程实际的运行规律不相适应，比如常用的全局变量所在的页面或者循环体所在页面都可能被它选为淘汰对象。出现bleady现象。</p>
+<p>页面进入主存的先后次序：<br>2-&gt;4-&gt;5-&gt;1</p>
+<p><img src="https://pic1.zhimg.com/80/v2-e7f65e45e53c457f81db445964f5d63c_720w.webp" alt="img"></p>
+<p>当要调入第6页时：<br>置换第2页<br>将第2页改为6<br>替换指针指向第4页4-&gt;5-&gt;1-&gt;6</p>
+<p>Belady现象：采用FIFO算法时，如果对一个进程未分配它所要求的全部页面，有时就会出现分配的页面数增多，缺页率反而提高的异常现象。<br>Belady现象的描述：一个进程P要访问M个页，OS分配N个内存页面给进程P；对一个访问序列S，发生缺页次数为PE（S,N）。当N增大时，PE(S, N)时而增大，时而减小。<br>Belady现象的原因：<strong>FIFO算法的置换特征与进程访问内存的动态特征是非常不一致的，即被置换的页面通常并不是进程不会访问的</strong>。</p>
+<p>采用FIFO淘汰算法：</p>
+<p><img src="https://pic4.zhimg.com/80/v2-4392e40a70cb228820f46d58edd00a97_720w.webp" alt="img"></p>
+<p><strong>（3） 最近最久未使用算法 (LRU, Least Recently Used）</strong></p>
+<p>根据页面调入内存后的使用情况，选择<strong>内存中最久未使用的页面被置换</strong>。这是局部性原理的合理近似，性能接近最佳算法。<br>OPT算法使用页面将要被访问的时间，LRU算法使用页面最后一次被访问的时间。二者唯一的差别是：OPT是向前看的，而LRU是向后看的。<br>下面给出LRU的实现算法：<br><strong>a、计时法：</strong>对于每一页面增设一个访问时间计时器，每当一个页面被访问时，当时的绝对时钟内容被拷贝到对应的访问时间计时器中，这样系统记录了内存中所有页面最后一次被访问的时间。淘汰时，选取访问时间计时器的值最小的页面。<br><strong>b、堆栈法：</strong>每当进程访问某页面时，便将该页面的页号从栈中移出，将它压入栈顶。栈顶始终是最新被访问的页面的编号。栈底则是最近最久未被使用的页面的页面号。<br><strong>c、多位寄存器法</strong><br>为每页设置一个R位的寄存器<br>每次访问一页时，将该页所对应的寄存器最左位置1<br>每隔时间间隔T，所有寄存器右移一位。<br>选择R值最小的页淘汰。<br>例如，r寄存器共有四位，页面P0、P1、P2在T1、T2、T3时刻的r寄存器内容如下：<br>页面 时刻<br>T1 T2 T3<br>P0 1000 0100 1010<br>P1 1000 1100 0110<br>P2 0000 1000 0100</p>
+<p>给某作业分配了三块主存，该作业依次访问的页号为：4，3，0，4，1，1，2，3，2。当访问这些页时，页面淘汰序列变化情况如下</p>
+<p><img src="https://pic3.zhimg.com/80/v2-6eb312b2f3da1549d5d8c269b1bfe476_720w.webp" alt="img"></p>
+<p>LRU的开销是很大的，必须有硬件的支持，完全由软件实现其速度至少会减少10倍，因此LRU近似算法更实用些</p>
+<p><strong>（4）二次机会淘汰算法——SC(Second Chance)淘汰算法</strong><br>这是一种<strong>LRU的近似算法</strong>，是通过对FIFO算法进行简单改造，结合页表中的访问位而得来一种淘汰算法。<br>该算法首先检查位于FIFO链链首的页，如果它的访问位为0，则选择该页淘汰；如果它的访问位为1，则清除其访问位，将它移至FIFO链的链尾，重复此算法的查找过程，直至遇到新链首页是一个访问位为0的较早进入内存的页为止，把它选为被淘汰的页。</p>
+<p>为每一个存储块（存储分块表）或页面（页表）设立一个引用位。<br>当访问某页时，就将该页引用位置1<br>页面管理软件周期性地（设周期为T）将所有引用位重新置0<br>在T内，被访问过的页面引用位为1，否则为0<br>选择引用位为0的页面淘汰。</p>
+<p><strong>（5）时钟(Clock)淘汰算法</strong><br>二次机会淘汰算法缺点：就是需要把访问位为1的处于链首的页移至链尾，这需要一定的开销。<br>改进的方法：<strong>就是把进程所访问的页面链成一个环形链表，再设一个指针指向最老的页面</strong>，于是形成了一种简单实用的LRU近似算法——时钟淘汰算法。<br>该算法首先检测指针所指的页面，如果它的访问位为0，则淘汰该页，新装入的页插入到此位置，然后指针前进一个位置；如果它的访问位为1，则清除为0，并将指针前进一个位置，继续检查访问位。重复此过程，直到找到访问位为0的页面为止。</p>
+<p><strong>访问页号727</strong><br><strong>引发缺页</strong></p>
+<p><img src="https://pic3.zhimg.com/80/v2-13f82fa69defe9cbefb68fa801858a02_720w.webp" alt="img"></p>
+<p><img src="https://pic1.zhimg.com/80/v2-e0610db42d87eb3007f0d3f1e36976e0_720w.webp" alt="img"></p>
+<p><strong>（6）最近未用淘汰算法——NRU(Not Used Recently)淘汰算法</strong><br>它把FIFO算法的思想与页面的<strong>访问位和修改位</strong>结合起来确定一个接近LRU算法的淘汰对象。<br>该算法每次都尽量选择<strong>最近最久未被写过的页面</strong>淘汰，这种干净的页面可以不被写回到磁盘。在实现时，为每一个页面设置初始值0的访问位和修改位。当对某页面执行写操作时，其修改位和访问位均由硬件置成1；当对某页面执行读操作时，只有其访问位被硬件置成1。系统每隔固定时间将所有访问位都清0。</p>
+<p>按照下列次序选择被淘汰的页面：<br>①访问位＝０，修改位＝０；直接淘汰；<br>②访问位＝０，修改位＝１；写回外存后淘汰；<br>③访问位＝１，修改位＝０；直接淘汰；<br>④访问位＝１，修改位＝１；写回外存后淘汰；</p>
+<p>页面请求序列为：2，3，2，1，5，2，4，5，3，2，5，2<br>内存分配3块<br>用OPT、LRU、FIFO、Clock算法写出页面置换过程</p>
+<p><img src="https://pic2.zhimg.com/80/v2-7c2bad5abc86d0986e4057f9a16463f1_720w.webp" alt="img"></p>
+<p>时钟clock算法中的箭头是当前指针的位置！</p>
+<h3 id="3-5影响缺页中断率的因素"><a href="#3-5影响缺页中断率的因素" class="headerlink" title="3.5影响缺页中断率的因素"></a>3.5影响缺页中断率的因素</h3><p>（1）页面调度算法不合理<br>抖动又叫颠簸，是指一段时间里，页面在内存与外存之间频繁地调度或换入换出，以至于系统用于调度页面所需要的时间比进程实际运行所占用的时间还要多。<br>显然，抖动是由于缺页中断率很高而引起的一种坏现象，它将严重影响系统的效率，甚至可能使系统全面崩溃。<br>（2）分配给作业的内存块数太少<br>作业的缺页中断率与作业所占内存块数成反比。分配给作业的内存块数太少是导致抖动现象发生的最主要的原因，实验分析表明：<strong>对所有的程序来说，要使其有效地工作，它在内存中的页面数不应少于它的总页面数的一半。</strong><br>（3）页面大小的选择不合理<br>虽然缺页中断率与页面尺寸成反比，但页面尺寸却不能一味地求大，它一般在0.5KB~4KB之间，是个实验统计值。因为页面大时，页表较小，占空间少，查表速度快，缺页中断次数少，但页面调度时间长，页内碎片较大。页面小时，恰恰相反。<br>（4）用户程序编制的方法不合适<br>作业的缺页中断率与程序的局部化（包括时间局部化和空间局部化）程度成反比。用户程序编制的方法不合适可能导致程序运行的时空复杂度高，缺页次数多。</p>
+<hr>
+<p>版权声明：本文为知乎博主「Linux内核库」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文 出处链接及本声明。 </p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/448029786">https://zhuanlan.zhihu.com/p/448029786</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E5%88%86%E5%8C%BA%E5%BC%8F%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86/">https://vcloud.ysme.top/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E5%88%86%E5%8C%BA%E5%BC%8F%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://pic1.zhimg.com/80/v2-1de81658ba2a37163cdc8f15c3cf57b0_720w.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98%E5%8E%9F%E7%90%86/" title="Linux内核共享内存原理"><img class="cover" src="https://pic4.zhimg.com/80/v2-3209cfa76d596e32532791573ef2973b_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux内核共享内存原理</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/" title="Linux内核内存管理系统调用"><img class="cover" src="https://pic4.zhimg.com/80/v2-3b6310a5b0286d44ff7ef95c029339e3_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux内核内存管理系统调用</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81%E5%AE%9E%E5%88%86%E9%A1%B5%E5%BC%8F%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">1、实分页式存储管理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="toc-number">2.1.</span> <span class="toc-text">1.1基本原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2%E9%A1%B5%E8%A1%A8"><span class="toc-number">2.2.</span> <span class="toc-text">1.2页表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3%E5%9C%B0%E5%9D%80%E6%98%A0%E5%B0%84"><span class="toc-number">2.3.</span> <span class="toc-text">1.3地址映射</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4%E5%BF%AB%E8%A1%A8"><span class="toc-number">2.4.</span> <span class="toc-text">1.4快表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5%E4%B8%A4%E7%BA%A7%E5%92%8C%E5%A4%9A%E7%BA%A7%E9%A1%B5%E8%A1%A8"><span class="toc-number">2.5.</span> <span class="toc-text">1.5两级和多级页表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-6%E9%A1%B5%E7%9A%84%E5%88%86%E9%85%8D%E4%B8%8E%E5%9B%9E%E6%94%B6"><span class="toc-number">2.6.</span> <span class="toc-text">1.6页的分配与回收</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-7%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">2.7.</span> <span class="toc-text">1.7存在的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-8%E5%88%86%E9%A1%B5%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86%E6%96%B9%E6%A1%88%E7%9A%84%E8%AF%84%E4%BB%B7"><span class="toc-number">2.8.</span> <span class="toc-text">1.8分页存储管理方案的评价</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81%E8%99%9A%E6%8B%9F%E5%AD%98%E5%82%A8%E5%99%A8-Virtual-Memory"><span class="toc-number">3.</span> <span class="toc-text">2、虚拟存储器(Virtual Memory)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1%E5%B1%80%E9%83%A8%E6%80%A7%E5%8E%9F%E7%90%86-principle-of-locality"><span class="toc-number">3.1.</span> <span class="toc-text">2.1局部性原理(principle of locality)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2%E5%BC%95%E5%85%A5%E8%99%9A%E6%8B%9F%E5%AD%98%E5%82%A8%E6%8A%80%E6%9C%AF%E7%9A%84%E5%A5%BD%E5%A4%84"><span class="toc-number">3.2.</span> <span class="toc-text">2.2引入虚拟存储技术的好处</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3%E8%99%9A%E6%8B%9F%E5%AD%98%E5%82%A8%E6%8A%80%E6%9C%AF%E7%9A%84%E7%89%B9%E5%BE%81"><span class="toc-number">3.3.</span> <span class="toc-text">2.3虚拟存储技术的特征</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4%E8%99%9A%E6%8B%9F%E5%AD%98%E5%82%A8%E6%8A%80%E6%9C%AF%E7%9A%84%E7%A7%8D%E7%B1%BB"><span class="toc-number">3.4.</span> <span class="toc-text">2.4虚拟存储技术的种类</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E8%99%9A%E6%8B%9F%E9%A1%B5%E5%BC%8F-virtual-paging-%E5%AD%98%E5%82%A8%E7%AE%A1%E7%90%86"><span class="toc-number">4.</span> <span class="toc-text">3、虚拟页式(virtual paging)存储管理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="toc-number">4.1.</span> <span class="toc-text">3.1基本原理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2%E4%B8%BB%E5%AD%98%E9%A1%B5%E9%9D%A2%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5"><span class="toc-number">4.2.</span> <span class="toc-text">3.2主存页面分配策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3%E9%A1%B5%E9%9D%A2%E8%B0%83%E5%85%A5%E7%AD%96%E7%95%A5"><span class="toc-number">4.3.</span> <span class="toc-text">3.3页面调入策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4%E9%A1%B5%E9%9D%A2%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95"><span class="toc-number">4.4.</span> <span class="toc-text">3.4页面调度算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5%E5%BD%B1%E5%93%8D%E7%BC%BA%E9%A1%B5%E4%B8%AD%E6%96%AD%E7%8E%87%E7%9A%84%E5%9B%A0%E7%B4%A0"><span class="toc-number">4.5.</span> <span class="toc-text">3.5影响缺页中断率的因素</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

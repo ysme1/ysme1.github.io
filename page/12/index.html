@@ -1,7 +1,222 @@
-extends includes/layout.pug
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta property="og:type" content="website">
+<meta property="og:title" content="Blog">
+<meta property="og:url" content="https://vcloud.ysme.top/page/12/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
+<meta property="article:author" content="ysme">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/page/12/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Blog',
+  isPost: false,
+  isHome: true,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2024-04-05 21:18:37'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
 
-block content
-  include ./includes/mixins/post-ui.pug
-  #recent-posts.recent-posts
-    +postUI
-    include includes/pagination.pug
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="page" id="body-wrap"><header class="full_page" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="site-info"><h1 id="site-title">Blog</h1></div><div id="scroll-down"><i class="fas fa-angle-down scroll-down-effects"></i></div></header><main class="layout" id="content-inner"><div class="recent-posts" id="recent-posts"><div class="recent-post-item"><div class="post_cover left"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/" title="Linux内核进程管理并发同步与原子操作"><img class="post-bg" src="https://pic1.zhimg.com/80/v2-3055dc26275b76efe6b40dc3a9f2853c_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核进程管理并发同步与原子操作"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/" title="Linux内核进程管理并发同步与原子操作">Linux内核进程管理并发同步与原子操作</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">并发同步并发 是指在某一时间段内能够处理多个任务的能力，而 并行 是指同一时间能够处理多个任务的能力。并发和并行看起来很像，但实际上是有区别的，如下图（图片来源于网络）：
+
+上图的意思是，有两条在排队买咖啡的队列，并且只有一架咖啡机在处理，而并行就有两架的咖啡机在处理。咖啡机的数量越多，并行能力就越强。可以把上面的两条队列看成两个进程，并发就是指只有单个CPU在处理，而并行就有两个CPU在处理。为了让两个进程在单核CPU中也能得到执行，一般的做法就是让每个进程交替执行一段时间，比如让每个进程固定执行100毫秒 ，执行时间使用完后切换到其他进程执行。而并行就没有这种问题，因为有两个CPU，所以两个进程可以同时执行。如下图：
+
+
+上面介绍过，并发有可能会打断当前执行的进程，然后替切换成其他进程执行。如果有两个进程同时对一个共享变量 count 进行加一操作，由于C语言的 count++ 操作会被翻译成如下指令：
+123mov eax, [count]inc eaxmov [count], eax
+
+那么在并发的情况下，有可能出现如下问题：
+
+假设count变量初始值为0：
+
+进程1执行完  ...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/" title="Linux内核进程管理进程优先级"><img class="post-bg" src="https://pic3.zhimg.com/80/v2-ed56495e2c5f289842576ffebae899e2_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核进程管理进程优先级"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/" title="Linux内核进程管理进程优先级">Linux内核进程管理进程优先级</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">
+前言：进程优先级实际上是系统对进程重要性的一个客观评价。根据这个评价的结果来为进程分配不同的系统资源，这个资源包括内存资源和CPU资源。为了保证“公平公正”的评价每个进程，Google工程师为此设计了一套评价系统。
+
+
+为什么要有进程优先级？这似乎不用过多的解释，毕竟自从多任务操作系统诞生以来，进程执行占用cpu的能力就是一个必须要可以人为控制的事情。因为有的进程相对重要，而有的进程则没那么重要。进程优先级起作用的方式从发明以来基本没有什么变化，无论是只有一个cpu的时代，还是多核cpu时代，都是通过控制进程占用cpu时间的长短来实现的。就是说在同一个调度周期中，优先级高的进程占用的时间长些，而优先级低的进程占用的短些。从这个角度看，进程优先级其实也跟cgroup的cpu限制一样，都是一种针对cpu占用的QOS机制。我曾经一直很困惑一点，为什么已经有了优先级，还要再设计一个针对cpu的cgroup？得到的答案大概是因为，优先级这个值不能很直观的反馈出资源分配的比例吧？不过这不重要，实际上从内核目前的进程调度器cfs的角度说，同时实现cpushare方式的cgroup和优先级这两个机制 ...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/" title="Linux内核进程调度O(1)调度算法"><img class="post-bg" src="https://pic1.zhimg.com/80/v2-dd9cfa164bdd3cdd6044d5a260419f50_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核进程调度O(1)调度算法"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/" title="Linux内核进程调度O(1)调度算法">Linux内核进程调度O(1)调度算法</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">Linux是一个支持多任务的操作系统，而多个任务之间的切换是通过 调度器 来完成，调度器 使用不同的调度算法会有不同的效果。Linux2.4版本使用的调度算法的时间复杂度为O(n)，其主要原理是通过轮询所有可运行任务列表，然后挑选一个最合适的任务运行，所以其时间复杂度与可运行任务队列的长度成正比。而Linux2.6开始替换成名为 O(1)调度算法，顾名思义，其时间复杂度为O(1)。虽然在后面的版本开始使用 CFS调度算法（完全公平调度算法），但了解 O(1)调度算法 对学习Linux调度器还是有很大帮助的，所以本文主要介绍 O(1)调度算法 的原理与实现。由于在 Linux 内核中，任务和进程是相同的概念，所以在本文混用了任务和进程这两个名词。
+1、O(1)调度算法原理1.1prio_array 结构O(1)调度算法 通过优先级来对任务进行分组，可分为140个优先级（0 ~ 139，数值越小优先级越高），每个优先级的任务由一个队列来维护。
+prio_array 结构就是用来维护这些任务队列，如下代码：
+1234567891011#define MAX_USER_RT_PRIO    1 ...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/" title="Linux内核进程述符和进程状态"><img class="post-bg" src="https://pic3.zhimg.com/80/v2-43d9ec266d5c37594e4de7d5758ba50e_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核进程述符和进程状态"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/" title="Linux内核进程述符和进程状态">Linux内核进程述符和进程状态</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">一，进程程序是指储存在外部存储(如硬盘)的一个可执行文件, 而进程是指处于执行期间的程序, 进程包括 代码段(textsection) 和 数据段(data section) , 除了代码段和数据段外, 进程一般还包含打开的文件, 要处理的信号和CPU上下文等等。
+二，进程描述符Linux进程使用 struct task_struct根据描述(include&#x2F;linux&#x2F;sched.h), 如下:
+1234567891011121314struct task_struct &#123;/** offsets of these are hardcoded elsewhere - touch with care */   volatile long state; /* -1 unrunnable, 0 runnable, &gt;0 stopped */   unsigned long flags; /* per process flags, defined below */   int sigpending; mm_segment_t addr_limit; /* t ...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/" title="Linux内核进程间通信-管道"><img class="post-bg" src="https://pic2.zhimg.com/80/v2-13b4a46233ad254912d9bf9ba6bbdb95_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核进程间通信-管道"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/" title="Linux内核进程间通信-管道">Linux内核进程间通信-管道</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">1、管道的定义
+管道是第一个广泛应用的进程间通信手段。日常在终端执行shell命令时，会大量用到管道。但管道的缺陷在于只能在有亲缘关系（有共同的祖先）的进程之间使用。为了突破这个限制，后来引入了命名管道。
+
+
+
+2、管道的用途
+管道是最早出现的进程间通信的手段。在shell中执行命令，经常会将上一个命令的输出作为下一个命令的输入，由多个命令配合完成一件事情。而这就是通过管道来实现的。在图9-3中，进程who的标准输出，通过管道传递给下游的wc进程作为标准输入，从而通过相互配合完成了一件任务。
+
+
+3、管道的操作
+管道的作用是在具有亲缘关系的进程之间传递消息，所谓有亲缘关系，是指有同一个祖先。所以管道并不是只可以用于父子进程通信，也可以在兄弟进程之间还可以用在祖孙之间等，反正只要共同的祖先调用了pipe函数，打开的管道文件就会在fork之后，被各个后代所共享。
+不过由于管道是字节流通信，没有消息边界，多个进程同时发送的字节流混在一起，则无法分辨消息，所有管道一般用于2个进程之间通信，另外管道的内容读完后不会保存，管道是单向的，一边要么读，一边要么写，不可以又读又写，想要一边读一边写，那就 ...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/" title="Linux进程、线程、调度(一)"><img class="post-bg" src="https://user-images.githubusercontent.com/87457873/127093984-949e7c2a-e29b-495f-a88d-437b84008205.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux进程、线程、调度(一)"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/" title="Linux进程、线程、调度(一)">Linux进程、线程、调度(一)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">希望可以通过本小结 彻底地搞清楚进程生命周期，进程生命周期创建、退出、停止，以及僵尸进程的本质；
+进程 是处于执行期的程序以及相关的资源的总称，是操作系统资源分配的单位。
+123456进程的资源到底包括什么？1.打开的文件2.挂起的信号3.内核的内部数据4.处理器的状态5.内存映射的内存地址空间 等等
+
+Linux系统 对线程和进程并不特别区分。线程仅仅被视为一个与其他线程共享某些资源的进程。每个线程都拥有唯一自己的task_struct。
+内核调度的对象是根据task_struct结构体。可以说是线程，而不是进程。
+不仅仅要有资源，还需要有进程的描述，例如：pid
+进程描述符及task_structlinux通过task_struct结构体描述一个进程。
+mm 成员：描述内存资源fs 成员：描述文件系统资源files 成员：进程运行时打开了多少文件，fd的数组signal 成员：进程接收的信号资源
+
+Linux通过slab分配器分配task_struct结构，只需在栈底创建新的结构，struct thread_info。每个任务的thread_info结构在它的内核栈的尾端分配。
+p ...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/" title="Linux进程、线程、调度(三)"><img class="post-bg" src="https://user-images.githubusercontent.com/87457873/127105320-a7646493-0a85-4467-b5a8-f10a5bb96942.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux进程、线程、调度(三)"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/" title="Linux进程、线程、调度(三)">Linux进程、线程、调度(三)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">本节主要介绍进程的调度器，设计的目标：吞吐和响应，轮流让其他进程获取CPU资源。
+进程调度机制的架构操作系统通过中断机制，来周期性地触发调度算法进行进程的切换。
+
+rq: 可运行队列，每个CPU对应一个，包含自旋锁，进程数量，用于公平调度的CFS结构体，当前正在运行的进程描述符。
+cfs_rq: cfs调度的运行队列信息，包含红黑色的根节点，正在运行的进程指针，用于负载均衡的叶子队列等。
+sched_entity: 调度实体，包含负载权重值，对应红黑树节点，虚拟运行时vruntime等。
+sched_class: 调度算法抽象成的调度类，包含一组通用的调度操作接口，将接口和实现分离。
+
+
+schedule函数的流程包括：
+1、关闭内核抢占，标识cpu状态。通知RCU更新状态，关闭本地终端，获取所要保护的运行队列的自旋锁，为查找可运行进程做准备。2、检查prev状态，决定是否将进程插入到运行队列，或者从运行队列中删除。3、task_on_rq_queued(prev) : 将pre进程插入到运行队列的队尾。4、pick_next_task : 选取下一个将要执行的进程。5、context ...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/" title="Linux进程、线程、调度(二)"><img class="post-bg" src="https://user-images.githubusercontent.com/87457873/127104795-7ec16416-cbee-4022-a36d-84de40a5e229.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux进程、线程、调度(二)"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/" title="Linux进程、线程、调度(二)">Linux进程、线程、调度(二)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">fork 、vfork、clone
+Linux 内核的调度算法，是根据task_struct结构体来进行调度的。
+写时拷贝技术当p1把p2创建出来时，会把task_struct里描述的资源结构体对拷给p2。区分进程的标志，就是 p2的资源不是p1的资源。两个task_struct 的资源都相同，那就不叫两个进程了。
+执行一个copy，但是任何修改都造成分裂，如：chroot,open，写memory，最难copy的是 mm 这个部分，因为要做写时拷贝。
+Linux通过MMU进行虚拟地址到物理地址的转换，当进程执行fork()后，会把页表中的权限设置为RD-ONLY，当P1,P2去写该页时，CPU会收到page fault，申请新的内存。Linux再将页表中的virt1指向新的物理地址。
+
+1234567891011121314151617181920212223242526#include &lt;sched.h&gt;#include &lt;unistd.h&gt;#include &lt;stdio.h&gt;#include &lt;stdlib.h&gt;int data = ...</div></div></div><div class="recent-post-item"><div class="post_cover left"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/" title="Linux进程、线程、调度(四)"><img class="post-bg" src="https://user-images.githubusercontent.com/87457873/127106385-d594a83f-d399-4cf3-b2a8-59a47c674e40.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux进程、线程、调度(四)"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/" title="Linux进程、线程、调度(四)">Linux进程、线程、调度(四)</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">延续（三）中，调度器的其他内容：关于多核、分群、硬实时
+多核下的负载均衡Linux 每个CPU可能有多个操作线程，每个核均运行的调度算法是 SCHED_FIFO, SCHED_RR，SCHED_NORMAL(CFS)等，每个核都“以劳动为乐”。
+tips: 旧的调度算法是通过+&#x2F;- 5 nice值，来照顾IO型，惩罚CPU型。新的进程调度算法CFS，会根据ptime&#x2F;nice值进行红黑树匹配。
+1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950#include &lt;stdio.h&gt;#include &lt;pthread.h&gt;#include &lt;sys/types.h&gt;void *thread_fun(void *param)&#123;    printf(&quot;thread pid:%d, tid:%lu\n&quot;, getpid(), pthread_self());    while (1 ...</div></div></div><div class="recent-post-item"><div class="post_cover right"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/" title="Linux进程状态总结"><img class="post-bg" src="https://user-images.githubusercontent.com/87457873/127657434-bfca795a-6388-486a-bae9-f66d4eff8b9e.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux进程状态总结"></a></div><div class="recent-post-info"><a class="article-title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/" title="Linux进程状态总结">Linux进程状态总结</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="content">进程生命周期在Linux内核里，无论是进程还是线程，统一使用 task_struct{} 结构体来表示，也就是统一抽象为任务（task）。task_struct{} 定义在 include&#x2F;linux&#x2F;sched.h 文件中，十分复杂，这里简单了解下。
+12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061// include/linux/sched.h// ... 省略struct task_struct &#123;#ifdef CONFIG_THREAD_INFO_IN_TASK	/*	 * For reasons of header soup (see current_thread_info()), this	 * must be the first element of task_struct.	 */	struct thread_info		thread_info;#endif	/*  ...</div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/page/11/#content-inner"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/#content-inner">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/#content-inner">13</a><a class="extend next" rel="next" href="/page/13/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline">
+            <i class="fas fa-folder-open"></i>
+            <span>分类</span>
+            <a class="card-more-btn" href="/categories/" title="查看更多">
+    <i class="fas fa-angle-right"></i></a>
+            </div>
+            <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc/"><span class="card-category-list-name">linux-doc</span><span class="card-category-list-count">36</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/"><span class="card-category-list-name">linux-doc 内存管理</span><span class="card-category-list-count">19</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/"><span class="card-category-list-name">linux-doc 文件系统</span><span class="card-category-list-count">14</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/"><span class="card-category-list-name">linux-doc 网络协议栈</span><span class="card-category-list-count">18</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/"><span class="card-category-list-name">linux-doc 设备驱动</span><span class="card-category-list-count">10</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/"><span class="card-category-list-name">linux-doc 进程管理</span><span class="card-category-list-count">30</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/"><span class="card-category-list-name">嵌入式</span><span class="card-category-list-count">2</span></a><ul class="card-category-list child"><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux/"><span class="card-category-list-name">linux</span><span class="card-category-list-count">2</span></a></li></ul></li>
+            </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/Linux%E5%BC%80%E5%8F%91/" style="font-size: 1.3em; color: #99a1ac">Linux开发</a> <a href="/tags/Linux/" style="font-size: 1.5em; color: #99a9bf">Linux</a> <a href="/tags/Git-%E5%B7%A5%E5%85%B7/" style="font-size: 1.1em; color: #999">Git 工具</a></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/03/"><span class="card-archive-list-date">三月 2023</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/01/"><span class="card-archive-list-date">一月 2023</span><span class="card-archive-list-count">129</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">130</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2024-04-05T13:18:36.630Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

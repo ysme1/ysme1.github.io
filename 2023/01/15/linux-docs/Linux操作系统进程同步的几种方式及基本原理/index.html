@@ -1,32 +1,254 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux操作系统进程同步的几种方式及基本原理 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="1，进程同步的几种方式1.1信号量用于进程间传递信号的一个整数值。在信号量上只有三种操作可以进行：初始化，P操作和V操作，这三种操作都是原子操作。 P操作(递减操作)可以用于阻塞一个进程，V操作(增加操作)可以用于解除阻塞一个进程。 基本原理是两个或多个进程可以通过简单的信号进行合作，一个进程可以被迫在某一位置停止，直到它接收到一个特定的信号。该信号即为信号量s。 为通过信号量s传送信号，进程可执">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux操作系统进程同步的几种方式及基本原理">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F%E5%8F%8A%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="1，进程同步的几种方式1.1信号量用于进程间传递信号的一个整数值。在信号量上只有三种操作可以进行：初始化，P操作和V操作，这三种操作都是原子操作。 P操作(递减操作)可以用于阻塞一个进程，V操作(增加操作)可以用于解除阻塞一个进程。 基本原理是两个或多个进程可以通过简单的信号进行合作，一个进程可以被迫在某一位置停止，直到它接收到一个特定的信号。该信号即为信号量s。 为通过信号量s传送信号，进程可执">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-6ccd4b5e0f74b262a55f9e2358fb0105_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.417Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic2.zhimg.com/80/v2-6ccd4b5e0f74b262a55f9e2358fb0105_720w.webp"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F%E5%8F%8A%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux操作系统进程同步的几种方式及基本原理',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://pic2.zhimg.com/80/v2-6ccd4b5e0f74b262a55f9e2358fb0105_720w.webp')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux操作系统进程同步的几种方式及基本原理</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.417Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc/">linux-doc</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux操作系统进程同步的几种方式及基本原理"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="1，进程同步的几种方式"><a href="#1，进程同步的几种方式" class="headerlink" title="1，进程同步的几种方式"></a>1，进程同步的几种方式</h2><h3 id="1-1信号量"><a href="#1-1信号量" class="headerlink" title="1.1信号量"></a>1.1信号量</h3><p>用于进程间传递信号的一个整数值。在信号量上只有三种操作可以进行：初始化，P操作和V操作，这三种操作都是原子操作。</p>
+<p><strong>P操作(递减操作)可以用于阻塞一个进程，V操作(增加操作)可以用于解除阻塞一个进程。</strong></p>
+<p>基本原理是两个或多个进程可以通过简单的信号进行合作，一个进程可以被迫在某一位置停止，直到它接收到一个特定的信号。该信号即为信号量s。</p>
+<p>为通过信号量s传送信号，进程可执行原语semSignal(s);为通过信号量s接收信号，进程可执行原语semWait(s);如果相应的信号仍然没有发送，则进程会被阻塞，直到发送完为止。</p>
+<p><strong>可把信号量视为一个具有整数值的变量，在它之上定义三个操作：</strong></p>
+<ul>
+<li>一个信号量可以初始化为非负数</li>
+<li>semWait操作使信号量s减1.若值为负数，则执行semWait的进程被阻塞。否则进程继续执行。</li>
+<li>semSignal操作使信号量加1，若值大于或等于零，则被semWait操作阻塞的进程被解除阻塞。</li>
+</ul>
+<h3 id="1-2管程"><a href="#1-2管程" class="headerlink" title="1.2管程"></a>1.2管程</h3><p>管程是由一个或多个过程、一个初始化序列和局部数据组成的软件模块，<strong>其主要特点如下：</strong></p>
+<ul>
+<li>局部数据变量只能被管程的过程访问，任何外部过程都不能访问。</li>
+<li>一个进程通过调用管程的一个过程进入管程。</li>
+<li>在任何时候，只能有一个进程在管程中执行，调用管程的任何其他进程都被阻塞，以等待管程可用。</li>
+</ul>
+<p>管程通过使用条件变量提供对同步的支持，这些条件变量包含在管程中，并且只有在管程中才能被访问。有两个函数可以操作条件变量：</p>
+<ul>
+<li>cwait(c)：调用进程的执行在条件c上阻塞，管程现在可被另一个进程使用。</li>
+<li>csignal(c)：恢复执行在cwait之后因为某些条件而阻塞的进程。如果有多个这样的进程，选择其中一个；如果没有这样的进程，什么以不做。</li>
+</ul>
+<h3 id="1-3消息传递"><a href="#1-3消息传递" class="headerlink" title="1.3消息传递"></a>1.3消息传递</h3><p><strong>消息传递的实际功能以一对原语的形式提供：</strong></p>
+<ul>
+<li>send(destination,message)</li>
+<li>receive(source,message)</li>
+</ul>
+<p>这是进程间进程消息传递所需要的最小操作集。</p>
+<p>一个进程以消息的形式给另一个指定的目标进程发送消息；</p>
+<p>进程通过执行receive原语接收消息，receive原语中指明发送消息的源进程和消息。</p>
+<h2 id="2、进程互斥"><a href="#2、进程互斥" class="headerlink" title="2、进程互斥"></a>2、进程互斥</h2><p>由于进程具有独立性和异步性等并发特征，计算机的资源有限，导致了进程之间的资源竞争和共享，也导致了对进程执行过程的制约。</p>
+<p><strong>1.临界区相关概念：</strong><br><strong>临界资源</strong>：也就是一次只允许一个进程操作使用的计算机资源，这里的资源可以是物理资源，也可以是逻辑上的变量等。<br><strong>临界区</strong>：把不允许多个并发进程交叉执行的一段程序称为临界区（critical region）或临界部分（critical section）。<br><strong>当一个进程使用该临界资源时，其他需要访问该资源的进程必须阻塞，直到占用者释放该资源。</strong></p>
+<p><strong>2、间接制约</strong><br>把这种由于共享某一公有资源而引起的在临界区内不允许并发进程交叉执行的现象，称为由共享公有资源而造成的对并发进程执行速度的间接制约。这里的“间接”二字主要是指各种并发进程的速度受公有资源的制约，而非进程之间的直接制约。</p>
+<p><strong>3.进程互斥</strong><br>在并发进程中，一个或多个进程要对公用资源进行访问时，必须确保该资源处于空闲状态，也就是说，在并发进程中，临界区只允许一个进程进入，而其他进程阻塞，等待该共享临界资源释放。</p>
+<p><strong>4.并发进程之间必须满足以下特征：</strong></p>
+<ul>
+<li><strong>平等竞争：</strong>即各并发进程享有平等地、独立地竞争共有资源的权利，且在不采取任何措施的条件下，在临界区内任意指令结束时，其他并发进程可以进入临界区。</li>
+<li><strong>互斥使用</strong>：当并发进程中的时候 多个进程同时申请进入临界区时，它只允许一个进程进入临界区。</li>
+<li><strong>不可独占：</strong>当进程不在临界区后，它不能阻止其他进程进入临界区。</li>
+<li><strong>有限等待：</strong>也就是在就绪队列中的进程等待资源时间必须是有限的。并发进程中的某个进程从申请进入临界区时开始，应在有限时间内得以进入临界区。</li>
+</ul>
+<h2 id="3、互斥的实现"><a href="#3、互斥的实现" class="headerlink" title="3、互斥的实现"></a>3、互斥的实现</h2><h3 id="2-1互斥的加锁实现"><a href="#2-1互斥的加锁实现" class="headerlink" title="2.1互斥的加锁实现"></a>2.1互斥的加锁实现</h3><p>对互斥的临界区进行加锁处理，即当一个进程进入了 临界区之后，对此临界区进行加锁，直到该进程退出临界区为止。而其他并发进程在申请进入临界区之前，必须测试该临界区是否加锁，如果是，则阻塞等待！<br>加锁实现是系统的原语：lock(key[S])和Unlock(key([S]))均保持原子操作。系统实现时锁定位key[S]总是设置在公有资源所对应的数据结构中的。</p>
+<h3 id="2-2互斥加锁实现的缺点"><a href="#2-2互斥加锁实现的缺点" class="headerlink" title="2.2互斥加锁实现的缺点"></a>2.2互斥加锁实现的缺点</h3><p>1.在进行锁测试和定位中将耗费CPU资源<br>2、进程加锁实现可能会对进程不公平，<strong>例如：</strong></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">进程A:</span><br><span class="line"><span class="built_in">lock</span>(key[S])</span><br><span class="line">&lt;S&gt;</span><br><span class="line"><span class="built_in">unlock</span>(key[S])</span><br><span class="line">Goto A</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">进程B：</span><br><span class="line"><span class="built_in">lock</span>(key[S])</span><br><span class="line">&lt;S&gt;</span><br><span class="line"><span class="built_in">unlock</span>(key[S])</span><br><span class="line">Goto B</span><br></pre></td></tr></table></figure>
+
+<p>如上面所示，进程A和B之间的一个进程运行到Goto之后，会使得另一个进程无法得到处理机资源运行。而处于永久饥饿状态（starvation）。</p>
+<p>分析可以知道，一个进程能否进入临界区取决于进程自己调用lock过程去测试相应的锁定位。也就是说，每个进程能否进入临界区是依靠进程自己的测试判断。这样，没有获得执行机会的进程当然无法判断，从而出现不公平现象。</p>
+<p>那么是否有办法解决这个问题呢？当然，很明显，办法是有的，我们可以为临界区设置一个管理员，由这个管理员来管理相应临界区的公有资源，它代表可用资源的实体，这个管理员就是<strong>信号量</strong>。</p>
+<h3 id="2-3信号量和P、V操作"><a href="#2-3信号量和P、V操作" class="headerlink" title="2.3信号量和P、V操作"></a>2.3信号量和P、V操作</h3><p>信号量和P、V原语是荷兰科学家E. W. Dijkstra提出来的。<br>**P原语：**P是荷兰语Proberen（**<em>测试</em>）的首字母。为阻塞原因，负责把当前进程由运行状态转换为阻塞状态，直到另外一个进程唤醒它。操作方法：申请一个空闲资源（把信号量减1），若成功，则退出；若失败，则该进程会被阻塞；</p>
+<p><strong>V原语</strong>：V是荷兰语Verhogen（<strong>增加</strong>）的首字母。为<strong>唤醒原语</strong>，负责把一个被阻塞的进程唤醒，它有一个参数表，存放着等待被唤醒的进程信息。操作为：释放一个被占用的资源（把信号量加1），如果发现有被阻塞的进程，则选择一个唤醒之。</p>
+<p><strong>【信号量semaphore】</strong> 在操作系统中，信号量sem是一个整数。</p>
+<ul>
+<li><strong>sem &gt;&#x3D; 0时</strong>，代表可供并发进程使用的资源实体数；</li>
+<li><strong>sem &lt; 0时</strong>，表示正在等待使用临界区的进程数。</li>
+</ul>
+<p>显然，用于互斥的信号量sem的初值应该大于0，而建立一个信号量必须说明所建信号量代表的意义，赋初值，以及建立相应的数据结构，以便指向那些等待使用该临界区的进程。sem初值为1。</p>
+<p><strong>【P、V原语】</strong><br>信号量的数值仅能由P、V原语操作改变。采用P、V原语，可以把类名为S的临界区描述为：When S do P(sem) 临界区 V(sem) od。</p>
+<ul>
+<li>一次<strong>P原语操作使信号量sem减1</strong></li>
+<li>一次<strong>V原语操作使信号量sem加1</strong></li>
+</ul>
+<p><strong>P原语操作：</strong></p>
+<p>sem减1；<br>若sem减1后仍大于或等于0，则P原语返回，该进程继续执行；<br>若sem减1后小于0，则该进程被阻塞后进入与该信号相对应的队列中，然后转进程调度。</p>
+<p><strong>V原语操作：</strong></p>
+<p>sem加1；<br>若相加结果大于0，V原语停止执行，该进程返回调用处，继续执行；<br>若相加结果小于或等于0，则从该信号的等待队列中唤醒一个等待进程，然后再返回原进程继续执行或转进程调度。</p>
+<p><strong>这里给出一个使用加锁法的软件实现方法来实现P、V原语：</strong></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">P</span>(sem):</span><br><span class="line">    begin</span><br><span class="line">        封锁中断;</span><br><span class="line">        <span class="built_in">lock</span>(lockbit)</span><br><span class="line">        val[sem]=val[sem]<span class="number">-1</span></span><br><span class="line">        <span class="keyword">if</span> val[sem]&lt;<span class="number">0</span></span><br><span class="line">            保护当前进程CPU现场</span><br><span class="line">            当前进程状态置为“等待”</span><br><span class="line">            将当前进程插入信号sem等待队列</span><br><span class="line">            转进程调度</span><br><span class="line">        fi</span><br><span class="line">        <span class="built_in">unlock</span>(lockbit);开放中断</span><br><span class="line">    <span class="function">end</span></span><br><span class="line"><span class="function"><span class="title">V</span><span class="params">(sem)</span>:</span></span><br><span class="line"><span class="function">    begin</span></span><br><span class="line"><span class="function">        封锁中断;</span></span><br><span class="line">        <span class="built_in">lock</span>(lockbit)</span><br><span class="line">        val[sem]=val[sem]+<span class="number">1</span></span><br><span class="line">        <span class="keyword">if</span> val[sem]&lt;=<span class="number">0</span></span><br><span class="line">            local k</span><br><span class="line">            从sem等待队列中选取一个等待进程，将其指针置入k中</span><br><span class="line">            将k插入就绪队列</span><br><span class="line">            进程状态置位“就绪”</span><br><span class="line">        fi</span><br><span class="line">        <span class="built_in">unlock</span>(lockbit);开放中断</span><br><span class="line">    end</span><br></pre></td></tr></table></figure>
+
+<p><strong>2.3用P、V原语实现进程互斥</strong><br>设信号量sem是用于互斥的信号量，且其初始值为1表示没有并发进程使用该临界区。显然，由前面论述可知，只要把临界区置于P(sem)和V(sem)之间，即可实现进程之间的互斥。</p>
+<p>用信号量实现两个并发进程PA和PB互斥的描述如下：<br>（1）设sem为互斥信号量，其取值范围为（1，0，-1）。其中sem&#x3D;1表示进程PA和PB都未进入类名为S的临界区，sem&#x3D;0表示进程PA或PB已进入类名为S的临界区，sem&#x3D;-1表示进程PA和PB中，一个进程已进入临界区，而另一个进程等待进入该临界区。<br>（2）实现过程：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Pa:</span><br><span class="line">    <span class="built_in">P</span>(sem)</span><br><span class="line">    &lt;S&gt;</span><br><span class="line">    <span class="built_in">V</span>(sem)</span><br><span class="line">    .</span><br><span class="line">    .</span><br><span class="line">    .</span><br><span class="line">Pb:</span><br><span class="line">    <span class="built_in">P</span>(sem)</span><br><span class="line">    &lt;S&gt;</span><br><span class="line">    <span class="built_in">V</span>(sem)</span><br><span class="line">    .</span><br><span class="line">    .</span><br><span class="line">    .</span><br></pre></td></tr></table></figure>
+
+<h2 id="4，进程互斥的软件实现方法："><a href="#4，进程互斥的软件实现方法：" class="headerlink" title="4，进程互斥的软件实现方法："></a>4，进程互斥的软件实现方法：</h2><p><strong>1，单标志法</strong></p>
+<p>1）在进入区只检查，不上锁</p>
+<p>2）在退出区把临界资源的使用权交给另一个进程</p>
+<p>3）主要问题：不遵循空闲让进的原则</p>
+<p><img src="https://pic2.zhimg.com/80/v2-6ccd4b5e0f74b262a55f9e2358fb0105_720w.webp" alt="img"></p>
+<p><strong>2，双标志先检查</strong></p>
+<p>1）在进入区先检查后上锁，退出区解锁</p>
+<p>2）主要问题：不遵循原则等待原则</p>
+<p><img src="https://pic3.zhimg.com/80/v2-0eb596552a0dc05c88a8945b3ea51f36_720w.webp" alt="img"></p>
+<p><strong>3，双标志后检查</strong></p>
+<p>1）在进入区先</p>
+<p>上锁后检查，退出区解锁</p>
+<p>2）主要问题：不遵循空闲让进，有限等待原则，可能导致饥饿</p>
+<p><img src="https://pic4.zhimg.com/80/v2-3f779d28ca87b1b176d791d1e57b8e17_720w.webp" alt="img"></p>
+<p><strong>4，Peterson算法</strong></p>
+<p>1）在进入区主动争取——》主动谦让——》检查对方是否想进，己方是否谦让</p>
+<p>2）主要问题：不遵循让则等待原则，会发送忙等</p>
+<p><img src="https://pic2.zhimg.com/80/v2-c3e7d49c7278ff24cdb25e45139c1221_720w.webp" alt="img"></p>
+<h2 id="5、进程同步"><a href="#5、进程同步" class="headerlink" title="5、进程同步"></a>5、进程同步</h2><p><strong>【进程间的直接制约】</strong>：一组在异步环境下的并发进程，各自的执行结果互为对方的执行条件，从而限制各进程的执行速度的过程称为并发进程间的直接制约。这里的异步环境主要是指各并发进程的执行起始时间的随机性和执行速度的独立性。</p>
+<p><strong>【进程间的同步】</strong>：把异步环境下的一组并发进程因直接制约而互相发送消息而进行互相合作、互相等待，使得各进程按一定的速度执行的过程称为进程间的同步。具有同步关系的一组并发进程称为合作进程，合作进程间相互发送的信号称为消息或事件。<br><strong>用消息实现进程同步：</strong></p>
+<blockquote>
+<p>用<br>wait(消息名)<br>表示进程等待合作进程发来的消息。<br>用<br>signal(消息名)<br>表示向合作进程发送消息。<br>过程wait的功能是等待到消息名为true的进程继续执行，而signal的功能则是向合作进程发送合作进程所需要的消息名，并将其值置为true。</p>
+</blockquote>
+<p><strong>进程互斥和进程同步】</strong>：<br>进程同步不同于进程互斥，进程互斥时它们的执行顺序可以是任意的。一般来说，也可以把个进程之间发送的消息作为信号量看待。与进程互斥时不同的是，这里的信号量只与制约进程及被制约进程有关，而不是与整租并发进程有关。因此，称该信号量为私用信号量（private semaphore）。一个进程Pi的私用信号量semi是从制约进程发送来的进程Pi的执行条件所需要的信息。与私用信号量相对应，称互斥时使用的信号量为公用信号量。</p>
+<p>【<strong>用P、V原语实现进程同步】：</strong><br>首先为各并发进程设置私用信号量，然后为私用信号量赋初值，最后利用P、V原语和私用信号量规定各进程的执行顺序。</p>
+<hr>
+<p>版权声明：本文为知乎博主「玩转Linux内核」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/447720544">https://zhuanlan.zhihu.com/p/447720544</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F%E5%8F%8A%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/">https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F%E5%8F%8A%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://pic2.zhimg.com/80/v2-6ccd4b5e0f74b262a55f9e2358fb0105_720w.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86(%E5%9B%BE%E6%96%87%E4%BB%A3%E7%A0%81)/" title="Linux操作系统汇编语言基础知识(图文代码)"><img class="cover" src="https://pic1.zhimg.com/80/v2-b9c8c1f5adce7fab60ba6010280982cc_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux操作系统汇编语言基础知识(图文代码)</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8A%B6%E6%80%81%E5%92%8C%E8%BD%AC%E6%8D%A2(%E4%BA%94%E6%80%81%E6%A8%A1%E5%9E%8B)/" title="Linux操作系统进程的状态和转换(五态模型)"><img class="cover" src="https://pic1.zhimg.com/80/v2-9d41935db8f3c558cc4904278295ae30_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux操作系统进程的状态和转换(五态模型)</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%EF%BC%8C%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5%E7%9A%84%E5%87%A0%E7%A7%8D%E6%96%B9%E5%BC%8F"><span class="toc-number">1.</span> <span class="toc-text">1，进程同步的几种方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1%E4%BF%A1%E5%8F%B7%E9%87%8F"><span class="toc-number">1.1.</span> <span class="toc-text">1.1信号量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2%E7%AE%A1%E7%A8%8B"><span class="toc-number">1.2.</span> <span class="toc-text">1.2管程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3%E6%B6%88%E6%81%AF%E4%BC%A0%E9%80%92"><span class="toc-number">1.3.</span> <span class="toc-text">1.3消息传递</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5"><span class="toc-number">2.</span> <span class="toc-text">2、进程互斥</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E4%BA%92%E6%96%A5%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.</span> <span class="toc-text">3、互斥的实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1%E4%BA%92%E6%96%A5%E7%9A%84%E5%8A%A0%E9%94%81%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.1.</span> <span class="toc-text">2.1互斥的加锁实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2%E4%BA%92%E6%96%A5%E5%8A%A0%E9%94%81%E5%AE%9E%E7%8E%B0%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="toc-number">3.2.</span> <span class="toc-text">2.2互斥加锁实现的缺点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%92%8CP%E3%80%81V%E6%93%8D%E4%BD%9C"><span class="toc-number">3.3.</span> <span class="toc-text">2.3信号量和P、V操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%EF%BC%8C%E8%BF%9B%E7%A8%8B%E4%BA%92%E6%96%A5%E7%9A%84%E8%BD%AF%E4%BB%B6%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%EF%BC%9A"><span class="toc-number">4.</span> <span class="toc-text">4，进程互斥的软件实现方法：</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5%E3%80%81%E8%BF%9B%E7%A8%8B%E5%90%8C%E6%AD%A5"><span class="toc-number">5.</span> <span class="toc-text">5、进程同步</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

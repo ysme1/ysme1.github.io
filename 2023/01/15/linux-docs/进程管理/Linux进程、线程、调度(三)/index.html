@@ -1,32 +1,211 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux进程、线程、调度(三) | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="本节主要介绍进程的调度器，设计的目标：吞吐和响应，轮流让其他进程获取CPU资源。 进程调度机制的架构操作系统通过中断机制，来周期性地触发调度算法进行进程的切换。  rq: 可运行队列，每个CPU对应一个，包含自旋锁，进程数量，用于公平调度的CFS结构体，当前正在运行的进程描述符。 cfs_rq: cfs调度的运行队列信息，包含红黑色的根节点，正在运行的进程指针，用于负载均衡的叶子队列等。 sche">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux进程、线程、调度(三)">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="本节主要介绍进程的调度器，设计的目标：吞吐和响应，轮流让其他进程获取CPU资源。 进程调度机制的架构操作系统通过中断机制，来周期性地触发调度算法进行进程的切换。  rq: 可运行队列，每个CPU对应一个，包含自旋锁，进程数量，用于公平调度的CFS结构体，当前正在运行的进程描述符。 cfs_rq: cfs调度的运行队列信息，包含红黑色的根节点，正在运行的进程指针，用于负载均衡的叶子队列等。 sche">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127105320-a7646493-0a85-4467-b5a8-f10a5bb96942.png">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.429Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/127105320-a7646493-0a85-4467-b5a8-f10a5bb96942.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux进程、线程、调度(三)',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://user-images.githubusercontent.com/87457873/127105320-a7646493-0a85-4467-b5a8-f10a5bb96942.png')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux进程、线程、调度(三)</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.429Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc-%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/">linux-doc 进程管理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux进程、线程、调度(三)"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>本节主要介绍进程的调度器，设计的目标：吞吐和响应，轮流让其他进程获取CPU资源。</p>
+<h3 id="进程调度机制的架构"><a href="#进程调度机制的架构" class="headerlink" title="进程调度机制的架构"></a>进程调度机制的架构</h3><p>操作系统通过中断机制，来周期性地触发调度算法进行进程的切换。</p>
+<ul>
+<li>rq: 可运行队列，每个CPU对应一个，包含自旋锁，进程数量，用于公平调度的CFS结构体，当前正在运行的进程描述符。</li>
+<li>cfs_rq: cfs调度的运行队列信息，包含红黑色的根节点，正在运行的进程指针，用于负载均衡的叶子队列等。</li>
+<li>sched_entity: 调度实体，包含负载权重值，对应红黑树节点，虚拟运行时vruntime等。</li>
+<li>sched_class: 调度算法抽象成的调度类，包含一组通用的调度操作接口，将接口和实现分离。</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/87457873/127105320-a7646493-0a85-4467-b5a8-f10a5bb96942.png" alt="image"></p>
+<p>schedule函数的流程包括：</p>
+<p>1、关闭内核抢占，标识cpu状态。通知RCU更新状态，关闭本地终端，获取所要保护的运行队列的自旋锁，为查找可运行进程做准备。<br><br>2、检查prev状态，决定是否将进程插入到运行队列，或者从运行队列中删除。<br><br>3、task_on_rq_queued(prev) : 将pre进程插入到运行队列的队尾。<br><br>4、pick_next_task : 选取下一个将要执行的进程。<br><br>5、context_switch(rq, prev, next) 进行进程上下文切换。<br></p>
+<h3 id="CPU-IO消耗型进程"><a href="#CPU-IO消耗型进程" class="headerlink" title="CPU&#x2F;IO消耗型进程"></a>CPU&#x2F;IO消耗型进程</h3><p>吞吐 vs. 响应</p>
+<ul>
+<li>响应：最小化某个任务的响应时间，哪怕牺牲其他的任务为代价。</li>
+<li>吞吐：全局视野，整个系统的workload被最大化处理。</li>
+<li>任何操作系统的调度器设计只追求2个目标：吞吐率大和延迟低。这2个目标有点类似零和游戏，因为吞吐率要大，势必要把更多的时间放在做真实的有用功，而不是把时间浪费在频繁的进程上下文切换；而延迟要低，势必要求优先级高的进程可以随时抢占进来，打断别人，强行插队。但是，抢占会引起上下文切换，上下文切换的时间本身对吞吐率来讲，是一个消耗，这个消耗可以低到2us或者更低（这看起来没什么？），但是上下文切换更大的消耗不是切换本身，而是切换会引起大量的cache miss。你明明weibo跑的很爽，现在切过去微信，那么CPU的cache是不太容易命中微信的。</li>
+</ul>
+<p>操作系统中估算”上下文切换”对吞吐能力影响时，不是计算上下文切换本身，而是在CPU 高速cache中的miss。一旦从一个进程切到另一个进程，会造成比较多的cache miss，从而影响吞吐能力。</p>
+<p>在内核编译的时候，Kernel Features —&gt; Preemption Model选项实际上可以让我们编译内核的时候，是倾向于支持吞吐，还是支持响应</p>
+<p>preemption model：选择内核的抢占模型，影响调度算法<br><br>1、No Forced Preemption （Server）： 不强制抢占，更在意吞吐，支撑比较大的连接等。<br><br>2、Voluntary kernel preemption (Desktop)： 内核不能抢占。<br><br>3、Preemtible Kernel（low-latency desktop）： 内核都可以抢占，更在意响应，滑动触摸屏等操作需要立刻响应。</p>
+<p>I&#x2F;O消耗型 vs. CPU消耗型</p>
+<ul>
+<li>IO bound： CPU利用率低，进程的运行效率主要受限于I&#x2F;O速度；</li>
+<li>tips: IO 消耗型对拿到CPU(延迟)比较敏感，应该被优先调度。一般需要CPU的响应速度快，即优先级要求比较高。</li>
+<li>CPU bound： 多数时间花在CPU上面（做运算）；</li>
+</ul>
+<h3 id="调度算法：-策略-优先级"><a href="#调度算法：-策略-优先级" class="headerlink" title="调度算法： 策略 + 优先级"></a>调度算法： 策略 + 优先级</h3><p>早期2.6调度器：优先级数组 和 Bitmaps</p>
+<ul>
+<li>0～ 139： 在内核空间， 把整个Linux优先级划分为0～139，数字越小，优先级越高。用户空间设置时，是反过来的。<br></li>
+<li>某个优先级有TASK_RUNNING进程，响应bit设置1。<br></li>
+<li>调度第一个bitmap设置为1的进程</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/87457873/127105805-547271f8-e1d5-4236-a7dc-4bb0d6ef51ca.png" alt="image"></p>
+<h4 id="SCHED-FIFO、SCHED-RR"><a href="#SCHED-FIFO、SCHED-RR" class="headerlink" title="SCHED_FIFO、SCHED_RR"></a>SCHED_FIFO、SCHED_RR</h4><p>实时（RT）进程调度策略： 0～99采用的RT，100～139是非RT的。</p>
+<ul>
+<li>SCHED_FIFO： 不同优先级按照优先级高的先跑到睡眠，优先级低的再跑；同等优先级先进先出。</li>
+<li>SCHED_RR：不同优先级按照优先级高的先跑到睡眠，优先级低的再跑；同等优先级轮转。</li>
+</ul>
+<p><img src="https://user-images.githubusercontent.com/87457873/127105885-b0cf808e-2d8e-4dfc-82a3-cf1fdcd1486f.png" alt="image"></p>
+<p>当所有的SCHED_FIFO和SCHED_RR都运行至睡眠态，就开始运行 100～139之间的 普通task_struct。这些进程讲究 nice，</p>
+<h4 id="SCHED-NORMAL"><a href="#SCHED-NORMAL" class="headerlink" title="SCHED_NORMAL"></a>SCHED_NORMAL</h4><p><strong>非实时进程的调度和动态优先级：</strong></p>
+<p>早期内核2.6的调度器，100对应nice值为 -20，139对应nice值为19。对于普通进程，优先级高不会形成对优先级低的绝对优势，并不会阻塞优先级低的进程拿到时间片。<br><br>普通进程在不同优先级之间进行轮转，nice值越高，优先级越低。此时优先级的具体作用是：</p>
+<p>1、时间片。优先级高的进程可以得到更多时间片。<br><br>2、抢占。从睡眠状态到醒来，可以优先去抢占优先级低的进程。<br><br><strong>Linux根据睡眠情况，动态奖励和惩罚。</strong> 越睡，优先级越高。想让CPU消耗型进程和IO消耗型进程竞争时，IO消耗型的进程可以竞争过CPU消耗型。</p>
+<h4 id="rt的门限"><a href="#rt的门限" class="headerlink" title="rt的门限"></a>rt的门限</h4><p>Linux内核在period的时间里RT最多只能跑runtime的时间。<br><br>在参数 &#x2F;proc&#x2F;sys&#x2F;kernel&#x2F;sched_rt_period_us 和 &#x2F;proc&#x2F;sys&#x2F;kernel&#x2F;sched_rt_runtime_us 中设置。单位：微秒。</p>
+<h4 id="CFS-完全公平调度"><a href="#CFS-完全公平调度" class="headerlink" title="CFS 完全公平调度"></a>CFS 完全公平调度</h4><p>后期，Linux对普通进程调度，提供了 完全公平调度算法，每次都会调vruntime最小的进程调度。</p>
+<p>红黑树，左边节点小于右边节点的值，运行到目前为止 （vruntime最小）的进程，同时考虑了CPU&#x2F;IO和nice。</p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127106097-30790100-6fa1-4af4-ba7a-bc4e7ce0c336.png" alt="image"></p>
+<p><img src="https://user-images.githubusercontent.com/87457873/127106110-7eb7a50d-fdcd-45f2-9919-9a4ec58061fc.png" alt="image"></p>
+<p>vruntime: virtual runtime，＝ pruntime&#x2F;weight 权重* 系数。</p>
+<p>随着时间运行，分子pruntime变大，vruntime也就变大，优先级变低。喜欢睡眠、IO消耗型的进程，分子小。nice值低的，分母大。但是RT的进程，优先级高于所有普通的进程。</p>
+<p>红黑树实现的CFS，用分子pruntime来照顾 睡眠情况，用分母来照顾nice值。</p>
+<p>当进程里fork了多个线程，每个线程的 调度策略都可以不同，优先级可以不同。原因显然。</p>
+<h4 id="工具-chrt-和-renice"><a href="#工具-chrt-和-renice" class="headerlink" title="工具 chrt 和 renice"></a>工具 chrt 和 renice</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;pthread.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> *<span class="title function_">thread_fun</span><span class="params">(<span class="type">void</span> *param)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;thread pid:%d, tid:%lu\n&quot;</span>, getpid(), pthread_self());</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) ;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">pthread_t</span> tid1, tid2;</span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;main pid:%d, tid:%lu\n&quot;</span>, getpid(), pthread_self());</span><br><span class="line">    ret = pthread_create(&amp;tid1, <span class="literal">NULL</span>, thread_fun, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (ret == <span class="number">-1</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;cannot create new thread&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ret = pthread_create(&amp;tid2, <span class="literal">NULL</span>, thread_fun, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">if</span> (ret == <span class="number">-1</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;cannot create new thread&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (pthread_join(tid1, <span class="literal">NULL</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;call pthread_join function fail&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (pthread_join(tid2, <span class="literal">NULL</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">        perror(<span class="string">&quot;call pthread_join function fail&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="number">1.</span>编译two-loops.c, gcc two-loops.c -pthread，运行两份</span><br><span class="line">root@whale:~/develop$ gcc two-loops.c -pthread</span><br><span class="line">root@whale:~/develop$ ./a.out &amp;</span><br><span class="line">[<span class="number">1</span>] <span class="number">13682</span></span><br><span class="line">root@whale:~/develop$ main pid:<span class="number">13682</span>, tid:<span class="number">3075434240</span></span><br><span class="line">thread pid:<span class="number">13682</span>, tid:<span class="number">3067038528</span></span><br><span class="line">thread pid:<span class="number">13682</span>, tid:<span class="number">3075431232</span></span><br><span class="line"></span><br><span class="line">root@whale:~/develop$ ./a.out &amp;</span><br><span class="line">[<span class="number">2</span>] <span class="number">13685</span></span><br><span class="line">root@whale:~/develop$</span><br><span class="line">main pid:<span class="number">13685</span>, tid:<span class="number">3075925760</span></span><br><span class="line">thread pid:<span class="number">13685</span>, tid:<span class="number">3067530048</span></span><br><span class="line">thread pid:<span class="number">13685</span>, tid:<span class="number">3075922752</span> </span><br><span class="line"></span><br><span class="line">##<span class="meta"># top命令观察CPU利用率：</span></span><br><span class="line">    <span class="number">13682</span> root   <span class="number">20</span>   <span class="number">0</span>   <span class="number">18684</span>    <span class="number">616</span>    <span class="number">552</span> S  <span class="number">98.4</span>  <span class="number">0.0</span>   <span class="number">1</span>:<span class="number">12.09</span> a.out</span><br><span class="line">    <span class="number">13685</span>  root    <span class="number">20</span>   <span class="number">0</span>   <span class="number">18684</span>    <span class="number">644</span>    <span class="number">580</span> S  <span class="number">98.1</span>  <span class="number">0.0</span>   <span class="number">1</span>:<span class="number">07.32</span> a.out  </span><br><span class="line">    </span><br><span class="line">##<span class="meta"># renice其中之一，再观察CPU利用率</span></span><br><span class="line">    </span><br><span class="line">    sudo renice -n <span class="number">-5</span> -g <span class="number">13682</span></span><br><span class="line"></span><br><span class="line">      PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND</span><br><span class="line">    <span class="number">13682</span>  root    <span class="number">15</span>  <span class="number">-5</span>   <span class="number">18684</span>    <span class="number">616</span>    <span class="number">552</span> S <span class="number">147.4</span>  <span class="number">0.0</span>   <span class="number">4</span>:<span class="number">52.73</span> a.out</span><br><span class="line">    <span class="number">13685</span>  root     <span class="number">20</span>   <span class="number">0</span>   <span class="number">18684</span>    <span class="number">644</span>    <span class="number">580</span> S  <span class="number">48.6</span>  <span class="number">0.0</span>   <span class="number">4</span>:<span class="number">12.77</span> a.out</span><br><span class="line">    </span><br><span class="line">killall a.out</span><br><span class="line"></span><br><span class="line"><span class="number">2.</span>编译two-loops.c, gcc two-loops.c -pthread，运行一份</span><br><span class="line">top发现其CPU利用率接近<span class="number">200</span>%</span><br><span class="line">-f：把它的所有线程设置为SCHED_FIFO</span><br><span class="line">-a : 所有线程</span><br><span class="line"></span><br><span class="line">  chrt -f -a -p <span class="number">50</span> 进程PID</span><br><span class="line">  </span><br><span class="line">再观察它的CPU利用率</span><br><span class="line"></span><br><span class="line">答：CPU利用率会下降，rt的限制，<span class="number">1</span>s中只能占<span class="number">0.95</span>。</span><br><span class="line">此时虽然CPU使用率下降，但是服务器的响应更慢了。因为鼠标等应用的优先级没有a.out 这个进程的优先级高。</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/">https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://user-images.githubusercontent.com/87457873/127105320-a7646493-0a85-4467-b5a8-f10a5bb96942.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/" title="Linux进程、线程、调度(一)"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127093984-949e7c2a-e29b-495f-a88d-437b84008205.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux进程、线程、调度(一)</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/" title="Linux进程、线程、调度(二)"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127104795-7ec16416-cbee-4022-a36d-84de40a5e229.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux进程、线程、调度(二)</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6%E6%9C%BA%E5%88%B6%E7%9A%84%E6%9E%B6%E6%9E%84"><span class="toc-number">1.</span> <span class="toc-text">进程调度机制的架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#CPU-IO%E6%B6%88%E8%80%97%E5%9E%8B%E8%BF%9B%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">CPU&#x2F;IO消耗型进程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95%EF%BC%9A-%E7%AD%96%E7%95%A5-%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">3.</span> <span class="toc-text">调度算法： 策略 + 优先级</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#SCHED-FIFO%E3%80%81SCHED-RR"><span class="toc-number">3.1.</span> <span class="toc-text">SCHED_FIFO、SCHED_RR</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#SCHED-NORMAL"><span class="toc-number">3.2.</span> <span class="toc-text">SCHED_NORMAL</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#rt%E7%9A%84%E9%97%A8%E9%99%90"><span class="toc-number">3.3.</span> <span class="toc-text">rt的门限</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#CFS-%E5%AE%8C%E5%85%A8%E5%85%AC%E5%B9%B3%E8%B0%83%E5%BA%A6"><span class="toc-number">3.4.</span> <span class="toc-text">CFS 完全公平调度</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7-chrt-%E5%92%8C-renice"><span class="toc-number">3.5.</span> <span class="toc-text">工具 chrt 和 renice</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

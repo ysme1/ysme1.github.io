@@ -1,32 +1,306 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux内核架构和工作原理 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：作用是将应用层序的请求传递给硬件，并充当底层驱动程序，对系统中的各种设备和组件进行寻址。目前支持模块的动态装卸(裁剪)。Linux内核就是基于这个策略实现的。Linux进程1.采用层次结构，每个进程都依赖于一个父进程。内核启动init程序作为第一个进程。该进程负责进一步的系统初始化操作。init进程是进程树的根，所有的进程都直接或者间接起源于该进程。virt&#x2F; —- 提供虚拟机技">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核架构和工作原理">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E6%9E%B6%E6%9E%84%E5%92%8C%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="前言：作用是将应用层序的请求传递给硬件，并充当底层驱动程序，对系统中的各种设备和组件进行寻址。目前支持模块的动态装卸(裁剪)。Linux内核就是基于这个策略实现的。Linux进程1.采用层次结构，每个进程都依赖于一个父进程。内核启动init程序作为第一个进程。该进程负责进一步的系统初始化操作。init进程是进程树的根，所有的进程都直接或者间接起源于该进程。virt&#x2F; —- 提供虚拟机技">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-d969437fc09bcd369092c2f85b01e8c7_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.413Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic4.zhimg.com/80/v2-d969437fc09bcd369092c2f85b01e8c7_720w.webp"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E6%9E%B6%E6%9E%84%E5%92%8C%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux内核架构和工作原理',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://pic4.zhimg.com/80/v2-d969437fc09bcd369092c2f85b01e8c7_720w.webp')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux内核架构和工作原理</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.413Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc/">linux-doc</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux内核架构和工作原理"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言：</strong>作用是将应用层序的请求传递给硬件，并充当底层驱动程序，对系统中的各种设备和组件进行寻址。目前支持模块的动态装卸(裁剪)。Linux内核就是基于这个策略实现的。Linux进程1.采用层次结构，每个进程都依赖于一个父进程。内核启动init程序作为第一个进程。该进程负责进一步的系统初始化操作。init进程是进程树的根，所有的进程都直接或者间接起源于该进程。virt&#x2F; —- 提供虚拟机技术的支持。</p>
+</blockquote>
+<h2 id="1、Linux内核预备工作"><a href="#1、Linux内核预备工作" class="headerlink" title="1、Linux内核预备工作"></a>1、Linux内核预备工作</h2><p><strong>理解Linux内核最好预备的知识点：</strong></p>
+<p>懂C语言<br>懂一点操作系统的知识<br>熟悉少量相关算法<br>懂计算机体系结构</p>
+<p><strong>Linux内核的特点：</strong></p>
+<p>结合了Unix操作系统的一些基础概念</p>
+<p><img src="https://pic4.zhimg.com/80/v2-d969437fc09bcd369092c2f85b01e8c7_720w.webp" alt="img"></p>
+<p><img src="https://pic2.zhimg.com/80/v2-2316dd0f3cd70e0390554a35e8881bf9_720w.webp" alt="img"></p>
+<p><strong>Linux内核的任务：</strong></p>
+<p>1.从技术层面讲，内核是硬件与软件之间的一个中间层。作用是将应用层序的请求传递给硬件，并充当底层驱动程序，对系统中的各种设备和组件进行寻址。</p>
+<p>2.从应用程序的层面讲，应用程序与硬件没有联系，只与内核有联系，内核是应用程序知道的层次中的最底层。在实际工作中内核抽象了相关细节。</p>
+<p>3.内核是一个资源管理程序。负责将可用的共享资源(CPU时间、磁盘空间、网络连接等)分配得到各个系统进程。</p>
+<p>4.内核就像一个库，提供了一组面向系统的命令。系统调用对于应用程序来说，就像调用普通函数一样。</p>
+<p><strong>内核实现策略：</strong></p>
+<p>1.微内核。最基本的功能由中央内核（微内核）实现。所有其他的功能都委托给一些独立进程，这些进程通过明确定义的通信接口与中心内核通信。</p>
+<p>2.宏内核。内核的所有代码，包括子系统（如内存管理、文件管理、设备驱动程序）都打包到一个文件中。内核中的每一个函数都可以访问到内核中所有其他部分。目前支持模块的动态装卸(裁剪)。Linux内核就是基于这个策略实现的。</p>
+<p><strong>哪些地方用到了内核机制？</strong></p>
+<p>1.进程（在cpu的虚拟内存中分配地址空间，各个进程的地址空间完全独立;同时执行的进程数最多不超过cpu数目）之间进行通 信，需要使用特定的内核机制。</p>
+<p>2.进程间切换(同时执行的进程数最多不超过cpu数目)，也需要用到内核机制。</p>
+<p>进程切换也需要像FreeRTOS任务切换一样保存状态，并将进程置于闲置状态&#x2F;恢复状态。</p>
+<p>3.进程的调度。确认哪个进程运行多长的时间。</p>
+<p><strong>Linux进程</strong></p>
+<p>1.采用层次结构，每个进程都依赖于一个父进程。内核启动init程序作为第一个进程。该进程负责进一步的系统初始化操作。init进程是进程树的根，所有的进程都直接或者间接起源于该进程。</p>
+<p>2.通过Pstree命令查询。实际上得系统第一个进程是Systemd，而不是init（这也是疑问点）</p>
+<p>3.系统中每一个进程都有一个唯一标识符(ID),用户（或其他进程）可以使用ID来访问进程。</p>
+<p><strong>Linux内核源代码的目录结构</strong></p>
+<p>Linux内核源代码包括三个主要部分：</p>
+<p>\1. 内核核心代码，包括第3章所描述的各个子系统和子模块，以及其它的支撑子系统，例如电源管理、Linux初始化等</p>
+<p>\2. 其它非核心代码，例如库文件（因为Linux内核是一个自包含的内核，即内核不依赖其它的任何软件，自己就可以编译通过）、固件集合、KVM（虚拟机技术）等</p>
+<p>\3. 编译脚本、配置文件、帮助文档、版权说明等辅助性文件。</p>
+<p><strong>使用ls命令看到的内核源代码的顶层目录结构，具体描述如下：</strong></p>
+<ul>
+<li>include&#x2F; —- 内核头文件，需要提供给外部模块（例如用户空间代码）使用。</li>
+<li>kernel&#x2F; —- Linux内核的核心代码，包含了3.2小节所描述的进程调度子系统，以及和进程调度相关的模块。</li>
+<li>mm&#x2F; —- 内存管理子系统（3.3小节）。</li>
+<li>fs&#x2F; —- VFS子系统（3.4小节）。</li>
+<li>net&#x2F; —- 不包括网络设备驱动的网络子系统（3.5小节）。</li>
+<li>ipc&#x2F; —- IPC（进程间通信）子系统。</li>
+<li>arch&#x2F;&#x2F; —- 体系结构相关的代码，例如arm, x86等等。</li>
+<li>arch&#x2F;&#x2F;mach- —- 具体的machine&#x2F;board相关的代码。</li>
+<li>arch&#x2F;&#x2F;include&#x2F;asm —- 体系结构相关的头文件。</li>
+<li>arch&#x2F;&#x2F;boot&#x2F;dts —- 设备树（Device Tree）文件。</li>
+<li>init&#x2F; —- Linux系统启动初始化相关的代码。</li>
+<li>block&#x2F; —- 提供块设备的层次。</li>
+<li>sound&#x2F; —- 音频相关的驱动及子系统，可以看作“音频子系统”。</li>
+<li>drivers&#x2F; —- 设备驱动（在Linux kernel 3.10中，设备驱动占了49.4的代码量）。</li>
+<li>lib&#x2F; —- 实现需要在内核中使用的库函数，例如CRC、FIFO、list、MD5等。</li>
+<li>crypto&#x2F; —– 加密、解密相关的库函数。</li>
+<li>security&#x2F; —- 提供安全特性（SELinux）。</li>
+<li>virt&#x2F; —- 提供虚拟机技术（KVM等）的支持。</li>
+<li>usr&#x2F; —- 用于生成initramfs的代码。</li>
+<li>firmware&#x2F; —- 保存用于驱动第三方设备的固件。</li>
+<li>samples&#x2F; —- 一些示例代码。</li>
+<li>tools&#x2F; —- 一些常用工具，如性能剖析、自测试等。</li>
+<li>Kconfig, Kbuild, Makefile, scripts&#x2F; —- 用于内核编译的配置文件、脚本等。</li>
+<li>COPYING —- 版权声明。</li>
+<li>MAINTAINERS —-维护者名单。</li>
+<li>CREDITS —- Linux主要的贡献者名单。</li>
+<li>REPORTING-BUGS —- Bug上报的指南。</li>
+<li>Documentation, README —- 帮助、说明文档。</li>
+</ul>
+<h2 id="2、Linux内核体系结构简析简析"><a href="#2、Linux内核体系结构简析简析" class="headerlink" title="2、Linux内核体系结构简析简析"></a>2、Linux内核体系结构简析简析</h2><p><img src="https://pic4.zhimg.com/80/v2-ba1465f73c052a0acf19c922c11a13df_720w.webp" alt="img"></p>
+<p>Linux系统层次结构</p>
+<p>最上面是用户（或应用程序）空间。这是用户应用程序执行的地方。用户空间之下是内核空间，Linux 内核正是位于这里。GNU C Library （glibc）也在这里。它提供了连接内核的系统调用接口，还提供了在用户空间应用程序和内核之间进行转换的机制。这点非常重要，因为内核和用户空间的应用程序使用的是不同的保护地址空间。每个用户空间的进程都使用自己的虚拟地址空间，而内核则占用单独的地址空间。</p>
+<p>Linux 内核可以进一步划分成 3 层。最上面是系统调用接口，它实现了一些基本的功能，例如 read 和 write。系统调用接口之下是内核代码，可以更精确地定义为独立于体系结构的内核代码。这些代码是 Linux 所支持的所有处理器体系结构所通用的。在这些代码之下是依赖于体系结构的代码，构成了通常称为 BSP（Board Support Package）的部分。这些代码用作给定体系结构的处理器和特定于平台的代码。</p>
+<p>Linux 内核实现了很多重要的体系结构属性。在或高或低的层次上，内核被划分为多个子系统。Linux 也可以看作是一个整体，因为它会将所有这些基本服务都集成到内核中。这与微内核的体系结构不同，后者会提供一些基本的服务，例如通信、I&#x2F;O、内存和进程管理，更具体的服务都是插入到微内核层中的。每种内核都有自己的优点，不过这里并不对此进行讨论。</p>
+<p>随着时间的流逝，Linux 内核在内存和 CPU 使用方面具有较高的效率，并且非常稳定。但是对于 Linux 来说，最为有趣的是在这种大小和复杂性的前提下，依然具有良好的可移植性。Linux 编译后可在大量处理器和具有不同体系结构约束和需求的平台上运行。一个例子是 Linux 可以在一个具有内存管理单元（MMU）的处理器上运行，也可以在那些不提供 MMU 的处理器上运行。</p>
+<p>Linux 内核的 uClinux 移植提供了对非 MMU 的支持。</p>
+<p><img src="https://pic2.zhimg.com/80/v2-dc367274df8b2a5b2a1c88d6efa4e901_720w.webp" alt="img"></p>
+<p>Linux内核体系结构</p>
+<p>Linux内核的主要组件有：系统调用接口、进程管理、内存管理、虚拟文件系统、网络堆栈、设备驱动程序、硬件架构的相关代码。</p>
+<p><strong>（1）系统调用接口</strong></p>
+<p>SCI 层提供了某些机制执行从用户空间到内核的函数调用。正如前面讨论的一样，这个接口依赖于体系结构，甚至在相同的处理器家族内也是如此。SCI 实际上是一个非常有用的函数调用多路复用和多路分解服务。在 .&#x2F;linux&#x2F;kernel 中您可以找到 SCI 的实现，并在 .&#x2F;linux&#x2F;arch 中找到依赖于体系结构的部分。</p>
+<p><strong>（2）进程管理</strong></p>
+<p>进程管理的重点是进程的执行。在内核中，这些进程称为线程，代表了单独的处理器虚拟化（线程代码、数据、堆栈和 CPU 寄存器）。在用户空间，通常使用进程 这个术语，不过 Linux 实现并没有区分这两个概念（进程和线程）。内核通过 SCI 提供了一个应用程序编程接口（API）来创建一个新进程（fork、exec 或 Portable Operating System Interface [POSIX] 函数），停止进程（kill、exit），并在它们之间进行通信和同步（signal 或者 POSIX 机制）。</p>
+<p>进程管理还包括处理活动进程之间共享 CPU 的需求。内核实现了一种新型的调度算法，不管有多少个线程在竞争 CPU，这种算法都可以在固定时间内进行操作。这种算法就称为 O(1) 调度程序，这个名字就表示它调度多个线程所使用的时间和调度一个线程所使用的时间是相同的。O(1) 调度程序也可以支持多处理器（称为对称多处理器或 SMP）。您可以在 .&#x2F;linux&#x2F;kernel 中找到进程管理的源代码，在 .&#x2F;linux&#x2F;arch 中可以找到依赖于体系结构的源代码。</p>
+<p><strong>（3）内存管理</strong></p>
+<p>内核所管理的另外一个重要资源是内存。为了提高效率，如果由硬件管理虚拟内存，内存是按照所谓的内存页 方式进行管理的（对于大部分体系结构来说都是 4KB）。Linux 包括了管理可用内存的方式，以及物理和虚拟映射所使用的硬件机制。不过内存管理要管理的可不止 4KB 缓冲区。Linux 提供了对 4KB 缓冲区的抽象，例如 slab 分配器。这种内存管理模式使用 4KB 缓冲区为基数，然后从中分配结构，并跟踪内存页使用情况，比如哪些内存页是满的，哪些页面没有完全使用，哪些页面为空。这样就允许该模式根据系统需要来动态调整内存使用。为了支持多个用户使用内存，有时会出现可用内存被消耗光的情况。由于这个原因，页面可以移出内存并放入磁盘中。这个过程称为交换，因为页面会被从内存交换到硬盘上。内存管理的源代码可以在 .&#x2F;linux&#x2F;mm 中找到。</p>
+<p><strong>（4）虚拟文件系统</strong></p>
+<p>虚拟文件系统（VFS）是 Linux 内核中非常有用的一个方面，因为它为文件系统提供了一个通用的接口抽象。VFS 在 SCI 和内核所支持的文件系统之间提供了一个交换层（请参看图4）。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-5f5326e20c34c3eb6efeeeaaf389ba67_720w.webp" alt="img"></p>
+<p>Linux文件系统层次结构</p>
+<p>在 VFS 上面，是对诸如 open、close、read 和 write 之类的函数的一个通用 API 抽象。在 VFS 下面是文件系统抽象，它定义了上层函数的实现方式。它们是给定文件系统（超过 50 个）的插件。文件系统的源代码可以在 .&#x2F;linux&#x2F;fs 中找到。文件系统层之下是缓冲区缓存，它为文件系统层提供了一个通用函数集（与具体文件系统无关）。这个缓存层通过将数据保留一段时间（或者随即预先读取数据以便在需要是就可用）优化了对物理设备的访问。缓冲区缓存之下是设备驱动程序，它实现了特定物理设备的接口。</p>
+<p><strong>（5）网络堆栈</strong></p>
+<p>网络堆栈在设计上遵循模拟协议本身的分层体系结构。回想一下，Internet Protocol (IP) 是传输协议（通常称为传输控制协议或 TCP）下面的核心网络层协议。TCP 上面是 socket 层，它是通过 SCI 进行调用的。socket 层是网络子系统的标准 API，它为各种网络协议提供了一个用户接口。从原始帧访问到 IP 协议数据单元（PDU），再到 TCP 和 User Datagram Protocol (UDP)，socket 层提供了一种标准化的方法来管理连接，并在各个终点之间移动数据。内核中网络源代码可以在 .&#x2F;linux&#x2F;net 中找到。</p>
+<p><strong>（6）设备驱动程序</strong></p>
+<p>Linux 内核中有大量代码都在设备驱动程序中，它们能够运转特定的硬件设备。Linux 源码树提供了一个驱动程序子目录，这个目录又进一步划分为各种支持设备，例如 Bluetooth、I2C、serial 等。设备驱动程序的代码可以在 .&#x2F;linux&#x2F;drivers 中找到。</p>
+<p><strong>（7）依赖体系结构的代码</strong></p>
+<p>尽管 Linux 很大程度上独立于所运行的体系结构，但是有些元素则必须考虑体系结构才能正常操作并实现更高效率。.&#x2F;linux&#x2F;arch 子目录定义了内核源代码中依赖于体系结构的部分，其中包含了各种特定于体系结构的子目录（共同组成了 BSP）。对于一个典型的桌面系统来说，使用的是 x86 目录。每个体系结构子目录都包含了很多其他子目录，每个子目录都关注内核中的一个特定方面，例如引导、内核、内存管理等。这些依赖体系结构的代码可以在 .&#x2F;linux&#x2F;arch 中找到。</p>
+<p>如果 Linux 内核的可移植性和效率还不够好，Linux 还提供了其他一些特性，它们无法划分到上面的分类中。作为一个生产操作系统和开源软件，Linux 是测试新协议及其增强的良好平台。Linux 支持大量网络协议，包括典型的 TCP&#x2F;IP，以及高速网络的扩展（大于 1 Gigabit Ethernet [GbE] 和 10 GbE）。Linux 也可以支持诸如流控制传输协议（SCTP）之类的协议，它提供了很多比 TCP 更高级的特性（是传输层协议的接替者）。</p>
+<p>Linux 还是一个动态内核，支持动态添加或删除软件组件。被称为动态可加载内核模块，它们可以在引导时根据需要（当前特定设备需要这个模块）或在任何时候由用户插入。</p>
+<p>Linux 最新的一个增强是可以用作其他操作系统的操作系统（称为系统管理程序）。最近，对内核进行了修改，称为基于内核的虚拟机（KVM）。这个修改为用户空间启用了一个新的接口，它可以允许其他操作系统在启用了 KVM 的内核之上运行。除了运行 Linux 的其他实例之外， Microsoft Windows也可以进行虚拟化。惟一的限制是底层处理器必须支持新的虚拟化指令。</p>
+<h2 id="3、Linux体系结构和内核结构区别"><a href="#3、Linux体系结构和内核结构区别" class="headerlink" title="3、Linux体系结构和内核结构区别"></a>3、Linux体系结构和内核结构区别</h2><p><strong>1．当被问到Linux体系结构（就是Linux系统是怎么构成的）时，</strong>我们可以参照下图这么回答：从大的方面讲，Linux体系结构可以分为两块：</p>
+<ul>
+<li>（1）用户空间：用户空间中又包含了，用户的应用程序，C库</li>
+<li>（2）内核空间：内核空间包括，系统调用，内核，以及与平台架构相关的代码</li>
+</ul>
+<p><img src="https://pic4.zhimg.com/80/v2-0c0e596001874218a2a246af82adc88f_720w.webp" alt="img"></p>
+<p><strong>2．Linux体系结构要分成用户空间和内核空间的原因：</strong></p>
+<p>1）现代CPU通常都实现了不同的工作模式，</p>
+<p>以ARM为例：ARM实现了7种工作模式，不同模式下CPU可以执行的指令或者访问的寄存器不同：</p>
+<ul>
+<li>（1）用户模式 usr</li>
+<li>（2）系统模式 sys</li>
+<li>（3）管理模式 svc</li>
+<li>（4）快速中断 fiq</li>
+<li>（5）外部中断 irq</li>
+<li>（6）数据访问终止 abt</li>
+<li>（7）未定义指令异常</li>
+</ul>
+<p>以（2）X86为例：X86实现了4个不同级别的权限，Ring0—Ring3 ;Ring0下可以执行特权指令，可以访问IO设备；Ring3则有很多的限制</p>
+<p>2）所以，Linux从CPU的角度出发，为了保护内核的安全，把系统分成了2部分；</p>
+<p>3．用户空间和内核空间是程序执行的两种不同状态，我们可以通过“系统调用”和“硬件中断“来完成用户空间到内核空间的转移</p>
+<p>4．Linux的内核结构（注意区分LInux体系结构和Linux内核结构）</p>
+<p><img src="https://pic4.zhimg.com/80/v2-4afc669c4dfb7c46c227b2b45690e6d3_720w.webp" alt="img"></p>
+<h2 id="4、Linux驱动的platform机制"><a href="#4、Linux驱动的platform机制" class="headerlink" title="4、Linux驱动的platform机制"></a>4、Linux驱动的platform机制</h2><p>Linux的这种platform driver机制和传统的device_driver机制相比，一个十分明显的优势在于platform机制将本身的资源注册进内核，由内核统一管理，在驱动程序中使用这些资源时通过platform_device提供的标准接口进行申请并使用。这样提高了驱动和资源管理的独立性，并且拥有较好的可移植性和安全性。下面是SPI驱动层次示意图，Linux中的SPI总线可理解为SPI控制器引出的总线：</p>
+<p><img src="https://pic1.zhimg.com/80/v2-5bd23fdb2e32e999d5103cb05b8c2764_720w.webp" alt="img"></p>
+<p>和传统的驱动一样，<strong>platform机制也分为三个步骤：</strong></p>
+<p><strong>1、总线注册阶段：</strong></p>
+<p>内核启动初始化时的main.c文件中的kernel_init()→do_basic_setup()→driver_init()→platform_bus_init()→bus_register(&amp;platform_bus_type)，注册了一条platform总线（虚拟总线，platform_bus）。</p>
+<p><strong>2、添加设备阶段：</strong></p>
+<p>设备注册的时候Platform_device_register()→platform_device_add()→(pdev→dev.bus &#x3D; &amp;platform_bus_type)→device_add()，就这样把设备给挂到虚拟的总线上。</p>
+<p><strong>3、驱动注册阶段：</strong></p>
+<p>Platform_driver_register()→driver_register()→bus_add_driver()→driver_attach()→bus_for_each_dev(), 对在每个挂在虚拟的platform bus的设备作__driver_attach()→driver_probe_device(),判断drv→bus→match()是否执行成功，此时通过指针执行platform_match→strncmp(pdev→name , drv→name , BUS_ID_SIZE),如果相符就调用really_probe(实际就是执行相应设备的platform_driver→probe(platform_device)。)开始真正的探测，如果probe成功，则绑定设备到该驱动。</p>
+<p>从上面可以看出，platform机制最后还是调用了bus_register() , device_add() , driver_register()这三个关键的函数。</p>
+<p><strong>下面看几个结构体：</strong></p>
+<p><img src="https://pic3.zhimg.com/80/v2-5f6443d292671c2f505285967ea62ae2_720w.webp" alt="img"></p>
+<p>Platform_device结构体描述了一个platform结构的设备，在其中包含了一般设备的结构体struct device dev;设备的资源结构体struct resource * resource;还有设备的名字const char * name。（注意，这个名字一定要和后面platform_driver.driver àname相同，原因会在后面说明。）</p>
+<p><strong>该结构体中最重要的就是resource结构，这也是之所以引入platform机制的原因。</strong></p>
+<p><img src="https://pic2.zhimg.com/80/v2-579a8a2db3ad4e5af52aa2cdb43e3589_720w.webp" alt="img"></p>
+<p><strong>名字要一致的原因：</strong></p>
+<p>上面说的驱动在注册的时候会调用函数bus_for_each_dev(), 对在每个挂在虚拟的platform bus的设备作__driver_attach()→driver_probe_device(),在此函数中会对dev和drv做初步的匹配，调用的是drv-&gt;bus-&gt;match所指向的函数。platform_driver_register函数中drv-&gt;driver.bus &#x3D; &amp;platform_bus_type，所以drv-&gt;bus-&gt;match就为platform_bus_type→match,为platform_match函数，该函数如下：</p>
+<p><img src="https://pic2.zhimg.com/80/v2-ba6968431a2f40ca694eb4d497e62979_720w.webp" alt="img"></p>
+<p>是比较dev和drv的name，相同则会进入really_probe（）函数，从而进入自己写的probe函数做进一步的匹配。所以dev→name和driver→drv→name在初始化时一定要填一样的。</p>
+<p>不同类型的驱动，其match函数是不一样的，这个platform的驱动，比较的是dev和drv的名字，还记得usb类驱动里的match吗？它比较的是Product ID和Vendor ID。</p>
+<p><strong>个人总结Platform机制的好处：</strong></p>
+<p>1、提供platform_bus_type类型的总线，把那些不是总线型的soc设备都添加到这条虚拟总线上。使得，总线——设备——驱动的模式可以得到普及。</p>
+<p>2、提供platform_device和platform_driver类型的数据结构，将传统的device和driver数据结构嵌入其中，并且加入resource成员，以便于和Open Firmware这种动态传递设备资源的新型bootloader和kernel 接轨。</p>
+<h2 id="5、Linux内核体系结构"><a href="#5、Linux内核体系结构" class="headerlink" title="5、Linux内核体系结构"></a>5、Linux内核体系结构</h2><p>因为Linux内核是单片的，所以它比其他类型的内核占用空间最大，复杂度也最高。这是一个设计特性，在Linux早期引起了相当多的争论，并且仍然带有一些与单内核固有的相同的设计缺陷。</p>
+<p><img src="https://pic3.zhimg.com/80/v2-27733a2ef35c2b2c70ba8c6ad50aad2a_720w.webp" alt="img"></p>
+<p>为了解决这些缺陷，Linux内核开发人员所做的一件事就是使内核模块可以在运行时加载和卸载，这意味着您可以动态地添加或删除内核的特性。这不仅可以向内核添加硬件功能，还可以包括运行服务器进程的模块，比如低级别虚拟化，但也可以替换整个内核，而不需要在某些情况下重启计算机。<br>想象一下，如果您可以升级到Windows服务包，而不需要重新启动……</p>
+<p><strong>内核模块</strong></p>
+<p>如果Windows已经安装了所有可用的驱动程序，而您只需要打开所需的驱动程序怎么办?这本质上就是内核模块为Linux所做的。内核模块，也称为可加载内核模块(LKM)，对于保持内核在不消耗所有可用内存的情况下与所有硬件一起工作是必不可少的。</p>
+<p><img src="https://pic1.zhimg.com/80/v2-05bbaa4cf8f0d0b8dc7243392fc0d84c_720w.webp" alt="img"></p>
+<p>模块通常向基本内核添加设备、文件系统和系统调用等功能。lkm的文件扩展名是.ko，通常存储在&#x2F;lib&#x2F;modules目录中。由于模块的特性，您可以通过在启动时使用menuconfig命令将模块设置为load或not load，或者通过编辑&#x2F;boot&#x2F;config文件，或者使用modprobe命令动态地加载和卸载模块，轻松定制内核。</p>
+<p>第三方和封闭源码模块在一些发行版中是可用的，比如Ubuntu，默认情况下可能无法安装，因为这些模块的源代码是不可用的。该软件的开发人员(即nVidia、ATI等)不提供源代码，而是构建自己的模块并编译所需的.ko文件以便分发。虽然这些模块像beer一样是免费的，但它们不像speech那样是免费的，因此不包括在一些发行版中，因为维护人员认为它通过提供非免费软件“污染”了内核。</p>
+<p>内核并不神奇，但对于任何正常运行的计算机来说，它都是必不可少的。Linux内核不同于OS X和Windows，因为它包含内核级别的驱动程序，并使许多东西“开箱即用”。希望您能对软件和硬件如何协同工作以及启动计算机所需的文件有更多的了解。</p>
+<hr>
+<p>版权声明：本文为知乎博主「玩转Linux内核」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/419643250">https://zhuanlan.zhihu.com/p/419643250</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E6%9E%B6%E6%9E%84%E5%92%8C%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/">https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E6%9E%B6%E6%9E%84%E5%92%8C%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://pic4.zhimg.com/80/v2-d969437fc09bcd369092c2f85b01e8c7_720w.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%8E%9F%E7%90%86%E4%B8%8E%E6%A6%82%E8%BF%B0(%E6%B5%81%E7%A8%8B%E5%9B%BE)/" title="Linux内核操作系统原理与概述(流程图)"><img class="cover" src="https://pic2.zhimg.com/80/v2-904b5e9cc059f3714d300994e97b6fc1_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux内核操作系统原理与概述(流程图)</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E7%9C%8Bsocket%E5%BA%95%E5%B1%82%E7%9A%84%E6%9C%AC%E8%B4%A8(IO)/" title="Linux内核看socket底层的本质(IO)"><img class="cover" src="https://pic1.zhimg.com/80/v2-5360be48b37f8ff02990e5ba9e691b40_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux内核看socket底层的本质(IO)</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81Linux%E5%86%85%E6%A0%B8%E9%A2%84%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="toc-number">1.</span> <span class="toc-text">1、Linux内核预备工作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81Linux%E5%86%85%E6%A0%B8%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AE%80%E6%9E%90%E7%AE%80%E6%9E%90"><span class="toc-number">2.</span> <span class="toc-text">2、Linux内核体系结构简析简析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81Linux%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E5%92%8C%E5%86%85%E6%A0%B8%E7%BB%93%E6%9E%84%E5%8C%BA%E5%88%AB"><span class="toc-number">3.</span> <span class="toc-text">3、Linux体系结构和内核结构区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%E3%80%81Linux%E9%A9%B1%E5%8A%A8%E7%9A%84platform%E6%9C%BA%E5%88%B6"><span class="toc-number">4.</span> <span class="toc-text">4、Linux驱动的platform机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5%E3%80%81Linux%E5%86%85%E6%A0%B8%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84"><span class="toc-number">5.</span> <span class="toc-text">5、Linux内核体系结构</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

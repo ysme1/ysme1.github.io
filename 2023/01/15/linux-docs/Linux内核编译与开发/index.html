@@ -1,32 +1,198 @@
-extends includes/layout.pug
-
-block content
-  #post
-    if top_img === false
-      include includes/header/post-info.pug
-
-    article#article-container.post-content!=page.content
-    include includes/post/post-copyright.pug
-    .tag_share
-      if (theme.post_meta.post.tags)
-        .post-meta__tag-list
-          each item, index in page.tags.data
-            a(href=url_for(item.path)).post-meta__tags #[=item.name]
-      include includes/third-party/share/index.pug
-        
-    if theme.reward.enable && theme.reward.QR_code
-      !=partial('includes/post/reward', {}, {cache: true})
-
-    //- ad
-    if theme.ad && theme.ad.post
-      .ads-wrap!=theme.ad.post
-
-    if theme.post_pagination
-      include includes/pagination.pug
-    if theme.related_post && theme.related_post.enable
-      != related_posts(page,site.posts)
-
-    if page.comments !== false && theme.comments && theme.comments.use
-      - var commentsJsLoad = true
-      !=partial('includes/third-party/comments/index', {}, {cache: true})
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux内核编译与开发 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="1、Linux内核简介linux kernel map：  linux 系统体系结构：  linux kernel体系结构：arm有7种工作模式，x86也实现了4个不同级别RING0-RING3,RING0级别最高，这样linux用户代码运行在RING3下，内核运行在RING0,这样系统本身就得到了充分的保护 用户空间(用户模式)转到内核空间(系统模式)方法：·系统调用·硬件中断 linux ke">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核编译与开发">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E4%B8%8E%E5%BC%80%E5%8F%91/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="1、Linux内核简介linux kernel map：  linux 系统体系结构：  linux kernel体系结构：arm有7种工作模式，x86也实现了4个不同级别RING0-RING3,RING0级别最高，这样linux用户代码运行在RING3下，内核运行在RING0,这样系统本身就得到了充分的保护 用户空间(用户模式)转到内核空间(系统模式)方法：·系统调用·硬件中断 linux ke">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-6bacced1d82334518e1b3ef705d840d2_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T13:18:23.413Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic3.zhimg.com/80/v2-6bacced1d82334518e1b3ef705d840d2_720w.webp"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E4%B8%8E%E5%BC%80%E5%8F%91/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux内核编译与开发',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-05 21:18:23'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://pic3.zhimg.com/80/v2-6bacced1d82334518e1b3ef705d840d2_720w.webp')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux内核编译与开发</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-05T13:18:23.413Z" title="更新于 2024-04-05 21:18:23">2024-04-05</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/linux-doc/">linux-doc</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux内核编译与开发"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="1、Linux内核简介"><a href="#1、Linux内核简介" class="headerlink" title="1、Linux内核简介"></a><strong>1、Linux内核简介</strong></h2><p><strong>linux kernel map：</strong></p>
+<p><img src="https://pic3.zhimg.com/80/v2-6bacced1d82334518e1b3ef705d840d2_720w.webp" alt="img"></p>
+<p><strong>linux 系统体系结构：</strong></p>
+<p><img src="https://pic1.zhimg.com/80/v2-7cc8b2e7574aed2dab109c6accdfa9a8_720w.webp" alt="img"></p>
+<p><strong>linux kernel体系结构：</strong><br>arm有7种工作模式，x86也实现了4个不同级别RING0-RING3,RING0级别最高，<br>这样linux用户代码运行在RING3下，内核运行在RING0,这样系统本身就得到了<br>充分的保护</p>
+<p><strong>用户空间(用户模式)转到内核空间(系统模式)方法：</strong><br>·系统调用<br>·硬件中断</p>
+<p><strong>linux kernel 体系结构：</strong></p>
+<p><img src="https://pic1.zhimg.com/80/v2-751fa81f9b734d40245468e86b84ce4c_720w.webp" alt="img"></p>
+<p><strong>虚拟文件系统VFS:</strong><br>VFS(虚拟文件系统)隐藏各种文件系统的具体细节，为文件操作提供统一的接口</p>
+<h2 id="2、Linux内核源代码"><a href="#2、Linux内核源代码" class="headerlink" title="2、Linux内核源代码"></a><strong>2、Linux内核源代码</strong></h2><p>linux内核下载***<a href="https://link.zhihu.com/?target=http://www.kernel.org">http://www.kernel.org</a>***<br><strong>目录结构:</strong><br>解压linux kernel tar后目录<br>·arch:根据cpu体系结构不同而分的代码<br>·block:部分块设备驱动程序<br>·crypto:加密，压缩，CRC校验算法<br>·documentation:内核文档<br>·drivers:设备驱动程序<br>·fs(虚拟文件系统vfs):文件系统<br>·include:内核所需的头文件，(与平台无关的头文件在include&#x2F;linux中)<br>·lib:库文件代码(与平台相关的)<br>·mm:实现内存管理，与硬件体系结构无关的(与硬件体系结构相关的在arch中)<br>·net:网络协议的代码<br>·samples:一些内核编程的范例<br>·scripts:配置内核的脚本<br>·security:SElinux的模块<br>·sound:音频设备的驱动程序<br>·usr:cpio命令实现，用于制作根文件系统的命令(文件系统与内核放到一块的命令)<br>·virt:内核虚拟机</p>
+<p><strong>linux DOC 编译生成:</strong></p>
+<p>linux源根目录&#x2F;Documentation&#x2F;00-INDEX:目录索引<br>linux源根目录&#x2F;Documentation&#x2F;HOWTO:指南<br>·生成linux内核帮助文档:在linux源根目录(Documentation) 执行make htmldocs</p>
+<p>ubuntu16下需要执行sudo apt-get install xmlto安装插件才可生成doc文档</p>
+<p>后面开发中经常要改的是arch，drivers中的代码</p>
+<h2 id="3、Linux内核配置与编译"><a href="#3、Linux内核配置与编译" class="headerlink" title="3、Linux内核配置与编译"></a><strong>3、Linux内核配置与编译</strong></h2><p><strong>清理文件(在linux源码根目录):</strong><br>·make clean:只清理所有产生的文件<br>·make mrproper:清理所有产生的文件与config配置文件<br>·make distclean:清理所有产生的文件与config配置文件，并且编辑过的与补丁文件<br>↓<br><strong>配置(收集硬件信息如cpu型号，网卡等…):</strong><br>·make config:基于文本模式的交互配置<br>·make menuconfig:基于文本模式的菜单模式(推荐使用)<br>·make oldconfig:使用已有的.config,但会询问新增的配置项<br>·make xconfig:图形化的配置(需要安装图形化系统)<br><strong>配置方法：</strong><br>1)使用make menuconfig操作方法：<br>1&gt;按y:编译&gt;连接&gt;镜像文件<br>2&gt;按m:编译<br>3&gt;按n:什么都不做<br>4&gt;按”空格键”:y,n轮换<br>配置完并保存后会在linux源码根目录下生成一个.config文件<br>注意：在ubuntu11上要执行apt-get install libncurses5-dev来安装支持包<br>2)利用已有的配置文件模板(.config)<br>1&gt;linux源码根目录&#x2F;arch&#x2F;&lt;cpu架构&gt;&#x2F;configs&#x2F;&lt;具体某一的CPU文件&gt;，把里面对应的文件copy并改名为.config至linux源码根目录下<br>2&gt;利用当前运行已有的文件(要用ls &#x2F;boot&#x2F; -a查看)把&#x2F;boot&#x2F;config-2.6.18-53.e15拷贝并改名为.config至linux源码根目录下执行以上操作就可以用make menuconfig在拷贝<br>.config文件上面修改文件了<br>↓<br><strong>编译内核:</strong><br>1)make zImage<br>2)make bzImage<br>区别:在X86平台上，zimage只能用于小于512k的内核<br>获取详细编译信息：make zimage V&#x3D;1 或 make bzimage V&#x3D;1<br>编译好的内核在：arch&#x2F;<cpu>&#x2F;boot&#x2F;目录下<br>注意：在把.config配置文件cp到根目录编译内核前，必须进入make menuconfig并保存退出(否则生不了效)<br>↓<br><strong>编译并安装模块:</strong></p>
+<p>1)编译内核模块:make modules<br>2)安装内核模块:make modules_install INSTALL_MOD_PATH&#x3D;&#x2F;lib&#x2F;modules<br>更换本机器内核:将编译好的内核模块从内核源码目录copy至&#x2F;lib&#x2F;modules下<br>制作init ramdisk():输入执行命令mkinitrd initrd-2.6.39(任意) 2.6.39(可通过查询&#x2F;lib&#x2F;modules下的目录得到)<br>注意：<br>mkinitrd命令为redhat里面的,ubuntu的命令为:mkinitramfs -k &#x2F;lib&#x2F;modules&#x2F;模块安装位置 -o initrd-2.6.39(任意) 2.6.39(可通过查询&#x2F;lib&#x2F;modules下的目录得到)<br>如果ubuntu里面没有mkinitramfs命令可以用apt-get install initrd-tools进行安装<br>↓<br><strong>安装内核模块:</strong><br>1)手动<br>1&gt;cp linux根目录&#x2F;arch&#x2F;x86&#x2F;boot&#x2F;bzImage &#x2F;boot&#x2F;mylinux-2.6.39<br>2&gt;cp linux根目录&#x2F;initrd-2.6.39 &#x2F;boot&#x2F;initrd-2.6.39<br>最后修改&#x2F;etc&#x2F;grub.conf或&#x2F;etc&#x2F;lilo.conf文件<br>2)自动<br>1&gt;make install:这个命令会自动完成上面的操作(查看当前内核版本：uname -r)<br>-—————————————————————————-</p>
+<h2 id="4、linux内核模块开发"><a href="#4、linux内核模块开发" class="headerlink" title="4、linux内核模块开发"></a><strong>4、linux内核模块开发</strong></h2><p>描述：<br>linux内核组件非常庞大，内核ximage并不包含某组件，而是在该组件需要被使用的时候，动态的添加到正在运行的内核中(也可以卸载)，这种机制叫做“内核模块”的机制。内核模块通常通过使用makefile文件对模块进行编译</p>
+<p><strong>模块安装与卸载:</strong><br>1)加载：insmod hello.ko<br>2)卸载：rmmod hello<br>3)查看：lsmod<br>4)加载(自动寻找模块依赖)：modprobe hello<br>modprobe会根据文件&#x2F;lib&#x2F;modules&#x2F;version&#x2F;modules.dep来查看要加载的模块，看它是否还依赖于其他模块，如果是,会先找到这些模块，把它们先加载到内核</p>
+<p><strong>实例分析：</strong><br>1)moduleDep&#x2F;1(一个模块的编译)</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;linux/module.h&gt;</span><br><span class="line">#include &lt;linux/init.h&gt;</span><br><span class="line"></span><br><span class="line">//模块入口函数</span><br><span class="line">//__init:表示代码段中的子段,里面的内容只运行一次并且回收内存.</span><br><span class="line">static int __init hello_init(void)</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_EMERG &quot;hello world!\n&quot;);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line">//模块卸载函数</span><br><span class="line">//__exit:</span><br><span class="line">static void __exit hello_exit(void)</span><br><span class="line">&#123;</span><br><span class="line">    printk(KERN_EMERG &quot;hello exit!\n&quot;);</span><br><span class="line">&#125;</span><br><span class="line">//内核符号导出 函数</span><br><span class="line">int add_integar(int a,int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a+b;</span><br><span class="line">&#125;</span><br><span class="line">int sub_integar(int a,int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a-b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(hello_init);</span><br><span class="line">module_exit(hello_exit);</span><br><span class="line">//函数导出</span><br><span class="line">EXPORT_SYMBOL(add_integar);</span><br><span class="line">EXPORT_SYMBOL(sub_integar);</span><br></pre></td></tr></table></figure>
+
+<p>makefile:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">#第一次执行KERNELRELEASE是空的,所以执行else里面的</span><br><span class="line">ifneq ($(KERNELRELEASE),)</span><br><span class="line"></span><br><span class="line">obj-m :=hello.o</span><br><span class="line"></span><br><span class="line">#else块</span><br><span class="line">else</span><br><span class="line"></span><br><span class="line">KDIR:= /lib/modules/2.6.18-53.el5/build</span><br><span class="line"></span><br><span class="line">all:</span><br><span class="line">#KDIR    依赖内核模块源代码路径(内核编译安装路径)</span><br><span class="line">#PWD     表示内核代码在哪(当前目录)</span><br><span class="line">#modules 编译的是模块</span><br><span class="line">    make -C $(KDIR) M=$(PWD) modules </span><br><span class="line"></span><br><span class="line">clean:</span><br><span class="line">    rm -f *.ko *.o *.mod.o *.mod.c *.symvers *.order</span><br><span class="line"></span><br><span class="line">endif</span><br></pre></td></tr></table></figure>
+
+<p>2)moduleDep&#x2F;2(两个模块的编译)</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;linux/module.h&gt;</span><br><span class="line">#include &lt;linux/init.h&gt;</span><br><span class="line">//模块可选信息</span><br><span class="line">MODULE_LICENSE(&quot;GPL&quot;);//许可证声明</span><br><span class="line">MODULE_AUTHOR(&quot;liyuan&quot;);//作者声明</span><br><span class="line">MODULE_DESCRIPTION(&quot;This module is a param example.&quot;);//模块描述</span><br><span class="line">MODULE_VERSION(&quot;V1.0&quot;);//模块别名</span><br><span class="line">MODULE_ALIAS(&quot;a simple module&quot;);//模块别名</span><br><span class="line"></span><br><span class="line">//模块参数</span><br><span class="line">static char *name = &quot;liyuan arg&quot;;</span><br><span class="line">static int age = 30;</span><br><span class="line">//S_IRUGO是参数权限，也可以用数字</span><br><span class="line">module_param(age,int,S_IRUGO);</span><br><span class="line">module_param(name,charp,S_IRUGO);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//使用外部文件函数</span><br><span class="line">extern int add(int a,int b);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">//声明 外部内核符号 函数</span><br><span class="line">extern int add_integar(int a,int b);</span><br><span class="line">extern int sub_integar(int a,int b);</span><br><span class="line"></span><br><span class="line">static int __init mains_init(void)</span><br><span class="line">&#123;</span><br><span class="line">     //多文件编译</span><br><span class="line"></span><br><span class="line">    printk(KERN_EMERG&quot;param hi&quot;);</span><br><span class="line">    int vle=add(1,2);</span><br><span class="line">    printk(KERN_EMERG&quot;add value:%d\n&quot;,vle);</span><br><span class="line">    //模块参数</span><br><span class="line"></span><br><span class="line">     printk(KERN_EMERG&quot; name : %s\n&quot;,name);</span><br><span class="line">     printk(KERN_EMERG&quot; age : %d\n&quot;,age);</span><br><span class="line"></span><br><span class="line">    //使用其他模块的函数(内核符号导出)</span><br><span class="line">    int adds=add_integar(3,1);</span><br><span class="line">    int subs=sub_integar(3,1);</span><br><span class="line">    printk(KERN_EMERG&quot; add_integar : %d\n&quot;,adds);</span><br><span class="line">    printk(KERN_EMERG&quot; sub_integar : %d\n&quot;,subs);</span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">static void __exit mains_exit(void)</span><br><span class="line">&#123;</span><br><span class="line">    printk(&quot;param exit!&quot;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">module_init(mains_init);</span><br><span class="line">module_exit(mains_exit);</span><br></pre></td></tr></table></figure>
+
+<p>add.c</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">int add(int a,int b)</span><br><span class="line">&#123;</span><br><span class="line">    return a+b;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>makefile</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">ifneq ($(KERNELRELEASE),)</span><br><span class="line">#两个以上内核源文件 生成单独的内核模块名ma</span><br><span class="line"></span><br><span class="line">#内核ma</span><br><span class="line">obj-m :=ma.o</span><br><span class="line">#下面的ma-objs前面必须和上面一样为ma</span><br><span class="line">ma-objs := mains.o add.o</span><br><span class="line"></span><br><span class="line">else</span><br><span class="line"></span><br><span class="line">KDIR:= /lib/modules/2.6.18-53.el5/build</span><br><span class="line"></span><br><span class="line">all:</span><br><span class="line">        make -C $(KDIR) M=$(PWD) modules </span><br><span class="line">clean:</span><br><span class="line">    rm -f *.ko *.o *.mod.o *.mod.c *.symvers *.order</span><br><span class="line"></span><br><span class="line">endif</span><br></pre></td></tr></table></figure>
+
+<p><strong>运行带参模块</strong>：insmod hello.ko name&#x3D;yuan age&#x3D;12<br>内核符号导出(&#x2F;proc&#x2F;kallsyms记录了内核中所有导出的符号的名字与地址):<br>一个内核模块的运行依赖另一个内核模块的函数实现，必须先运行第一个内核模块，这样就需要进行内核符号导出。</p>
+<p><strong>注意：</strong><br>错误信息:disagrees about version of symbol struct_module insmod:error inserting …<br>开发内核模块时会出现，内核模块不匹配的情况.是你当前运行的linux内核与编译连接所依赖的<br>内核版本不匹配，解决方法：<br>·使用modprobe –force-modversion强行插入<br>·可使用uname -r进行查看当前运行的内核版本</p>
+<p><strong>printk内核打印:</strong><br>在&lt;linux&#x2F;kernel.h&gt;中printk有8个优先级，按优先级递减的是：<br>·KERN_EMERG 0<br>用于紧急的消息，常常是那些崩溃的消息<br>·KERN_ALERT 1<br>需要立刻行动的消息<br>·KERN_CRIT 2<br>严重情况<br>·KERN_ERR 3<br>错误情况<br>·KERN_WARNING(printk默认级别) 4<br>有问题的警告<br>·KERN_NOTICE 5<br>正常情况，但是仍然值得注意<br>·KERN_INFO 6<br>信息消息<br>·KERN_DEBUG 7<br>用作调试消息</p>
+<p>不管是哪个级别的都会在&#x2F;var&#x2F;log&#x2F;messages里面打印出来(messages可以删除后，运行内核进行测试内核打印情况)控制台打印(优先级配置&#x2F;proc&#x2F;sys&#x2F;kernel&#x2F;printk)</p>
+<p>6 4 1 7<br>·Console_loglevel<br>·Default_message_loglevel<br>·Minimum_console_level<br>·Default_console_loglevel</p>
+<p>在vm+redhat安装2.6.39内核时出现的错误<br>启动时报could not find filesystem ‘&#x2F;dev&#x2F;root’<br>解决方法<br>a.通过make menuconfig选中以下对应的选项<br>General setup –&gt;<br>[<em>] enable deprecated sysfs features to support old userspace tools<br>成功时下面那个也</em>了的<br>b.修改.config文件<br>修改.config文件中CONFIG_SYSFS_DEPRECATED_V2，将原本被注释掉的<br>CONFIG_SYSFS_DEPRECATED_V2 改成CONFIG_SYSFS_DEPRECATED_V2&#x3D;y</p>
+<hr>
+<p>版权声明：本文为知乎博主「<a target="_blank" rel="noopener" href="https://www.zhihu.com/people/linuxwang-xian-sheng">极致Linux内核</a>」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。</p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/549065925">https://zhuanlan.zhihu.com/p/549065925</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E4%B8%8E%E5%BC%80%E5%8F%91/">https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E4%B8%8E%E5%BC%80%E5%8F%91/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="https://pic3.zhimg.com/80/v2-6bacced1d82334518e1b3ef705d840d2_720w.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E7%9C%8Bsocket%E5%BA%95%E5%B1%82%E7%9A%84%E6%9C%AC%E8%B4%A8(IO)/" title="Linux内核看socket底层的本质(IO)"><img class="cover" src="https://pic1.zhimg.com/80/v2-5360be48b37f8ff02990e5ba9e691b40_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux内核看socket底层的本质(IO)</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E8%99%9A%E6%8B%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" title="Linux内核虚拟文件系统"><img class="cover" src="https://pic1.zhimg.com/80/v2-47c81e353571a8203518a88ee90f82b8_720w.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Linux内核虚拟文件系统</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img class="cover" src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux 30分钟学会编译linux内核</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img class="cover" src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux IO 之 IO与网络模型</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img class="cover" src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux Kernel内核整体架构(图文详解)</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Coding Style整理</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Makefile%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3/" title="Linux内核Makefile系统文件详解"><img class="cover" src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核Makefile系统文件详解</div></div></a></div><div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8RCU%E6%9C%BA%E5%88%B6/" title="Linux内核RCU机制"><img class="cover" src="https://pic2.zhimg.com/80/v2-012ee665b35eb28bca5c88269765f069_720w.webp" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-01-15</div><div class="title">Linux内核RCU机制</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81Linux%E5%86%85%E6%A0%B8%E7%AE%80%E4%BB%8B"><span class="toc-number">1.</span> <span class="toc-text">1、Linux内核简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81Linux%E5%86%85%E6%A0%B8%E6%BA%90%E4%BB%A3%E7%A0%81"><span class="toc-number">2.</span> <span class="toc-text">2、Linux内核源代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81Linux%E5%86%85%E6%A0%B8%E9%85%8D%E7%BD%AE%E4%B8%8E%E7%BC%96%E8%AF%91"><span class="toc-number">3.</span> <span class="toc-text">3、Linux内核配置与编译</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%E3%80%81linux%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E5%BC%80%E5%8F%91"><span class="toc-number">4.</span> <span class="toc-text">4、linux内核模块开发</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/categories/%E5%AD%A6%E4%B9%A0/%E5%B7%A5%E5%85%B7/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
