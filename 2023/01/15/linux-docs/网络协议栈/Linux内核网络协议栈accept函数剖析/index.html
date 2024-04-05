@@ -1,0 +1,510 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Linux内核网络协议栈accept函数剖析 - Blog</title>
+
+  
+    <meta name="description" content="1、应用层——accept 函数该函数返回一个已建立连接的可用于数据通信的套接字。 12345#include &lt;sys&#x2F;socket.h&gt; int accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen);  &#x2F;&#x2F;返回：非负描述子——成功，-1——出错 &#x2F;*参数sockfd是监听后的套接字，这个套接字用来监听一个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核网络协议栈accept函数剖析">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88accept%E5%87%BD%E6%95%B0%E5%89%96%E6%9E%90/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="1、应用层——accept 函数该函数返回一个已建立连接的可用于数据通信的套接字。 12345#include &lt;sys&#x2F;socket.h&gt; int accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen);  &#x2F;&#x2F;返回：非负描述子——成功，-1——出错 &#x2F;*参数sockfd是监听后的套接字，这个套接字用来监听一个">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T12:59:49.936Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  <meta name="keywords" content="Linux">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E4%B8%80%E6%96%87%E5%B8%A6%E4%BD%A0%EF%BC%8C%E5%BD%BB%E5%BA%95%E4%BA%86%E8%A7%A3%EF%BC%8C%E9%9B%B6%E6%8B%B7%E8%B4%9DZero-Copy%E6%8A%80%E6%9C%AF/"><span class="title">一文带你，彻底了解，零拷贝Zero-Copy技术</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/"><span class="title">任务调度</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E5%92%8C%E6%B4%BE%E7%94%9F/"><span class="title">进程、线程的创建和派生</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/08a41b181ce68.svg"/></a><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/3845874.svg"/></a><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/3616429.svg"/></a><a class="social" href="/about/#comments" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/942ebbf1a4b91.svg"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T12:59:49.936Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux内核网络协议栈accept函数剖析</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="1、应用层——accept-函数"><a href="#1、应用层——accept-函数" class="headerlink" title="1、应用层——accept 函数"></a>1、应用层——acce<strong>pt 函数</strong></h2><p>该函数返回一个已建立连接的可用于数据通信的套接字。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/socket.h&gt; </span><br><span class="line">int accept(int sockfd, struct sockaddr *cliaddr, socklen_t *addrlen);  </span><br><span class="line">//返回：非负描述子——成功，-1——出错 </span><br><span class="line">/*参数sockfd是监听后的套接字，这个套接字用来监听一个端口，当有一个客户与服务器连接时，它使用一个与这个套接字关联的端口号， </span><br><span class="line">比较特别的是：参数cliaddr和addrlen是一个结果参数，用来返回已连接客户的协议地址。如果对客户的地址不感兴趣，那么可以把这个值设置为NULL*/ </span><br></pre></td></tr></table></figure>
+
+<h2 id="2、BSD-Socket-层——sock-accept-函数"><a href="#2、BSD-Socket-层——sock-accept-函数" class="headerlink" title="2、BSD Socket 层——sock_accept 函数"></a>2、BSD Socket 层——sock_accept 函数</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line">/* </span><br><span class="line"> *  For accept, we attempt to create a new socket, set up the link </span><br><span class="line"> *  with the client, wake up the client, then return the new </span><br><span class="line"> *  connected fd. We collect the address of the connector in kernel </span><br><span class="line"> *  space and move it to user at the very end. This is buggy because </span><br><span class="line"> *  we open the socket then return an error. </span><br><span class="line"> */  </span><br><span class="line">//用于服务器接收一个客户端的连接请求，这里是值-结果参数，之前有说到  </span><br><span class="line">//fd 为监听后套接字。最后返回一个记录了本地与目的端信息的套接字  </span><br><span class="line">//upeer_sockaddr用来返回已连接客户的协议地址，如果对协议地址不感兴趣就NULL  </span><br><span class="line">static int sock_accept(int fd, struct sockaddr *upeer_sockaddr, int *upeer_addrlen)  </span><br><span class="line">&#123;  </span><br><span class="line">    struct file *file;  </span><br><span class="line">    struct socket *sock, *newsock;  </span><br><span class="line">    int i;  </span><br><span class="line">    char address[MAX_SOCK_ADDR];  </span><br><span class="line">    int len;  </span><br><span class="line">  </span><br><span class="line">    if (fd &lt; 0 || fd &gt;= NR_OPEN || ((file = current-&gt;files-&gt;fd[fd]) == NULL))  </span><br><span class="line">        return(-EBADF);  </span><br><span class="line">    if (!(sock = sockfd_lookup(fd, &amp;file)))   </span><br><span class="line">        return(-ENOTSOCK);  </span><br><span class="line">    if (sock-&gt;state != SS_UNCONNECTED)//socket各个状态的演变是一步一步来的   </span><br><span class="line">    &#123;  </span><br><span class="line">        return(-EINVAL);  </span><br><span class="line">    &#125;  </span><br><span class="line">    //这是tcp连接，得按步骤来  </span><br><span class="line">    if (!(sock-&gt;flags &amp; SO_ACCEPTCON))//没有listen  </span><br><span class="line">    &#123;  </span><br><span class="line">        return(-EINVAL);  </span><br><span class="line">    &#125;  </span><br><span class="line">    //分配一个新的套接字，用于表示后面可进行通信的套接字  </span><br><span class="line">    if (!(newsock = sock_alloc()))   </span><br><span class="line">    &#123;  </span><br><span class="line">        printk(&quot;NET: sock_accept: no more sockets\n&quot;);  </span><br><span class="line">        return(-ENOSR); /* Was: EAGAIN, but we are out of system </span><br><span class="line">                   resources! */  </span><br><span class="line">    &#125;  </span><br><span class="line">    newsock-&gt;type = sock-&gt;type;  </span><br><span class="line">    newsock-&gt;ops = sock-&gt;ops;  </span><br><span class="line">    //套接字重定向，目的是初始化新的用于数据传送的套接字  </span><br><span class="line">    //继承了第一参数传来的服务器的IP和端口号信息  </span><br><span class="line">    if ((i = sock-&gt;ops-&gt;dup(newsock, sock)) &lt; 0)   </span><br><span class="line">    &#123;  </span><br><span class="line">        sock_release(newsock);  </span><br><span class="line">        return(i);  </span><br><span class="line">    &#125;  </span><br><span class="line">    //转调用inet_accept  </span><br><span class="line">    i = newsock-&gt;ops-&gt;accept(sock, newsock, file-&gt;f_flags);  </span><br><span class="line">    if ( i &lt; 0)   </span><br><span class="line">    &#123;  </span><br><span class="line">        sock_release(newsock);  </span><br><span class="line">        return(i);  </span><br><span class="line">    &#125;  </span><br><span class="line">    //分配一个文件描述符，用于以后的数据传送  </span><br><span class="line">    if ((fd = get_fd(SOCK_INODE(newsock))) &lt; 0)   </span><br><span class="line">    &#123;  </span><br><span class="line">        sock_release(newsock);  </span><br><span class="line">        return(-EINVAL);  </span><br><span class="line">    &#125;  </span><br><span class="line">    //返回通信远端的地址  </span><br><span class="line">    if (upeer_sockaddr)  </span><br><span class="line">    &#123;//得到客户端地址，并复制到用户空间  </span><br><span class="line">        newsock-&gt;ops-&gt;getname(newsock, (struct sockaddr *)address, &amp;len, 1);  </span><br><span class="line">        move_addr_to_user(address,len, upeer_sockaddr, upeer_addrlen);  </span><br><span class="line">    &#125;  </span><br><span class="line">    return(fd);  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<h2 id="3、INET-Socket-层——inet-accept-函数"><a href="#3、INET-Socket-层——inet-accept-函数" class="headerlink" title="3、INET Socket 层——inet_accept 函数"></a>3、INET Socket 层——inet_accept 函数</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line">/* </span><br><span class="line"> *  Accept a pending connection. The TCP layer now gives BSD semantics. </span><br><span class="line"> */  </span><br><span class="line">//先去看看sock_accept，看看各个参数的意思，newsock是dup sock后的新sock  </span><br><span class="line">//sock为监听套接字，newsock为连接成功后实际用于通信的sock  </span><br><span class="line">static int inet_accept(struct socket *sock, struct socket *newsock, int flags)  </span><br><span class="line">&#123;  </span><br><span class="line">    struct sock *sk1, *sk2;  </span><br><span class="line">    int err;  </span><br><span class="line">  </span><br><span class="line">    sk1 = (struct sock *) sock-&gt;data;  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     * We&#x27;ve been passed an extra socket. </span><br><span class="line">     * We need to free it up because the tcp module creates </span><br><span class="line">     * its own when it accepts one. </span><br><span class="line">     */  </span><br><span class="line">     //如果sock-&gt;data 已经指向了对应的sock结构，则把它销毁  </span><br><span class="line">     //销毁旧的，后面指向新的accept后的  </span><br><span class="line">    if (newsock-&gt;data)  </span><br><span class="line">    &#123;  </span><br><span class="line">        struct sock *sk=(struct sock *)newsock-&gt;data;  </span><br><span class="line">        newsock-&gt;data=NULL;  </span><br><span class="line">        sk-&gt;dead = 1;  </span><br><span class="line">        destroy_sock(sk);//销毁旧的socket对应的sock结构  </span><br><span class="line">    &#125;  </span><br><span class="line">    </span><br><span class="line">    if (sk1-&gt;prot-&gt;accept == NULL) //没有对应的操作函数集，退出  </span><br><span class="line">        return(-EOPNOTSUPP);  </span><br><span class="line">  </span><br><span class="line">    /* Restore the state if we have been interrupted, and then returned. */  </span><br><span class="line">//如果套接字在等待连接的过程中被中断，则监听套接字与中断的套接字关联，下次优先处理该套接字  </span><br><span class="line">    if (sk1-&gt;pair != NULL )   </span><br><span class="line">    &#123;  </span><br><span class="line">        sk2 = sk1-&gt;pair;  </span><br><span class="line">        sk1-&gt;pair = NULL;  </span><br><span class="line">    &#125;   </span><br><span class="line">    else  </span><br><span class="line">    &#123;  </span><br><span class="line">//这里调用下层处理函数tcp_accept，首次调用inet_accept，sk1-&gt;pair 肯定是为NULL的，所以一开始就会执行下面的代码  </span><br><span class="line">        sk2 = sk1-&gt;prot-&gt;accept(sk1,flags);//交给下层处理函数  </span><br><span class="line">        if (sk2 == NULL)   </span><br><span class="line">        &#123;  </span><br><span class="line">            if (sk1-&gt;err &lt;= 0)  </span><br><span class="line">                printk(&quot;Warning sock.c:sk1-&gt;err &lt;= 0.  Returning non-error.\n&quot;);  </span><br><span class="line">            err=sk1-&gt;err;  </span><br><span class="line">            sk1-&gt;err=0;  </span><br><span class="line">            return(-err);  </span><br><span class="line">        &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    //socket sock建立关联  </span><br><span class="line">    newsock-&gt;data = (void *)sk2;//指向新的，sk2为下层函数tcp_accept返回的套接字  </span><br><span class="line">    sk2-&gt;sleep = newsock-&gt;wait;//等待队列  </span><br><span class="line">    sk2-&gt;socket = newsock;//回绑，指向上层的socket结构  </span><br><span class="line">    newsock-&gt;conn = NULL;//还没有连接客户端  </span><br><span class="line">    if (flags &amp; O_NONBLOCK)   </span><br><span class="line">        return(0);  </span><br><span class="line">  </span><br><span class="line">    cli(); /* avoid the race. */  </span><br><span class="line">    //三次握手中间过程，tcp SYN序列号接收  </span><br><span class="line">    while(sk2-&gt;state == TCP_SYN_RECV)   </span><br><span class="line">    &#123;  </span><br><span class="line">    //被中断了  </span><br><span class="line">        interruptible_sleep_on(sk2-&gt;sleep);  </span><br><span class="line">        if (current-&gt;signal &amp; ~current-&gt;blocked)   </span><br><span class="line">        &#123;  </span><br><span class="line">            sti();  </span><br><span class="line">            sk1-&gt;pair = sk2;//存入pair，下次优先处理  </span><br><span class="line">            sk2-&gt;sleep = NULL;  </span><br><span class="line">            sk2-&gt;socket=NULL;  </span><br><span class="line">            newsock-&gt;data = NULL;  </span><br><span class="line">            return(-ERESTARTSYS);  </span><br><span class="line">        &#125;  </span><br><span class="line">    &#125;  </span><br><span class="line">    sti();  </span><br><span class="line">    //连接失败，三次握手失败  </span><br><span class="line">    if (sk2-&gt;state != TCP_ESTABLISHED &amp;&amp; sk2-&gt;err &gt; 0)   </span><br><span class="line">    &#123;  </span><br><span class="line">        err = -sk2-&gt;err;  </span><br><span class="line">        sk2-&gt;err=0;  </span><br><span class="line">        sk2-&gt;dead=1; /* ANK */  </span><br><span class="line">        destroy_sock(sk2);//销毁新建的sock结构  </span><br><span class="line">        newsock-&gt;data = NULL;  </span><br><span class="line">        return(err);  </span><br><span class="line">    &#125;  </span><br><span class="line">    newsock-&gt;state = SS_CONNECTED;//已经建立了连接  </span><br><span class="line">    return(0);  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<h2 id="4、传输层——tcp-accept-函数"><a href="#4、传输层——tcp-accept-函数" class="headerlink" title="4、传输层——tcp_accept 函数"></a>4、传输层——tcp_accept 函数</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line">/* </span><br><span class="line"> *  This will accept the next outstanding connection.  </span><br><span class="line"> */  </span><br><span class="line"> //accept-&gt;sock_accpet-&gt;inet_accpet-&gt;tcp_accept(tcp)  </span><br><span class="line"> //顶层accept传值进来的套接字sk是监听套接字，然后返回可以进行数据通信的套接字  </span><br><span class="line"> //tcp_accept就是从监听套接字缓存队列里面找到一个完成连接的套接字  </span><br><span class="line">static struct sock *tcp_accept(struct sock *sk, int flags)  </span><br><span class="line">&#123;  </span><br><span class="line">    struct sock *newsk;  </span><br><span class="line">    struct sk_buff *skb;  </span><br><span class="line">    </span><br><span class="line">  /* </span><br><span class="line">   * We need to make sure that this socket is listening, </span><br><span class="line">   * and that it has something pending. </span><br><span class="line">   */  </span><br><span class="line">  </span><br><span class="line">    if (sk-&gt;state != TCP_LISTEN) //如果当前不是出于监听状态就退出  </span><br><span class="line">    &#123;  </span><br><span class="line">        sk-&gt;err = EINVAL;  </span><br><span class="line">        return(NULL);   </span><br><span class="line">    &#125;  </span><br><span class="line">    //套接字处于监听状态  </span><br><span class="line">    /* Avoid the race. */  </span><br><span class="line">    cli();  </span><br><span class="line">    sk-&gt;inuse = 1;//表示当前进程正在使用该sock结构，其余进程不能使用，加锁  </span><br><span class="line">      </span><br><span class="line">  //从监听套接字缓存队列里找到已经建立连接的套接字,并返回  </span><br><span class="line">    while((skb = tcp_dequeue_established(sk)) == NULL)  </span><br><span class="line">    &#123;  </span><br><span class="line">    //如果没有完成连接的，就一直陷入循环，然后重发back_log中的数据包  </span><br><span class="line">        if (flags &amp; O_NONBLOCK) //不阻塞  </span><br><span class="line">        &#123;  </span><br><span class="line">            sti();  </span><br><span class="line">//如果当前套接字正忙，数据包将插入到sock结构的back_log队列中，back_log只是暂居之所  </span><br><span class="line">//数据包必须插入到receive_queue中才算被接收  </span><br><span class="line">            release_sock(sk);//从back_log中取数据包重新调用tcp_rcv函数对数据包进行接收  </span><br><span class="line">            sk-&gt;err = EAGAIN;  </span><br><span class="line">            return(NULL);  </span><br><span class="line">        &#125;  </span><br><span class="line">       </span><br><span class="line">        release_sock(sk);//从back_log中取数据包重新调用tcp_rcv函数对数据包进行接收  </span><br><span class="line">        interruptible_sleep_on(sk-&gt;sleep);  </span><br><span class="line">        if (current-&gt;signal &amp; ~current-&gt;blocked)   </span><br><span class="line">        &#123;  </span><br><span class="line">            sti();  </span><br><span class="line">            sk-&gt;err = ERESTARTSYS;  </span><br><span class="line">            return(NULL);  </span><br><span class="line">        &#125;  </span><br><span class="line">        sk-&gt;inuse = 1;//加锁  </span><br><span class="line">    &#125;  </span><br><span class="line">    sti();  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     *  Now all we need to do is return skb-&gt;sk.  </span><br><span class="line">     */  </span><br><span class="line">    newsk = skb-&gt;sk;//返回的套接字(已完成连接)  </span><br><span class="line">  </span><br><span class="line">    kfree_skb(skb, FREE_READ);//释放sk_buff  </span><br><span class="line">    sk-&gt;ack_backlog--;//未应答数据包个数-1  </span><br><span class="line">    release_sock(sk);//原套接字继续监听  </span><br><span class="line">    return(newsk);  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<p>好，定位到 tcp_dqueue_established 函数：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">/* </span><br><span class="line"> *  Remove a completed connection and return it. This is used by </span><br><span class="line"> *  tcp_accept() to get connections from the queue. </span><br><span class="line"> */  </span><br><span class="line">//移除sock中一个已经建立连接的数据包，并返回该数据包  </span><br><span class="line">//结合前面可以看出，对于receive_queue，套接字连接的第1次握手时在该链表尾部增加一个链表节点，  </span><br><span class="line">//当第3次握手完成将此节点删除,所以对于监听套接字receive_queue中保存的是不完全建立连接的套接字的数据包  </span><br><span class="line">static struct sk_buff *tcp_dequeue_established(struct sock *s)  </span><br><span class="line">&#123;  </span><br><span class="line">    struct sk_buff *skb;  </span><br><span class="line">    unsigned long flags;  </span><br><span class="line">    save_flags(flags);//保存状态  </span><br><span class="line">    cli();   </span><br><span class="line">    skb=tcp_find_established(s);//找到已经建立连接的数据包  </span><br><span class="line">    if(skb!=NULL)  </span><br><span class="line">        skb_unlink(skb);    //从队列中移除，但该数据报实体还是存在的/* Take it off the queue */  </span><br><span class="line">    restore_flags(flags);  </span><br><span class="line">    return skb;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<p>好，再定位到 tcp_find_established 函数：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">/* </span><br><span class="line"> *  Find someone to &#x27;accept&#x27;. Must be called with </span><br><span class="line"> *  sk-&gt;inuse=1 or cli() </span><br><span class="line"> */   </span><br><span class="line"> //sk_buff 表示接收或发送数据报的包头信息  </span><br><span class="line">/*从监听套接字缓冲队列中检查是否存在已经完成连接的远端发送的数据包，该数据包的作用是完成连接。 </span><br><span class="line">本地监听套接字在处理完该连接，设置相关状态后将该数据包缓存在receive_queue中 </span><br><span class="line">*/  </span><br><span class="line">/*对于监听套接字而言，其接收队列中的数据包是建立连接数据包，即SYN数据包，不含数据数据包 </span><br><span class="line">*/  </span><br><span class="line">static struct sk_buff *tcp_find_established(struct sock *s)  </span><br><span class="line">&#123;  </span><br><span class="line">//获取receive_queue中的第一个链表元素，sk_buff 结构  </span><br><span class="line">    //该队列中的数据报表示已被正式接收  </span><br><span class="line">  </span><br><span class="line">    struct sk_buff *p=skb_peek(&amp;s-&gt;receive_queue);//返回指向链表第一个节点的指针  </span><br><span class="line">    if(p==NULL)  </span><br><span class="line">        return NULL;  </span><br><span class="line">    do  </span><br><span class="line">    &#123;  </span><br><span class="line">    //sk的状态state是枚举类  </span><br><span class="line">    //返回完成了三次握手连接的套接字  </span><br><span class="line">        if(p-&gt;sk-&gt;state == TCP_ESTABLISHED || p-&gt;sk-&gt;state &gt;= TCP_FIN_WAIT1)  </span><br><span class="line">            return p;  </span><br><span class="line">        p=p-&gt;next;  </span><br><span class="line">    &#125;  </span><br><span class="line">    while(p!=(struct sk_buff *)&amp;s-&gt;receive_queue);//双向链表，即遍历整个队列  </span><br><span class="line">    return NULL;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<p>看到没，这里accept 函数返回的通信套接字是从监听套接字的 receive_queue 队列中获得的，那么通信套接字与监听套接字的receive_queue队列之间的关系，其中的细节又是什么呢？</p>
+<p>其内部实现在 tcp_conn_request 函数中啦：而这个函数在connect 函数下层函数被调用，服务器是被动打开的，即是客户端主动连接。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br></pre></td><td class="code"><pre><span class="line">/* </span><br><span class="line"> *  This routine handles a connection request. </span><br><span class="line"> *  It should make sure we haven&#x27;t already responded. </span><br><span class="line"> *  Because of the way BSD works, we have to send a syn/ack now. </span><br><span class="line"> *  This also means it will be harder to close a socket which is </span><br><span class="line"> *  listening. </span><br><span class="line"> */  </span><br><span class="line"> /* </span><br><span class="line"> 参数中daddr，saddr的理解应从远端角度出发。所以daddr表示本地地址；saddr表示远端地址 </span><br><span class="line"> seq是函数调用tcp_init_seq()的返回值，表示本地初始化序列号； </span><br><span class="line"> dev表示接收该数据包的接口设备 </span><br><span class="line"> */  </span><br><span class="line"> //tcp_rcv接收一个syn连接请求数据包后，将调用tcp_con_request函数进行具体处理  </span><br><span class="line"> //其内部逻辑很简单:创建一个新的套接字用于通信，其本身继续监听客户端的请求  </span><br><span class="line"> //创建一个新的套接字得设置其各个字段，这里是复制监听套接字的已有信息，然后根据需要修改部分  </span><br><span class="line"> //然后创建数据包，设置其TCP首部，创建MAC和IP首部，然后回送给客户端，  </span><br><span class="line"> //并把该数据包插入到监听套接字sk的recive_queue队列中，该数据包已经关联了新套接字，  </span><br><span class="line"> //在accept函数中，最后返回的通信套接字则是从这个队列中获得(参见tcp_accept函数)  </span><br><span class="line">static void tcp_conn_request(struct sock *sk, struct sk_buff *skb,  </span><br><span class="line">         unsigned long daddr, unsigned long saddr,  </span><br><span class="line">         struct options *opt, struct device *dev, unsigned long seq)  </span><br><span class="line">&#123;  </span><br><span class="line">    struct sk_buff *buff;  </span><br><span class="line">    struct tcphdr *t1;  </span><br><span class="line">    unsigned char *ptr;  </span><br><span class="line">    struct sock *newsk;  </span><br><span class="line">    struct tcphdr *th;  </span><br><span class="line">    struct device *ndev=NULL;  </span><br><span class="line">    int tmp;  </span><br><span class="line">    struct rtable *rt;  </span><br><span class="line">    </span><br><span class="line">    th = skb-&gt;h.th;//获取tcp首部  </span><br><span class="line">  </span><br><span class="line">    /* If the socket is dead, don&#x27;t accept the connection. */  </span><br><span class="line">    //判断套接字合法性  </span><br><span class="line">    if (!sk-&gt;dead)   </span><br><span class="line">    &#123;  </span><br><span class="line">        sk-&gt;data_ready(sk,0);//通知睡眠进程，有数据到达  </span><br><span class="line">    &#125;  </span><br><span class="line">    else //无效套接字，已经释放了的  </span><br><span class="line">    &#123;  </span><br><span class="line">        if(sk-&gt;debug)  </span><br><span class="line">            printk(&quot;Reset on %p: Connect on dead socket.\n&quot;,sk);  </span><br><span class="line">        tcp_reset(daddr, saddr, th, sk-&gt;prot, opt, dev, sk-&gt;ip_tos,sk-&gt;ip_ttl);  </span><br><span class="line">        tcp_statistics.TcpAttemptFails++;  </span><br><span class="line">        kfree_skb(skb, FREE_READ);  </span><br><span class="line">        return;  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     * Make sure we can accept more.  This will prevent a </span><br><span class="line">     * flurry of syns from eating up all our memory. </span><br><span class="line">     */  </span><br><span class="line">   //缓存的未应答数据包个数 &gt;= 最大可缓存个数；表示满了，已经不能接收了  </span><br><span class="line">    if (sk-&gt;ack_backlog &gt;= sk-&gt;max_ack_backlog)   </span><br><span class="line">    &#123;  </span><br><span class="line">        tcp_statistics.TcpAttemptFails++;  </span><br><span class="line">        kfree_skb(skb, FREE_READ);  </span><br><span class="line">        return;  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     * We need to build a new sock struct. </span><br><span class="line">     * It is sort of bad to have a socket without an inode attached </span><br><span class="line">     * to it, but the wake_up&#x27;s will just wake up the listening socket, </span><br><span class="line">     * and if the listening socket is destroyed before this is taken </span><br><span class="line">     * off of the queue, this will take care of it. </span><br><span class="line">     */  </span><br><span class="line">  //创建一个新的套接字  </span><br><span class="line">    newsk = (struct sock *) kmalloc(sizeof(struct sock), GFP_ATOMIC);  </span><br><span class="line">    if (newsk == NULL)   </span><br><span class="line">    &#123;  </span><br><span class="line">        /* just ignore the syn.  It will get retransmitted. */  </span><br><span class="line">        tcp_statistics.TcpAttemptFails++;  </span><br><span class="line">        kfree_skb(skb, FREE_READ);  </span><br><span class="line">        return;  </span><br><span class="line">    &#125;  </span><br><span class="line">   //复制一个套接字结构，即新的套接字中主要信息来源于监听套接字中的已有信息  </span><br><span class="line">    memcpy(newsk, sk, sizeof(*newsk));  </span><br><span class="line">   //下面两个就是把待发送和已接收队列初始化成数据包链表形式  </span><br><span class="line">    skb_queue_head_init(&amp;newsk-&gt;write_queue);  </span><br><span class="line">    skb_queue_head_init(&amp;newsk-&gt;receive_queue);  </span><br><span class="line">    //下面是重发队列  </span><br><span class="line">    newsk-&gt;send_head = NULL;  </span><br><span class="line">    newsk-&gt;send_tail = NULL;  </span><br><span class="line">    skb_queue_head_init(&amp;newsk-&gt;back_log);//数据包暂存队列(中转站)  </span><br><span class="line">    //新套接字的字段设置  </span><br><span class="line">    newsk-&gt;rtt = 0;      /*TCP_CONNECT_TIME&lt;&lt;3*/  </span><br><span class="line">    newsk-&gt;rto = TCP_TIMEOUT_INIT;  </span><br><span class="line">    newsk-&gt;mdev = 0;  </span><br><span class="line">    newsk-&gt;max_window = 0;  </span><br><span class="line">    newsk-&gt;cong_window = 1;  </span><br><span class="line">    newsk-&gt;cong_count = 0;  </span><br><span class="line">    newsk-&gt;ssthresh = 0;  </span><br><span class="line">    newsk-&gt;backoff = 0;  </span><br><span class="line">    newsk-&gt;blog = 0;  </span><br><span class="line">    newsk-&gt;intr = 0;  </span><br><span class="line">    newsk-&gt;proc = 0;  </span><br><span class="line">    newsk-&gt;done = 0;  </span><br><span class="line">    newsk-&gt;partial = NULL;  </span><br><span class="line">    newsk-&gt;pair = NULL;  </span><br><span class="line">    newsk-&gt;wmem_alloc = 0;  </span><br><span class="line">    newsk-&gt;rmem_alloc = 0;  </span><br><span class="line">    newsk-&gt;localroute = sk-&gt;localroute;  </span><br><span class="line">  </span><br><span class="line">    newsk-&gt;max_unacked = MAX_WINDOW - TCP_WINDOW_DIFF;  </span><br><span class="line">  </span><br><span class="line">    newsk-&gt;err = 0;  </span><br><span class="line">    newsk-&gt;shutdown = 0;  </span><br><span class="line">    newsk-&gt;ack_backlog = 0;  </span><br><span class="line">    newsk-&gt;acked_seq = skb-&gt;h.th-&gt;seq+1;  </span><br><span class="line">    newsk-&gt;copied_seq = skb-&gt;h.th-&gt;seq+1;  </span><br><span class="line">    newsk-&gt;fin_seq = skb-&gt;h.th-&gt;seq;  </span><br><span class="line">    newsk-&gt;state = TCP_SYN_RECV;  </span><br><span class="line">    newsk-&gt;timeout = 0;  </span><br><span class="line">    newsk-&gt;ip_xmit_timeout = 0;  </span><br><span class="line">    newsk-&gt;write_seq = seq;   </span><br><span class="line">    newsk-&gt;window_seq = newsk-&gt;write_seq;  </span><br><span class="line">    newsk-&gt;rcv_ack_seq = newsk-&gt;write_seq;  </span><br><span class="line">    newsk-&gt;urg_data = 0;  </span><br><span class="line">    newsk-&gt;retransmits = 0;  </span><br><span class="line">    newsk-&gt;linger=0;  </span><br><span class="line">    newsk-&gt;destroy = 0;  </span><br><span class="line">    init_timer(&amp;newsk-&gt;timer);  </span><br><span class="line">    newsk-&gt;timer.data = (unsigned long)newsk;  </span><br><span class="line">    newsk-&gt;timer.function = &amp;net_timer;  </span><br><span class="line">    init_timer(&amp;newsk-&gt;retransmit_timer);  </span><br><span class="line">    newsk-&gt;retransmit_timer.data = (unsigned long)newsk;  </span><br><span class="line">    newsk-&gt;retransmit_timer.function=&amp;retransmit_timer;  </span><br><span class="line">    newsk-&gt;dummy_th.source = skb-&gt;h.th-&gt;dest;  </span><br><span class="line">    newsk-&gt;dummy_th.dest = skb-&gt;h.th-&gt;source;  </span><br><span class="line">      </span><br><span class="line">    /* </span><br><span class="line">     *  Swap these two, they are from our point of view.  </span><br><span class="line">     */  </span><br><span class="line">       </span><br><span class="line">    newsk-&gt;daddr = saddr;  </span><br><span class="line">    newsk-&gt;saddr = daddr;  </span><br><span class="line">  </span><br><span class="line">    put_sock(newsk-&gt;num,newsk);//插入 array_sock 哈希表中  </span><br><span class="line">    newsk-&gt;dummy_th.res1 = 0;  </span><br><span class="line">    newsk-&gt;dummy_th.doff = 6;  </span><br><span class="line">    newsk-&gt;dummy_th.fin = 0;  </span><br><span class="line">    newsk-&gt;dummy_th.syn = 0;  </span><br><span class="line">    newsk-&gt;dummy_th.rst = 0;   </span><br><span class="line">    newsk-&gt;dummy_th.psh = 0;  </span><br><span class="line">    newsk-&gt;dummy_th.ack = 0;  </span><br><span class="line">    newsk-&gt;dummy_th.urg = 0;  </span><br><span class="line">    newsk-&gt;dummy_th.res2 = 0;  </span><br><span class="line">    newsk-&gt;acked_seq = skb-&gt;h.th-&gt;seq + 1;//序列号设置  </span><br><span class="line">    newsk-&gt;copied_seq = skb-&gt;h.th-&gt;seq + 1;  </span><br><span class="line">    newsk-&gt;socket = NULL;  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     *  Grab the ttl and tos values and use them  </span><br><span class="line">     */  </span><br><span class="line">  </span><br><span class="line">    newsk-&gt;ip_ttl=sk-&gt;ip_ttl;  </span><br><span class="line">    newsk-&gt;ip_tos=skb-&gt;ip_hdr-&gt;tos;  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     *  Use 512 or whatever user asked for  </span><br><span class="line">     */  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     *  Note use of sk-&gt;user_mss, since user has no direct access to newsk  </span><br><span class="line">     */  </span><br><span class="line">    //ip路由表查找表项  </span><br><span class="line">    rt=ip_rt_route(saddr, NULL,NULL);  </span><br><span class="line">      </span><br><span class="line">    if(rt!=NULL &amp;&amp; (rt-&gt;rt_flags&amp;RTF_WINDOW))  </span><br><span class="line">        newsk-&gt;window_clamp = rt-&gt;rt_window;  </span><br><span class="line">    else  </span><br><span class="line">        newsk-&gt;window_clamp = 0;  </span><br><span class="line">          </span><br><span class="line">    if (sk-&gt;user_mss)  </span><br><span class="line">        newsk-&gt;mtu = sk-&gt;user_mss;  </span><br><span class="line">    else if(rt!=NULL &amp;&amp; (rt-&gt;rt_flags&amp;RTF_MSS))  </span><br><span class="line">        newsk-&gt;mtu = rt-&gt;rt_mss - HEADER_SIZE;  </span><br><span class="line">    else   </span><br><span class="line">    &#123;  </span><br><span class="line">#ifdef CONFIG_INET_SNARL    /* Sub Nets Are Local */  </span><br><span class="line">        if ((saddr ^ daddr) &amp; default_mask(saddr))  </span><br><span class="line">#else  </span><br><span class="line">        if ((saddr ^ daddr) &amp; dev-&gt;pa_mask)  </span><br><span class="line">#endif  </span><br><span class="line">            newsk-&gt;mtu = 576 - HEADER_SIZE;  </span><br><span class="line">        else  </span><br><span class="line">            newsk-&gt;mtu = MAX_WINDOW;  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     *  But not bigger than device MTU  </span><br><span class="line">     */  </span><br><span class="line">  </span><br><span class="line">    newsk-&gt;mtu = min(newsk-&gt;mtu, dev-&gt;mtu - HEADER_SIZE);  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     *  This will min with what arrived in the packet  </span><br><span class="line">     */  </span><br><span class="line">  </span><br><span class="line">    tcp_options(newsk,skb-&gt;h.th);  </span><br><span class="line"> //服务器端创建新的套接字后，接下来就是创建一个数据包(syn+ack)回送过去  </span><br><span class="line">    buff = newsk-&gt;prot-&gt;wmalloc(newsk, MAX_SYN_SIZE, 1, GFP_ATOMIC);  </span><br><span class="line">    if (buff == NULL)   </span><br><span class="line">    &#123;  </span><br><span class="line">        sk-&gt;err = ENOMEM;  </span><br><span class="line">        newsk-&gt;dead = 1;  </span><br><span class="line">        newsk-&gt;state = TCP_CLOSE;  </span><br><span class="line">        /* And this will destroy it */  </span><br><span class="line">        release_sock(newsk);  </span><br><span class="line">        kfree_skb(skb, FREE_READ);  </span><br><span class="line">        tcp_statistics.TcpAttemptFails++;  </span><br><span class="line">        return;  </span><br><span class="line">    &#125;  </span><br><span class="line">  //字段设置  </span><br><span class="line">    buff-&gt;len = sizeof(struct tcphdr)+4;  </span><br><span class="line">    buff-&gt;sk = newsk;//与新套接字关联  </span><br><span class="line">    buff-&gt;localroute = newsk-&gt;localroute;  </span><br><span class="line">  </span><br><span class="line">    t1 =(struct tcphdr *) buff-&gt;data;  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     *  Put in the IP header and routing stuff.  </span><br><span class="line">     */  </span><br><span class="line">  //MAC 头+ ip 头创建  </span><br><span class="line">    tmp = sk-&gt;prot-&gt;build_header(buff, newsk-&gt;saddr, newsk-&gt;daddr, &amp;ndev,  </span><br><span class="line">                   IPPROTO_TCP, NULL, MAX_SYN_SIZE,sk-&gt;ip_tos,sk-&gt;ip_ttl);  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     *  Something went wrong.  </span><br><span class="line">     */  </span><br><span class="line">  </span><br><span class="line">    if (tmp &lt; 0)   </span><br><span class="line">    &#123;  </span><br><span class="line">        sk-&gt;err = tmp;  </span><br><span class="line">        buff-&gt;free = 1;  </span><br><span class="line">        kfree_skb(buff,FREE_WRITE);  </span><br><span class="line">        newsk-&gt;dead = 1;  </span><br><span class="line">        newsk-&gt;state = TCP_CLOSE;  </span><br><span class="line">        release_sock(newsk);  </span><br><span class="line">        skb-&gt;sk = sk;  </span><br><span class="line">        kfree_skb(skb, FREE_READ);  </span><br><span class="line">        tcp_statistics.TcpAttemptFails++;  </span><br><span class="line">        return;  </span><br><span class="line">    &#125;  </span><br><span class="line">  </span><br><span class="line">    buff-&gt;len += tmp;  </span><br><span class="line">    t1 =(struct tcphdr *)((char *)t1 +tmp);  </span><br><span class="line">  //tcp首部字段设置  </span><br><span class="line">    memcpy(t1, skb-&gt;h.th, sizeof(*t1));  </span><br><span class="line">    buff-&gt;h.seq = newsk-&gt;write_seq;  </span><br><span class="line">    /* </span><br><span class="line">     *  Swap the send and the receive.  </span><br><span class="line">     */  </span><br><span class="line">    t1-&gt;dest = skb-&gt;h.th-&gt;source;  </span><br><span class="line">    t1-&gt;source = newsk-&gt;dummy_th.source;  </span><br><span class="line">    t1-&gt;seq = ntohl(newsk-&gt;write_seq++);  </span><br><span class="line">    t1-&gt;ack = 1;//确认控制位，表示这是一个确认数据包  </span><br><span class="line">    newsk-&gt;window = tcp_select_window(newsk);  </span><br><span class="line">    newsk-&gt;sent_seq = newsk-&gt;write_seq;  </span><br><span class="line">    t1-&gt;window = ntohs(newsk-&gt;window);  </span><br><span class="line">    t1-&gt;res1 = 0;  </span><br><span class="line">    t1-&gt;res2 = 0;  </span><br><span class="line">    t1-&gt;rst = 0;  </span><br><span class="line">    t1-&gt;urg = 0;  </span><br><span class="line">    t1-&gt;psh = 0;  </span><br><span class="line">    t1-&gt;syn = 1;//同步控制位置位，和ack位一起作用  </span><br><span class="line">    t1-&gt;ack_seq = ntohl(skb-&gt;h.th-&gt;seq+1);//确认序列号=发过来的数据包的序列号+1  </span><br><span class="line">    t1-&gt;doff = sizeof(*t1)/4+1;  </span><br><span class="line">    ptr =(unsigned char *)(t1+1);  </span><br><span class="line">    ptr[0] = 2;  </span><br><span class="line">    ptr[1] = 4;  </span><br><span class="line">    ptr[2] = ((newsk-&gt;mtu) &gt;&gt; 8) &amp; 0xff;  </span><br><span class="line">    ptr[3] =(newsk-&gt;mtu) &amp; 0xff;  </span><br><span class="line">  </span><br><span class="line">    //下面是tcp校验和检查  </span><br><span class="line">    tcp_send_check(t1, daddr, saddr, sizeof(*t1)+4, newsk);  </span><br><span class="line">    //调用_queue_xmit函数发送(前面介绍过)  </span><br><span class="line">    newsk-&gt;prot-&gt;queue_xmit(newsk, ndev, buff, 0);  </span><br><span class="line">    reset_xmit_timer(newsk, TIME_WRITE , TCP_TIMEOUT_INIT);  </span><br><span class="line">    skb-&gt;sk = newsk;//这里数据包捆绑的就是新的套接字了  </span><br><span class="line">  </span><br><span class="line">    /* </span><br><span class="line">     *  Charge the sock_buff to newsk.  </span><br><span class="line">     */  </span><br><span class="line">    //原监听套接字接收队列中存放的字节数减去该数据包大小  </span><br><span class="line">    //新创建的通信套接字则加上该数据包大小  </span><br><span class="line">    sk-&gt;rmem_alloc -= skb-&gt;mem_len;  </span><br><span class="line">    newsk-&gt;rmem_alloc += skb-&gt;mem_len;  </span><br><span class="line">      </span><br><span class="line">    //把这个数据包插入到reveive_queue中，这个数据包的宿主是新套接字  </span><br><span class="line">    //在accept函数中，通信套接字则是从这个队列中获取  </span><br><span class="line">    skb_queue_tail(&amp;sk-&gt;receive_queue,skb);  </span><br><span class="line">    sk-&gt;ack_backlog++;//缓存的数据包个数+1  </span><br><span class="line">    release_sock(newsk);  </span><br><span class="line">    tcp_statistics.TcpOutSegs++;  </span><br><span class="line">&#125;  </span><br></pre></td></tr></table></figure>
+
+<p>经过上面这个函数，我们得到了一个重要信息，就是客户端向服务器发出连接请求后，服务器端新建了通信套接字和确认数据包，二者建立关联，并把确认数据包插入到监听套接字的receive_queue 队列中，该数据包的宿主就是新建的通信套接字，而accept函数返回的通信套接字则在监听套接字的 receive_queue 队列中获得。好了，至此整个tcp连接建立过程算是剖析完毕了。</p>
+<hr>
+<p>版权声明：本文为知乎博主「<a target="_blank" rel="noopener" href="https://www.zhihu.com/people/linuxwang-xian-sheng">极致Linux内核</a>」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。</p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/549428366">https://zhuanlan.zhihu.com/p/549428366</a></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E4%B8%AD%E6%96%AD%E4%B8%8B%E5%8D%8A%E9%83%A8%E5%A4%84%E7%90%86/">Linux内核网络中断下半部处理</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88bind%E5%87%BD%E6%95%B0%E4%BD%BF%E7%94%A8/">Linux内核网络协议栈bind函数使用</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">博客</span><a href="/">近期</a><a href="/">分类</a><a href="/">标签</a><a href="/">归档</a></div><div class="sitemap-group"><span class="fs15">项目</span><a href="/">开源库</a></div><div class="sitemap-group"><span class="fs15">社交</span><a href="/">友链</a><a href="/">留言板</a></div><div class="sitemap-group"><span class="fs15">更多</span><a href="/">关于本站</a><a href="/">GitHub</a></div></div><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81%E5%BA%94%E7%94%A8%E5%B1%82%E2%80%94%E2%80%94accept-%E5%87%BD%E6%95%B0"><span class="toc-text">1、应用层——accept 函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81BSD-Socket-%E5%B1%82%E2%80%94%E2%80%94sock-accept-%E5%87%BD%E6%95%B0"><span class="toc-text">2、BSD Socket 层——sock_accept 函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81INET-Socket-%E5%B1%82%E2%80%94%E2%80%94inet-accept-%E5%87%BD%E6%95%B0"><span class="toc-text">3、INET Socket 层——inet_accept 函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%E3%80%81%E4%BC%A0%E8%BE%93%E5%B1%82%E2%80%94%E2%80%94tcp-accept-%E5%87%BD%E6%95%B0"><span class="toc-text">4、传输层——tcp_accept 函数</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

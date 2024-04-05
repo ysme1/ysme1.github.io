@@ -1,0 +1,577 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Linux操作系统学习之字符设备 - Blog</title>
+
+  
+    <meta name="description" content="一. 前言  上文中我们分析了虚拟文件系统的结构以及常见的文件操作从用户态到虚拟文件系统再到底层实际文件系统的过程。而实际上我们并没有说明实际的文件系统如ext4是如何和磁盘进行交互的，这就是本文和下篇文章的重点：I&#x2F;O之块设备和字符设备。输入输出设备我们大致可以分为两类：块设备（Block Device）和字符设备（Character Device）。  块设备将信息存储在固定大小的块">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux操作系统学习之字符设备">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AD%A6%E4%B9%A0%E4%B9%8B%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="一. 前言  上文中我们分析了虚拟文件系统的结构以及常见的文件操作从用户态到虚拟文件系统再到底层实际文件系统的过程。而实际上我们并没有说明实际的文件系统如ext4是如何和磁盘进行交互的，这就是本文和下篇文章的重点：I&#x2F;O之块设备和字符设备。输入输出设备我们大致可以分为两类：块设备（Block Device）和字符设备（Character Device）。  块设备将信息存储在固定大小的块">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/128175363-3655a3b9-e0a6-4980-ac7f-5e1b891dcc0e.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/128175400-ba80285b-b70d-45ee-9e47-50a81f135dc2.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/128175427-20a921aa-03cb-425d-a66e-bdd6884b4d49.png">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T12:59:49.940Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/128175363-3655a3b9-e0a6-4980-ac7f-5e1b891dcc0e.png">
+  
+  
+  
+  <meta name="keywords" content="Linux">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E4%B8%80%E6%96%87%E5%B8%A6%E4%BD%A0%EF%BC%8C%E5%BD%BB%E5%BA%95%E4%BA%86%E8%A7%A3%EF%BC%8C%E9%9B%B6%E6%8B%B7%E8%B4%9DZero-Copy%E6%8A%80%E6%9C%AF/"><span class="title">一文带你，彻底了解，零拷贝Zero-Copy技术</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/"><span class="title">任务调度</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E5%92%8C%E6%B4%BE%E7%94%9F/"><span class="title">进程、线程的创建和派生</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/08a41b181ce68.svg"/></a><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/3845874.svg"/></a><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/3616429.svg"/></a><a class="social" href="/about/#comments" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/942ebbf1a4b91.svg"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux-doc-%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/">linux-doc 设备驱动</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T12:59:49.940Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux操作系统学习之字符设备</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="一-前言"><a href="#一-前言" class="headerlink" title="一. 前言"></a>一. 前言</h2><p>  上文中我们分析了虚拟文件系统的结构以及常见的文件操作从用户态到虚拟文件系统再到底层实际文件系统的过程。而实际上我们并没有说明实际的文件系统如ext4是如何和磁盘进行交互的，这就是本文和下篇文章的重点：I&#x2F;O之块设备和字符设备。输入输出设备我们大致可以分为两类：块设备（Block Device）和字符设备（Character Device）。</p>
+<ul>
+<li>块设备将信息存储在固定大小的块中，每个块都有自己的地址。如硬盘就是常见的块设备。</li>
+<li>字符设备发送或接收的是字节流，而不用考虑任何块结构，没有办法寻址。如鼠标就是常见的字符设备。</li>
+</ul>
+<p>  本文首先介绍虚拟文件系统下层直至硬件输入输出设备的结构关系，然后重点分析字符设备相关的整体逻辑情况。</p>
+<h2 id="二-I-O架构"><a href="#二-I-O架构" class="headerlink" title="二. I&#x2F;O架构"></a>二. I&#x2F;O架构</h2><p>  由于各种输入输出设备具有不同的硬件结构、驱动程序，因此我们采取了设备控制器这一中间层对上提供统一接口。设备控制器通过缓存来处理CPU和硬件I&#x2F;O之间的交互关系，通过中断进行通知，因此我们需要有中断处理器对各种中断进行统一。由于每种设备的控制器的寄存器、缓冲区等使用模式，指令都不同，所以对于操作系统还需要一层对接各个设备控制器的设备驱动程序。</p>
+<p>  这里需要注意的是，设备控制器不属于操作系统的一部分，但是设备驱动程序属于操作系统的一部分。操作系统的内核代码可以像调用本地代码一样调用驱动程序的代码，而驱动程序的代码需要发出特殊的面向设备控制器的指令，才能操作设备控制器。设备驱动程序中是一些面向特殊设备控制器的代码，不同的设备不同。但是对于操作系统其它部分的代码而言，设备驱动程序有统一的接口。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/128175363-3655a3b9-e0a6-4980-ac7f-5e1b891dcc0e.png" alt="image"></p>
+<p>设备驱动本身作为一个内核模块，通常以ko文件的形式存在，它有着其独特的代码结构：</p>
+<ul>
+<li>头文件部分。设备驱动程序至少需要以下头文件</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/module.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;linux/init.h&gt;</span></span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>调用MODULE_LICENSE声明lisence</li>
+<li>初始化函数module_init和退出函数module_exit的定义，用于加载和卸载ko文件</li>
+<li>文件系统的接口file_operation结构体定义</li>
+<li>定义需要的函数</li>
+</ul>
+<p>  在下文的分析中，我们就将按照此顺序来剖析字符设备的源码，以弄懂字符设备的一般运行逻辑。关于设备驱动代码编写的详细知识可以参考《Linux设备驱动》一书，本文重点不在于如何编写代码，而是在于操作系统中的字符设备和块设备如何工作。</p>
+<h2 id="三-字符设备基本构成"><a href="#三-字符设备基本构成" class="headerlink" title="三. 字符设备基本构成"></a>三. 字符设备基本构成</h2><p>  一个字符设备由3个部分组成：</p>
+<ul>
+<li><p>封装对于外部设备的操作的设备驱动程序，即 ko 文件模块，里面有模块初始化函数、中断处理函数、设备操作函数等。加载设备驱动程序模块的时候，模块初始化函数会被调用。在内核维护所有字符设备驱动的数据结构 cdev_map 里面注册设备号后，我们就可以很容易根据设备号找到相应的设备驱动程序。</p>
+</li>
+<li><p>特殊的设备驱动文件系统 devtmpfs，在&#x2F;dev 目录下生成一个文件表示这个设备。打开一个字符设备文件和打开一个普通的文件有类似的数据结构，有文件描述符、有 struct file、指向字符设备文件的 dentry 和 inode。其对应的 inode 是一个特殊的 inode，里面有设备号。通过它我们可以在 cdev_map 中找到设备驱动程序，里面还有针对字符设备文件的默认操作 def_chr_fops。</p>
+</li>
+<li><p>字符设备文件的相关操作 file_operations 。一开始会指向 def_chr_fops，在调用 def_chr_fops 里面的 chrdev_open 函数的时候修改为指向设备操作函数，从而读写一个字符设备文件就会直接变成读写外部设备了。</p>
+<p>这里主要涉及到了两个结构体：字符设备信息存储的struct cdev以及管理字符设备的cdev_map。</p>
+</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kobject</span> <span class="title">kobj</span>;</span>                  <span class="comment">//内嵌的内核对象.</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">module</span> *<span class="title">owner</span>;</span>                 <span class="comment">//该字符设备所在的内核模块的对象指针.</span></span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> *<span class="title">ops</span>;</span>    <span class="comment">//该结构描述了字符设备所能实现的方法，是极为关键的一个结构体.</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">list</span>;</span>                <span class="comment">//用来将已经向内核注册的所有字符设备形成链表.</span></span><br><span class="line">    <span class="type">dev_t</span> dev;                            <span class="comment">//字符设备的设备号，由主设备号和次设备号构成.</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> count;                   <span class="comment">//隶属于同一主设备号的次设备号的个数.</span></span><br><span class="line">&#125; __randomize_layout;</span><br></pre></td></tr></table></figure>
+<p>  cdev结构体还有另一个相关联的结构体char_device_struct。这里首先会定义主设备号和次设备号：主设备号用来标识与设备文件相连的驱动程序，用来反映设备类型。次设备号被驱动程序用来辨别操作的是哪个设备，用来区分同类型的设备。这里minorct指的是分配的区域，用于主设备号和次设备号的分配工作。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">char_device_struct</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">char_device_struct</span> *<span class="title">next</span>;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> major;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> baseminor;</span><br><span class="line">    <span class="type">int</span> minorct;</span><br><span class="line">    <span class="type">char</span> name[<span class="number">64</span>];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> *<span class="title">cdev</span>;</span>		<span class="comment">/* will die */</span></span><br><span class="line">&#125; *chrdevs[CHRDEV_MAJOR_HASH_SIZE];</span><br></pre></td></tr></table></figure>
+<p>  cdev_map用于维护所有字符设备驱动，实际是结构体kobj_map，主要包括了一个互斥锁lock，一个probes[255]数组，数组元素为struct probe的指针，该结构体包括链表项、设备号、设备号范围等。所以我们将字符设备驱动最后保存为一个probe，并用cdev_map&#x2F;kobj_map进行统一管理。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">kobj_map</span> *<span class="title">cdev_map</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">kobj_map</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">probe</span> &#123;</span></span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">probe</span> *<span class="title">next</span>;</span></span><br><span class="line">        <span class="type">dev_t</span> dev;</span><br><span class="line">        <span class="type">unsigned</span> <span class="type">long</span> range;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">module</span> *<span class="title">owner</span>;</span></span><br><span class="line">        <span class="type">kobj_probe_t</span> *get;</span><br><span class="line">        <span class="type">int</span> (*lock)(<span class="type">dev_t</span>, <span class="type">void</span> *);</span><br><span class="line">        <span class="type">void</span> *data;</span><br><span class="line">    &#125; *probes[<span class="number">255</span>];</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">mutex</span> *<span class="title">lock</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="四-打开字符设备"><a href="#四-打开字符设备" class="headerlink" title="四. 打开字符设备"></a>四. 打开字符设备</h2><p>  字符设备有很多种，这里以打印机设备为输出设备的例子，源码位于drivers&#x2F;char&#x2F;lp.c。以鼠标为输入设备的例子，源码位于drivers&#x2F;input&#x2F;mouse&#x2F;logibm.c。下面将根据上述的字符设备的三个组成部分分别剖析如何创建并打开字符设备。</p>
+<h3 id="4-1-加载"><a href="#4-1-加载" class="headerlink" title="4.1 加载"></a>4.1 加载</h3><p>  字符设备的使用从加载开始，通常我们会使用insmod命令或者modprobe命令加载ko文件，ko文件的加载则从module_init调用该设备自定义的初始函数开始。对于打印机来说，其初始化函数定义为lp_init_module()，实际调用lp_init()。lp_init()会初始化打印机结构体，并调用register_chardev()注册该字符设备。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">module_init(lp_init_module);</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">lp_init_module</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">return</span> lp_init();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">lp_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">if</span> (register_chrdev(LP_MAJOR, <span class="string">&quot;lp&quot;</span>, &amp;lp_fops)) &#123;</span><br><span class="line">        printk(KERN_ERR <span class="string">&quot;lp: unable to get major %d\n&quot;</span>, LP_MAJOR);</span><br><span class="line">        <span class="keyword">return</span> -EIO;</span><br><span class="line">    &#125;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>register_chrdev()实际调用__register_chrdev()，该函数会进行字符设备的注册操作。其主要逻辑如下</p>
+<ul>
+<li>调用__register_chrdev_region()注册字符设备的主设备号和名称</li>
+<li>调用cdev_alloc()分配结构体struct cdev</li>
+<li>将 cdev 的 ops 成员变量指向这个模块声明的 file_operations</li>
+<li>调用cdev_add()将这个字符设备添加到结构体 struct kobj_map *cdev_map ，该结构体用于统一管理所有字符设备。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">int</span> <span class="title function_">register_chrdev</span><span class="params">(<span class="type">unsigned</span> <span class="type">int</span> major, <span class="type">const</span> <span class="type">char</span> *name,</span></span><br><span class="line"><span class="params">                  <span class="type">const</span> <span class="keyword">struct</span> file_operations *fops)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> __register_chrdev(major, <span class="number">0</span>, <span class="number">256</span>, name, fops);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> __register_chrdev(<span class="type">unsigned</span> <span class="type">int</span> major, <span class="type">unsigned</span> <span class="type">int</span> baseminor,</span><br><span class="line">              <span class="type">unsigned</span> <span class="type">int</span> count, <span class="type">const</span> <span class="type">char</span> *name,</span><br><span class="line">              <span class="type">const</span> <span class="keyword">struct</span> file_operations *fops)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">char_device_struct</span> *<span class="title">cd</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> *<span class="title">cdev</span>;</span></span><br><span class="line">    <span class="type">int</span> err = -ENOMEM;</span><br><span class="line">    cd = __register_chrdev_region(major, baseminor, count, name);</span><br><span class="line">    <span class="keyword">if</span> (IS_ERR(cd))</span><br><span class="line">        <span class="keyword">return</span> PTR_ERR(cd);</span><br><span class="line">    cdev = cdev_alloc();</span><br><span class="line">    <span class="keyword">if</span> (!cdev)</span><br><span class="line">        <span class="keyword">goto</span> out2;</span><br><span class="line">    cdev-&gt;owner = fops-&gt;owner;</span><br><span class="line">    cdev-&gt;ops = fops;</span><br><span class="line">    kobject_set_name(&amp;cdev-&gt;kobj, <span class="string">&quot;%s&quot;</span>, name);</span><br><span class="line">    err = cdev_add(cdev, MKDEV(cd-&gt;major, baseminor), count);</span><br><span class="line">......</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 拼接ma和mi</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MINORBITS	20</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> MKDEV(ma,mi)	(((ma) &lt;&lt; MINORBITS) | (mi))</span></span><br></pre></td></tr></table></figure>
+<p>  对于鼠标来说，加载也是类似的：注册为logibm_init()函数。但是这里没有调用register_chrdev()而是使用input_register_device()，原因在于输入设备会统一由input_init()初始化，之后加入的输入设备通过input_register_device()注册到input的管理结构体中进行统一管理。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">module_init(logibm_init);</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">logibm_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">......</span><br><span class="line">    err = input_register_device(logibm_dev);</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="4-2-创建文件设备"><a href="#4-2-创建文件设备" class="headerlink" title="4.2 创建文件设备"></a>4.2 创建文件设备</h3><p>  加载完ko文件后，Linux内核会通过mknod在&#x2F;dev目录下创建一个设备文件，只有有了这个设备文件，我们才能通过文件系统的接口对这个设备文件进行操作。mknod本身是一个系统调用，主要逻辑为调用user_path_create()为该设备文件创建dentry，然后对于S_IFCHAR或者S_IFBLK会调用vfs_mknod()去调用对应文件系统的操作。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE3(mknod, <span class="type">const</span> <span class="type">char</span> __user *, filename, <span class="type">umode_t</span>, mode, <span class="type">unsigned</span>, dev)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> sys_mknodat(AT_FDCWD, filename, mode, dev);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">SYSCALL_DEFINE4(mknodat, <span class="type">int</span>, dfd, <span class="type">const</span> <span class="type">char</span> __user *, filename, <span class="type">umode_t</span>, mode,</span><br><span class="line">    <span class="type">unsigned</span>, dev)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">dentry</span> *<span class="title">dentry</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">path</span> <span class="title">path</span>;</span></span><br><span class="line">......</span><br><span class="line">    dentry = user_path_create(dfd, filename, &amp;path, lookup_flags);</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">switch</span> (mode &amp; S_IFMT) &#123;</span><br><span class="line">......</span><br><span class="line">        <span class="keyword">case</span> S_IFCHR: <span class="keyword">case</span> S_IFBLK:</span><br><span class="line">            error = vfs_mknod(path.dentry-&gt;d_inode,dentry,mode,</span><br><span class="line">            new_decode_dev(dev));</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">......</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">vfs_mknod</span><span class="params">(<span class="keyword">struct</span> inode *dir, <span class="keyword">struct</span> dentry *dentry, <span class="type">umode_t</span> mode, <span class="type">dev_t</span> dev)</span></span><br><span class="line">&#123;</span><br><span class="line">......</span><br><span class="line">    error = dir-&gt;i_op-&gt;mknod(dir, dentry, mode, dev);</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  对于&#x2F;dev目录下的设备驱动来说，所属的文件系统为devtmpfs文件系统，即设备驱动临时文件系统。devtmpfs对应的文件系统定义如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_system_type</span> <span class="title">dev_fs_type</span> =</span> &#123; </span><br><span class="line">    .name = <span class="string">&quot;devtmpfs&quot;</span>, </span><br><span class="line">    .mount = dev_mount, </span><br><span class="line">    .kill_sb = kill_litter_super,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">struct</span> dentry *<span class="title function_">dev_mount</span><span class="params">(<span class="keyword">struct</span> file_system_type *fs_type, <span class="type">int</span> flags, </span></span><br><span class="line"><span class="params">         <span class="type">const</span> <span class="type">char</span> *dev_name, <span class="type">void</span> *data)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_TMPFS </span></span><br><span class="line">    <span class="keyword">return</span> mount_single(fs_type, flags, data, shmem_fill_super);</span><br><span class="line"><span class="meta">#<span class="keyword">else</span> return </span></span><br><span class="line">    mount_single(fs_type, flags, data, ramfs_fill_super);</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  从这里可以看出，devtmpfs 在挂载的时候有两种模式：一种是 ramfs，一种是 shmem ，都是基于内存的文件系统。这两个 mknod 虽然实现不同，但是都会调用到同一个函数 init_special_inode()。显然这个文件是个特殊文件，inode 也是特殊的。这里这个 inode 可以关联字符设备、块设备、FIFO 文件、Socket 等。我们这里只看字符设备。这里的 inode 的 file_operations 指向一个 def_chr_fops，这里面只有一个 open，就等着你打开它。另外，inode 的 i_rdev 指向这个设备的 dev_t。通过这个 dev_t，可以找到我们刚刚加载的字符设备 cdev。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">inode_operations</span> <span class="title">ramfs_dir_inode_operations</span> =</span> &#123;</span><br><span class="line">......</span><br><span class="line">  .mknod    = ramfs_mknod,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">inode_operations</span> <span class="title">shmem_dir_inode_operations</span> =</span> &#123;</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_TMPFS</span></span><br><span class="line">......</span><br><span class="line">  .mknod    = shmem_mknod,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">init_special_inode</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="type">umode_t</span> mode, <span class="type">dev_t</span> rdev)</span></span><br><span class="line">&#123;</span><br><span class="line">    inode-&gt;i_mode = mode;</span><br><span class="line">    <span class="keyword">if</span> (S_ISCHR(mode)) &#123;</span><br><span class="line">        inode-&gt;i_fop = &amp;def_chr_fops;</span><br><span class="line">        inode-&gt;i_rdev = rdev;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (S_ISBLK(mode)) &#123;</span><br><span class="line">        inode-&gt;i_fop = &amp;def_blk_fops;</span><br><span class="line">        inode-&gt;i_rdev = rdev;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (S_ISFIFO(mode))</span><br><span class="line">        inode-&gt;i_fop = &amp;pipefifo_fops;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (S_ISSOCK(mode))</span><br><span class="line">        ;  <span class="comment">/* leave it no_open_fops */</span></span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        printk(KERN_DEBUG <span class="string">&quot;init_special_inode: bogus i_mode (%o) for&quot;</span></span><br><span class="line">                  <span class="string">&quot; inode %s:%lu\n&quot;</span>, mode, inode-&gt;i_sb-&gt;s_id,</span><br><span class="line">                  inode-&gt;i_ino);    </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">def_chr_fops</span> =</span> &#123;</span><br><span class="line">    .open = chrdev_open,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>  由此我们完成了&#x2F;dev下文件的创建，并利用rdev和生成的字符设备进行了关联。</p>
+<h3 id="4-3-打开字符设备"><a href="#4-3-打开字符设备" class="headerlink" title="4.3 打开字符设备"></a>4.3 打开字符设备</h3><p>  如打开普通文件一样，打开字符设备也会首先分配对应的文件描述符fd，然后生成struct file结构体与其绑定，并将file关联到对应的dentry从而可以接触inode。在进程里面调用 open() 函数，最终会调用到这个特殊的 inode 的 open() 函数，也就是 chrdev_open()。</p>
+<p>  chrdev_open()主要逻辑为</p>
+<ul>
+<li>调用kobj_lookup()，通过设备号i_cdev关联对应的设备驱动程序</li>
+<li>调用fops_get()将设备驱动程序自己定义的文件操作p-&gt;ops赋值给fops</li>
+<li>调用设备驱动程序的 file_operations 的 open() 函数真正打开设备。对于打印机，调用的是 lp_open()。对于鼠标调用的是 input_proc_devices_open()，最终会调用到 logibm_open()。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Called every time a character special file is opened</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">chrdev_open</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filp)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> *<span class="title">fops</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> *<span class="title">p</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> *<span class="title">new</span> =</span> <span class="literal">NULL</span>;</span><br><span class="line">......</span><br><span class="line">    p = inode-&gt;i_cdev;</span><br><span class="line">......</span><br><span class="line">    kobj = kobj_lookup(cdev_map, inode-&gt;i_rdev, &amp;idx);</span><br><span class="line">......      </span><br><span class="line">    fops = fops_get(p-&gt;ops);</span><br><span class="line">......</span><br><span class="line">    replace_fops(filp, fops);</span><br><span class="line">    <span class="keyword">if</span> (filp-&gt;f_op-&gt;open) &#123;</span><br><span class="line">        ret = filp-&gt;f_op-&gt;open(inode, filp);</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上述过程借用极客时间中的图来作为总结。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/128175400-ba80285b-b70d-45ee-9e47-50a81f135dc2.png" alt="image"></p>
+<h2 id="五-写入字符设备"><a href="#五-写入字符设备" class="headerlink" title="五. 写入字符设备"></a>五. 写入字符设备</h2><p>  写入字符设备和写入普通文件一样，调用write()函数执行。该函数在内核里查询系统调用表最终调用sys_write()，并根据fd描述符获取对应的file结构体，接着调用vfs_write()去调用对应的文件系统自定义的写入函数file-&gt;f_op-&gt;write()。对于打印机来说，最终调用的是自定义的lp_write()函数。</p>
+<p>  这里写入的重点在于调用 copy_from_user() 将数据从用户态拷贝到内核态的缓存中，然后调用 parport_write() 写入外部设备。这里还有一个 schedule() 函数，也即写入的过程中，给其他线程抢占 CPU 的机会。如果写入字节数多，不能一次写完，就会在循环里一直调用 copy_from_user() 和 parport_write()，直到写完为止。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">ssize_t</span> <span class="title function_">lp_write</span><span class="params">(<span class="keyword">struct</span> file *file, <span class="type">const</span> <span class="type">char</span> __user *buf,</span></span><br><span class="line"><span class="params">            <span class="type">size_t</span> count, <span class="type">loff_t</span> *ppos)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">int</span> minor = iminor(file_inode(file));</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">parport</span> *<span class="title">port</span> =</span> lp_table[minor].dev-&gt;port;</span><br><span class="line">    <span class="type">char</span> *kbuf = lp_table[minor].lp_buffer;</span><br><span class="line">    <span class="type">ssize_t</span> retv = <span class="number">0</span>;</span><br><span class="line">    <span class="type">ssize_t</span> written;</span><br><span class="line">    <span class="type">size_t</span> copy_size = count;</span><br><span class="line">......</span><br><span class="line">    <span class="comment">/* Need to copy the data from user-space. */</span></span><br><span class="line">    <span class="keyword">if</span> (copy_size &gt; LP_BUFFER_SIZE)</span><br><span class="line">        copy_size = LP_BUFFER_SIZE;</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">if</span> (copy_from_user(kbuf, buf, copy_size)) &#123;</span><br><span class="line">        retv = -EFAULT;</span><br><span class="line">        <span class="keyword">goto</span> out_unlock;</span><br><span class="line">    &#125;</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">do</span> &#123;</span><br><span class="line">        <span class="comment">/* Write the data. */</span></span><br><span class="line">        written = parport_write(port, kbuf, copy_size);</span><br><span class="line">        <span class="keyword">if</span> (written &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            copy_size -= written;</span><br><span class="line">            count -= written;</span><br><span class="line">            buf  += written;</span><br><span class="line">            retv += written;</span><br><span class="line">        &#125;</span><br><span class="line">......</span><br><span class="line">        <span class="keyword">if</span> (need_resched())</span><br><span class="line">            schedule(); </span><br><span class="line">        <span class="keyword">if</span> (count) &#123;</span><br><span class="line">            copy_size = count;</span><br><span class="line">            <span class="keyword">if</span> (copy_size &gt; LP_BUFFER_SIZE)</span><br><span class="line">                copy_size = LP_BUFFER_SIZE;</span><br><span class="line">            <span class="keyword">if</span> (copy_from_user(kbuf, buf, copy_size)) &#123;</span><br><span class="line">                <span class="keyword">if</span> (retv == <span class="number">0</span>)</span><br><span class="line">                    retv = -EFAULT;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">while</span> (count &gt; <span class="number">0</span>);</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="六-字符设备的控制"><a href="#六-字符设备的控制" class="headerlink" title="六. 字符设备的控制"></a>六. 字符设备的控制</h2><p>  在Linux中，我们常用ioctl()来对I&#x2F;O设备进行一些读写之外的特殊操作。其参数主要由文件描述符fd，命令cmd以及命令参数arg构成。其中cmd由几个部分拼接成整型，主要结构为</p>
+<ul>
+<li>最低8位为 NR，表示命令号；</li>
+<li>次低8位为 TYPE，表示类型；</li>
+<li>14位表示参数的大小；</li>
+<li>最高2位是 DIR，表示写入、读出，还是读写。</li>
+</ul>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/128175427-20a921aa-03cb-425d-a66e-bdd6884b4d49.png" alt="image"></p>
+<p>ioctl()也是一个系统调用，其中fd 是这个设备的文件描述符，cmd 是传给这个设备的命令，arg 是命令的参数。主要调用do_vfs_ioctl()完成实际功能。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE3(ioctl, <span class="type">unsigned</span> <span class="type">int</span>, fd, <span class="type">unsigned</span> <span class="type">int</span>, cmd, <span class="type">unsigned</span> <span class="type">long</span>, arg)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> error;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fd</span> <span class="title">f</span> =</span> fdget(fd);</span><br><span class="line">......</span><br><span class="line">    error = do_vfs_ioctl(f.file, fd, cmd, arg);</span><br><span class="line">    fdput(f);</span><br><span class="line">    <span class="keyword">return</span> error;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  do_vfs_ioctl()对于已经定义好的 cmd进行相应的处理。如果不是默认定义好的 cmd，则执行默认操作：对于普通文件，调用 file_ioctl，对于其他文件调用 vfs_ioctl。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * When you add any new common ioctls to the switches above and below</span></span><br><span class="line"><span class="comment"> * please update compat_sys_ioctl() too.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * do_vfs_ioctl() is not for drivers and not intended to be EXPORT_SYMBOL()&#x27;d.</span></span><br><span class="line"><span class="comment"> * It&#x27;s just a simple helper for sys_ioctl and compat_sys_ioctl.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">do_vfs_ioctl</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">unsigned</span> <span class="type">int</span> fd, <span class="type">unsigned</span> <span class="type">int</span> cmd,</span></span><br><span class="line"><span class="params">         <span class="type">unsigned</span> <span class="type">long</span> arg)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> error = <span class="number">0</span>;</span><br><span class="line">    <span class="type">int</span> __user *argp = (<span class="type">int</span> __user *)arg;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">inode</span> *<span class="title">inode</span> =</span> file_inode(filp);</span><br><span class="line">    <span class="keyword">switch</span> (cmd) &#123;</span><br><span class="line">    <span class="keyword">case</span> FIOCLEX:</span><br><span class="line">        set_close_on_exec(fd, <span class="number">1</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> FIONCLEX:</span><br><span class="line">        set_close_on_exec(fd, <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> FIONBIO:</span><br><span class="line">        error = ioctl_fionbio(filp, argp);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">case</span> FIOASYNC:</span><br><span class="line">        error = ioctl_fioasync(fd, filp, argp);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        <span class="keyword">if</span> (S_ISREG(inode-&gt;i_mode))</span><br><span class="line">            error = file_ioctl(filp, cmd, arg);</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            error = vfs_ioctl(filp, cmd, arg);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> error;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>  对于字符设备驱动程序，最终会调用vfs_ioctl()。这里面调用的是 struct file 里 file_operations 的 unlocked_ioctl() 函数。我们前面初始化设备驱动的时候，已经将 file_operations 指向设备驱动的 file_operations 了。这里调用的是设备驱动的 unlocked_ioctl。对于打印机程序来讲，调用的是 lp_ioctl()。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">long</span> <span class="title function_">vfs_ioctl</span><span class="params">(<span class="keyword">struct</span> file *filp, <span class="type">unsigned</span> <span class="type">int</span> cmd, <span class="type">unsigned</span> <span class="type">long</span> arg)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> error = -ENOTTY;</span><br><span class="line">    <span class="keyword">if</span> (!filp-&gt;f_op-&gt;unlocked_ioctl)</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line">    error = filp-&gt;f_op-&gt;unlocked_ioctl(filp, cmd, arg);</span><br><span class="line">    <span class="keyword">if</span> (error == -ENOIOCTLCMD)</span><br><span class="line">        error = -ENOTTY;</span><br><span class="line"> out:</span><br><span class="line">    <span class="keyword">return</span> error;</span><br><span class="line">&#125; EXPORT_SYMBOL(vfs_ioctl);</span><br></pre></td></tr></table></figure>
+<p>  打印机的lp_do_ioctl()主要逻辑也是针对cmd采用switch()语句分情况进行处理。主要包括使用LP_XXX()宏定义赋值标记位和调用copy_to_user()将用户想得到的信息返回给用户态。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">lp_do_ioctl</span><span class="params">(<span class="type">unsigned</span> <span class="type">int</span> minor, <span class="type">unsigned</span> <span class="type">int</span> cmd,</span></span><br><span class="line"><span class="params">    <span class="type">unsigned</span> <span class="type">long</span> arg, <span class="type">void</span> __user *argp)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> status;</span><br><span class="line">    <span class="type">int</span> retval = <span class="number">0</span>;</span><br><span class="line">......</span><br><span class="line">    <span class="keyword">switch</span> ( cmd ) &#123;</span><br><span class="line">        <span class="keyword">case</span> LPTIME:</span><br><span class="line">            <span class="keyword">if</span> (arg &gt; UINT_MAX / HZ)</span><br><span class="line">                <span class="keyword">return</span> -EINVAL;</span><br><span class="line">            LP_TIME(minor) = arg * HZ/<span class="number">100</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> LPCHAR:</span><br><span class="line">            LP_CHAR(minor) = arg;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> LPABORT:</span><br><span class="line">            <span class="keyword">if</span> (arg)</span><br><span class="line">                LP_F(minor) |= LP_ABORT;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                LP_F(minor) &amp;= ~LP_ABORT;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    ......</span><br><span class="line">        <span class="keyword">case</span> LPGETIRQ:</span><br><span class="line">            <span class="keyword">if</span> (copy_to_user(argp, &amp;LP_IRQ(minor),</span><br><span class="line">                    <span class="keyword">sizeof</span>(<span class="type">int</span>)))</span><br><span class="line">                <span class="keyword">return</span> -EFAULT;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>  本文简单介绍了设备驱动程序的结构，并在此基础上介绍了字符设备从创建到打开、写入以及控制的整个流程。</p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/linux-docs/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/Linux%E5%86%85%E6%A0%B8%E9%A9%B1%E5%8A%A8%E4%B9%8BGPIO%E5%AD%90%E7%B3%BB%E7%BB%9FAPI%E6%8E%A5%E5%8F%A3/">Linux内核驱动之GPIO子系统API接口</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8IO%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E4%B8%8E%E6%A6%82%E5%BF%B5/">Linux内核IO基础知识与概念</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">博客</span><a href="/">近期</a><a href="/">分类</a><a href="/">标签</a><a href="/">归档</a></div><div class="sitemap-group"><span class="fs15">项目</span><a href="/">开源库</a></div><div class="sitemap-group"><span class="fs15">社交</span><a href="/">友链</a><a href="/">留言板</a></div><div class="sitemap-group"><span class="fs15">更多</span><a href="/">关于本站</a><a href="/">GitHub</a></div></div><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80-%E5%89%8D%E8%A8%80"><span class="toc-text">一. 前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C-I-O%E6%9E%B6%E6%9E%84"><span class="toc-text">二. I&#x2F;O架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E5%9F%BA%E6%9C%AC%E6%9E%84%E6%88%90"><span class="toc-text">三. 字符设备基本构成</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B-%E6%89%93%E5%BC%80%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87"><span class="toc-text">四. 打开字符设备</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%8A%A0%E8%BD%BD"><span class="toc-text">4.1 加载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6%E8%AE%BE%E5%A4%87"><span class="toc-text">4.2 创建文件设备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E6%89%93%E5%BC%80%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87"><span class="toc-text">4.3 打开字符设备</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94-%E5%86%99%E5%85%A5%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87"><span class="toc-text">五. 写入字符设备</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD-%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E7%9A%84%E6%8E%A7%E5%88%B6"><span class="toc-text">六. 字符设备的控制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

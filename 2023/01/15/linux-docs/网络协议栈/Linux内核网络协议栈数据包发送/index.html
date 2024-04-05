@@ -1,0 +1,519 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Linux内核网络协议栈数据包发送 - Blog</title>
+
+  
+    <meta name="description" content="由于在connect函数中涉及数据包的发送与接收问题，事实上，发送与接收函数不限于connect函数，所以这里单独剖析。 承前文继续剖析 connect 函数，数据包的发送和接收在 ip_queue_xmit 函数和 release_sock 函数中实现。本文着重分析 ip_queue_xmit 函数，下篇将补充分析 connect 函数剩下的部分。 值得注意的是：这些函数是数据包发送函数，在数据">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核网络协议栈数据包发送">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="由于在connect函数中涉及数据包的发送与接收问题，事实上，发送与接收函数不限于connect函数，所以这里单独剖析。 承前文继续剖析 connect 函数，数据包的发送和接收在 ip_queue_xmit 函数和 release_sock 函数中实现。本文着重分析 ip_queue_xmit 函数，下篇将补充分析 connect 函数剩下的部分。 值得注意的是：这些函数是数据包发送函数，在数据">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-a8c44790925bc12839c9817d1cfb83ff_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T12:59:49.936Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic4.zhimg.com/80/v2-a8c44790925bc12839c9817d1cfb83ff_720w.webp">
+  
+  
+  
+  <meta name="keywords" content="Linux">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E4%B8%80%E6%96%87%E5%B8%A6%E4%BD%A0%EF%BC%8C%E5%BD%BB%E5%BA%95%E4%BA%86%E8%A7%A3%EF%BC%8C%E9%9B%B6%E6%8B%B7%E8%B4%9DZero-Copy%E6%8A%80%E6%9C%AF/"><span class="title">一文带你，彻底了解，零拷贝Zero-Copy技术</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/"><span class="title">任务调度</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E5%92%8C%E6%B4%BE%E7%94%9F/"><span class="title">进程、线程的创建和派生</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/08a41b181ce68.svg"/></a><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/3845874.svg"/></a><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/3616429.svg"/></a><a class="social" href="/about/#comments" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/942ebbf1a4b91.svg"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T12:59:49.936Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux内核网络协议栈数据包发送</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>由于在connect函数中涉及数据包的发送与接收问题，事实上，发送与接收函数不限于connect函数，所以这里单独剖析。</p>
+<p>承前文继续剖析 connect 函数，数据包的发送和接收在 ip_queue_xmit 函数和 release_sock 函数中实现。本文着重分析 ip_queue_xmit 函数，下篇将补充分析 connect 函数剩下的部分。</p>
+<p>值得注意的是：这些函数是数据包发送函数，在数据传输阶段，基本上都会调用该函数，因为connect涉及该函数，就放在这里介绍了，不意味着这个函数只属于connect下层函数。</p>
+<h2 id="1、网络层——ip-queue-xmit-函数"><a href="#1、网络层——ip-queue-xmit-函数" class="headerlink" title="1、网络层——ip_queue_xmit 函数"></a>1、网络层——ip_queue_xmit 函数</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> * Queues a packet to be sent, and starts the transmitter</span><br><span class="line"> * if necessary.  if free = 1 then we free the block after</span><br><span class="line"> * transmit, otherwise we don&#x27;t. If free==2 we not only</span><br><span class="line"> * free the block but also don&#x27;t assign a new ip seq number.</span><br><span class="line"> * This routine also needs to put in the total length,</span><br><span class="line"> * and compute the checksum</span><br><span class="line"> */</span><br><span class="line"> //数据包发送函数</span><br><span class="line"> //sk:被发送数据包对应的套接字；dev:发送数据包的网络设备</span><br><span class="line"> //skb:被发送的数据包         ；flags:是否对数据包进行缓存以便于此后的超时重发</span><br><span class="line">void ip_queue_xmit(struct sock *sk, struct device *dev,</span><br><span class="line">	      struct sk_buff *skb, int free)</span><br><span class="line">&#123;</span><br><span class="line">	struct iphdr *iph;</span><br><span class="line">	unsigned char *ptr;</span><br><span class="line"> </span><br><span class="line">	/* Sanity check */</span><br><span class="line">	//发送设备检查</span><br><span class="line">	if (dev == NULL)</span><br><span class="line">	&#123;</span><br><span class="line">		printk(&quot;IP: ip_queue_xmit dev = NULL\n&quot;);</span><br><span class="line">		return;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	IS_SKB(skb);//数据包合法性检查</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Do some book-keeping in the packet for later</span><br><span class="line">	 */</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">	skb-&gt;dev = dev;</span><br><span class="line">	skb-&gt;when = jiffies;//重置数据包的发送时间，只有一个定时器，每次发数据包时，都要重新设置</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Find the IP header and set the length. This is bad</span><br><span class="line">	 *	but once we get the skb data handling code in the</span><br><span class="line">	 *	hardware will push its header sensibly and we will</span><br><span class="line">	 *	set skb-&gt;ip_hdr to avoid this mess and the fixed</span><br><span class="line">	 *	header length problem</span><br><span class="line">	 */</span><br><span class="line">    //skb-&gt;data指向的地址空间的布局: MAC首部 | IP首部 | TCP首部 | 有效负载</span><br><span class="line">	ptr = skb-&gt;data;//获取数据部分首地址</span><br><span class="line">	ptr += dev-&gt;hard_header_len;//后移硬件(MAC)首部长度个字节，定位到ip首部</span><br><span class="line">	iph = (struct iphdr *)ptr;//获取ip首部</span><br><span class="line">	skb-&gt;ip_hdr = iph;//skb对应字段建立关联</span><br><span class="line">	//ip数据报的总长度(ip首部+数据部分) = skb的总长度 - 硬件首部长度</span><br><span class="line">	iph-&gt;tot_len = ntohs(skb-&gt;len-dev-&gt;hard_header_len);</span><br><span class="line"> </span><br><span class="line">#ifdef CONFIG_IP_FIREWALL</span><br><span class="line">	//数据包过滤，用于防火墙安全性检查</span><br><span class="line">	if(ip_fw_chk(iph, dev, ip_fw_blk_chain, ip_fw_blk_policy, 0) != 1)</span><br><span class="line">		/* just don&#x27;t send this packet */</span><br><span class="line">		return;</span><br><span class="line">#endif	</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	No reassigning numbers to fragments...</span><br><span class="line">	 */</span><br><span class="line">    //如果不是分片数据包，就需要递增id字段</span><br><span class="line">//free==2，表示这是个分片数据包，所有分片数据包必须具有相同的id字段，方便以后分片数据包重组</span><br><span class="line">	if(free!=2)</span><br><span class="line">		iph-&gt;id      = htons(ip_id_count++);//ip数据报标识符</span><br><span class="line">		//ip_id_count是全局变量，用于下一个数据包中ip首部id字段的赋值</span><br><span class="line">	else</span><br><span class="line">		free=1;</span><br><span class="line"> </span><br><span class="line">	/* All buffers without an owner socket get freed */</span><br><span class="line">	if (sk == NULL)//没有对应sock结构，则无法对数据包缓存</span><br><span class="line">		free = 1;</span><br><span class="line"> </span><br><span class="line">	skb-&gt;free = free;//用于标识数据包发送之后是缓存还是立即释放,=1表示无缓存</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Do we need to fragment. Again this is inefficient.</span><br><span class="line">	 *	We need to somehow lock the original buffer and use</span><br><span class="line">	 *	bits of it.</span><br><span class="line">	 */</span><br><span class="line">	//数据包拆分</span><br><span class="line">    //如果ip层数据包的数据部分(各层首部+有效负载)长度大于网络设备的最大传输单元，就需要拆分发送</span><br><span class="line">    //实际是skb-&gt;len - dev-&gt;hard_header_len &gt; dev-&gt;mtu</span><br><span class="line">    //因为MTU最大报文长度表示的仅仅是IP首部及其数据负载的长度，所以要考虑MAC首部长度</span><br><span class="line">	if(skb-&gt;len &gt; dev-&gt;mtu + dev-&gt;hard_header_len)</span><br><span class="line">	&#123;</span><br><span class="line">	//拆分成分片数据包传输</span><br><span class="line">		ip_fragment(sk,skb,dev,0);</span><br><span class="line">		IS_SKB(skb);//检查数据包skb相关字段</span><br><span class="line">		kfree_skb(skb,FREE_WRITE);</span><br><span class="line">		return;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Add an IP checksum</span><br><span class="line">	 */</span><br><span class="line">    //ip首部校验和计算</span><br><span class="line">	ip_send_check(iph);</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Print the frame when debugging</span><br><span class="line">	 */</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	More debugging. You cannot queue a packet already on a list</span><br><span class="line">	 *	Spot this and moan loudly.</span><br><span class="line">	 */</span><br><span class="line">	if (skb-&gt;next != NULL)</span><br><span class="line">	&#123;</span><br><span class="line">		printk(&quot;ip_queue_xmit: next != NULL\n&quot;);</span><br><span class="line">		skb_unlink(skb);</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	If a sender wishes the packet to remain unfreed</span><br><span class="line">	 *	we add it to his send queue. This arguably belongs</span><br><span class="line">	 *	in the TCP level since nobody else uses it. BUT</span><br><span class="line">	 *	remember IPng might change all the rules.</span><br><span class="line">	 */</span><br><span class="line">    //free=0，表示对数据包进行缓存，一旦发生丢弃的情况，进行数据包重传(可靠性数据传输协议)</span><br><span class="line">	if (!free)</span><br><span class="line">	&#123;</span><br><span class="line">		unsigned long flags;</span><br><span class="line">		/* The socket now has more outstanding blocks */</span><br><span class="line"> </span><br><span class="line">		sk-&gt;packets_out++;//本地发送出去但未得到应答的数据包数目</span><br><span class="line"> </span><br><span class="line">		/* Protect the list for a moment */</span><br><span class="line">		save_flags(flags);</span><br><span class="line">		cli();</span><br><span class="line"> </span><br><span class="line">		//数据包重发队列</span><br><span class="line">		if (skb-&gt;link3 != NULL)</span><br><span class="line">		&#123;</span><br><span class="line">			printk(&quot;ip.c: link3 != NULL\n&quot;);</span><br><span class="line">			skb-&gt;link3 = NULL;</span><br><span class="line">		&#125;</span><br><span class="line">		if (sk-&gt;send_head == NULL)</span><br><span class="line">		&#123;</span><br><span class="line">		//数据包重传缓存队列则是由下列两个字段维护</span><br><span class="line">			sk-&gt;send_tail = skb;</span><br><span class="line">			sk-&gt;send_head = skb;</span><br><span class="line">		&#125;</span><br><span class="line">		else</span><br><span class="line">		&#123;</span><br><span class="line">			sk-&gt;send_tail-&gt;link3 = skb;</span><br><span class="line">			sk-&gt;send_tail = skb;</span><br><span class="line">		&#125;</span><br><span class="line">		/* skb-&gt;link3 is NULL */</span><br><span class="line"> </span><br><span class="line">		/* Interrupt restore */</span><br><span class="line">		restore_flags(flags);</span><br><span class="line">	&#125;</span><br><span class="line">	else</span><br><span class="line">		/* Remember who owns the buffer */</span><br><span class="line">		skb-&gt;sk = sk;</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	If the indicated interface is up and running, send the packet.</span><br><span class="line">	 */</span><br><span class="line">	 </span><br><span class="line">	ip_statistics.IpOutRequests++;</span><br><span class="line">#ifdef CONFIG_IP_ACCT</span><br><span class="line">//下面函数内部调用ip_fw_chk，也是数据包过滤</span><br><span class="line">	ip_acct_cnt(iph,dev, ip_acct_chain);</span><br><span class="line">#endif	</span><br><span class="line">	</span><br><span class="line">#ifdef CONFIG_IP_MULTICAST	</span><br><span class="line">    //对于多播和广播数据包，其必须复制一份回送给本机</span><br><span class="line">	/*</span><br><span class="line">	 *	Multicasts are looped back for other local users</span><br><span class="line">	 */</span><br><span class="line">	 /*对多播和广播数据包进行处理*/</span><br><span class="line">	 //检查目的地址是否为一个多播地址</span><br><span class="line">	if (MULTICAST(iph-&gt;daddr) &amp;&amp; !(dev-&gt;flags&amp;IFF_LOOPBACK))</span><br><span class="line">	&#123;</span><br><span class="line">	//检查发送设备是否为一个回路设备</span><br><span class="line">		if(sk==NULL || sk-&gt;ip_mc_loop)</span><br><span class="line">		&#123;</span><br><span class="line">			if(iph-&gt;daddr==IGMP_ALL_HOSTS)//如果是224.0.0.1(默认多播地址)</span><br><span class="line">				ip_loopback(dev,skb);//数据包回送给发送端</span><br><span class="line">			else</span><br><span class="line">			&#123;  //检查多播地址列表，对数据包进行匹配</span><br><span class="line">				struct ip_mc_list *imc=dev-&gt;ip_mc_list;</span><br><span class="line">				while(imc!=NULL)</span><br><span class="line">				&#123;</span><br><span class="line">					if(imc-&gt;multiaddr==iph-&gt;daddr)//如果存在匹配项，则回送数据包</span><br><span class="line">					&#123;</span><br><span class="line">						ip_loopback(dev,skb);</span><br><span class="line">						break;</span><br><span class="line">					&#125;</span><br><span class="line">					imc=imc-&gt;next;</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		/* Multicasts with ttl 0 must not go beyond the host */</span><br><span class="line">		//检查ip首部ttl字段，如果为0，则不可进行数据包发送(转发)</span><br><span class="line">		if(skb-&gt;ip_hdr-&gt;ttl==0)</span><br><span class="line">		&#123;</span><br><span class="line">			kfree_skb(skb, FREE_READ);</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">#endif</span><br><span class="line">	//对广播数据包的判断</span><br><span class="line">	if((dev-&gt;flags&amp;IFF_BROADCAST) &amp;&amp; iph-&gt;daddr==dev-&gt;pa_brdaddr &amp;&amp; !(dev-&gt;flags&amp;IFF_LOOPBACK))</span><br><span class="line">		ip_loopback(dev,skb);</span><br><span class="line"> </span><br><span class="line">	//对发送设备当前状态的检查，如果处于非工作状态，则无法发送数据包，此时进入else执行</span><br><span class="line">	if (dev-&gt;flags &amp; IFF_UP)</span><br><span class="line">	&#123;</span><br><span class="line">		/*</span><br><span class="line">		 *	If we have an owner use its priority setting,</span><br><span class="line">		 *	otherwise use NORMAL</span><br><span class="line">		 */</span><br><span class="line">        //调用下层接口函数dev_queue_xmit，将数据包交由链路层处理</span><br><span class="line">		if (sk != NULL)</span><br><span class="line">		&#123;</span><br><span class="line">			dev_queue_xmit(skb, dev, sk-&gt;priority);</span><br><span class="line">		&#125;</span><br><span class="line">		else</span><br><span class="line">		&#123;</span><br><span class="line">			dev_queue_xmit(skb, dev, SOPRI_NORMAL);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	else</span><br><span class="line">	&#123;</span><br><span class="line">		ip_statistics.IpOutDiscards++;</span><br><span class="line">		if (free)</span><br><span class="line">			kfree_skb(skb, FREE_WRITE);//丢弃数据包，对tcp可靠传输而言，将造成数据包超时重传</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面函数功能可以总结为：</p>
+<p>\1. 相关合法性检查；</p>
+<p>\2. 防火墙过滤；</p>
+<p>\3. 对数据包是否需要分片发送进行检查；</p>
+<p>\4. 进行可能的数据包缓存处理；</p>
+<p>\5. 对多播和广播数据报是否需要回送本机进行检查；</p>
+<p>\6. 调用下层接口函数 dev_queue_xmit 将数据包送往链路层进行处理。</p>
+<p>上面函数内部涉及到一个函数，把数据包分片，当数据包大小大于最大传输单元时，需要将数据包分片传送，这里则是通过函数 ip_fragment 实现的。【Linux 内核网络协议栈源码剖析】数据包发送上面函数内部涉及到一个函数，把数据包分片，当数据包大小大于最大传输单元时，需要将数据包分片传送，这里则是通过函数 ip_fragment 实现的。</p>
+<p>ip_fragment函数：将大数据包（大于最大传输单元(最大传输单元指的是ip报，不包含mac头部)）分片发送。这个函数条理很清楚</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> *	This IP datagram is too large to be sent in one piece.  Break it up into</span><br><span class="line"> *	smaller pieces (each of size equal to the MAC header plus IP header plus</span><br><span class="line"> *	a block of the data of the original IP data part) that will yet fit in a</span><br><span class="line"> *	single device frame, and queue such a frame for sending by calling the</span><br><span class="line"> *	ip_queue_xmit().  Note that this is recursion, and bad things will happen</span><br><span class="line"> *	if this function causes a loop...</span><br><span class="line"> *</span><br><span class="line"> *	Yes this is inefficient, feel free to submit a quicker one.</span><br><span class="line"> *</span><br><span class="line"> *	**Protocol Violation**</span><br><span class="line"> *	We copy all the options to each fragment. !FIXME!</span><br><span class="line"> */</span><br><span class="line">void ip_fragment(struct sock *sk, struct sk_buff *skb, struct device *dev, int is_frag)</span><br><span class="line">&#123;</span><br><span class="line">	struct iphdr *iph;</span><br><span class="line">	unsigned char *raw;</span><br><span class="line">	unsigned char *ptr;</span><br><span class="line">	struct sk_buff *skb2;</span><br><span class="line">	int left, mtu, hlen, len;</span><br><span class="line">	int offset;</span><br><span class="line">	unsigned long flags;</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Point into the IP datagram header.</span><br><span class="line">	 */</span><br><span class="line"> </span><br><span class="line">	raw = skb-&gt;data;//得到数据部分，如果你还没清楚skb与data表示什么的话，请自行面壁</span><br><span class="line">	iph = (struct iphdr *) (raw + dev-&gt;hard_header_len);//偏移mac首部就到了ip首部位置</span><br><span class="line"> </span><br><span class="line">	skb-&gt;ip_hdr = iph;//指定ip首部</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Setup starting values.</span><br><span class="line">	 */</span><br><span class="line">    //ip数据报由ip首部和数据负载部分组成，其中数据负载部分又有tcp首部和tcp有效负载组成</span><br><span class="line">	hlen = (iph-&gt;ihl * sizeof(unsigned long));//ip首部长度</span><br><span class="line">	left = ntohs(iph-&gt;tot_len) - hlen;//ip数据负载长度	/* Space per frame */</span><br><span class="line">	hlen += dev-&gt;hard_header_len;//加上mac首部长度，得到这两者的长度和		/* Total header size */</span><br><span class="line">	mtu = (dev-&gt;mtu - hlen);//mtu初始化为ip数据负载长度		/* Size of data space */</span><br><span class="line">	ptr = (raw + hlen);	//指向ip负载数据开始位置		/* Where to start from */</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Check for any &quot;DF&quot; flag. [DF means do not fragment]</span><br><span class="line">	 */</span><br><span class="line">    //检查发送端是否允许进行分片</span><br><span class="line">	if (ntohs(iph-&gt;frag_off) &amp; IP_DF)//如果不允许</span><br><span class="line">	&#123;</span><br><span class="line">		/*</span><br><span class="line">		 *	Reply giving the MTU of the failed hop.</span><br><span class="line">		 */</span><br><span class="line">		 //返回一个ICMP错误</span><br><span class="line">		ip_statistics.IpFragFails++;</span><br><span class="line">		icmp_send(skb,ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED, dev-&gt;mtu, dev);</span><br><span class="line">		return;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	The protocol doesn&#x27;t seem to say what to do in the case that the</span><br><span class="line">	 *	frame + options doesn&#x27;t fit the mtu. As it used to fall down dead</span><br><span class="line">	 *	in this case we were fortunate it didn&#x27;t happen</span><br><span class="line">	 */</span><br><span class="line">    //如果ip数据负载长度&lt;8，则无法为其创建分片</span><br><span class="line">    //规定，分片中数据长度必须是8的倍数</span><br><span class="line">	if(mtu&lt;8)</span><br><span class="line">	&#123;</span><br><span class="line">		/* It&#x27;s wrong but it&#x27;s better than nothing */</span><br><span class="line">		icmp_send(skb,ICMP_DEST_UNREACH,ICMP_FRAG_NEEDED,dev-&gt;mtu, dev);</span><br><span class="line">		ip_statistics.IpFragFails++;</span><br><span class="line">		return;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Fragment the datagram.</span><br><span class="line">	 */</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	The initial offset is 0 for a complete frame. When</span><br><span class="line">	 *	fragmenting fragments it&#x27;s wherever this one starts.</span><br><span class="line">	 */</span><br><span class="line"> </span><br><span class="line">	if (is_frag &amp; 2)//表示被分片数据包本身是一个分片</span><br><span class="line">		offset = (ntohs(iph-&gt;frag_off) &amp; 0x1fff) &lt;&lt; 3;</span><br><span class="line">	else</span><br><span class="line">		offset = 0;</span><br><span class="line"> </span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Keep copying data until we run out.</span><br><span class="line">	 */</span><br><span class="line">    //直到所有分片数据处理完</span><br><span class="line">	while(left &gt; 0)</span><br><span class="line">	&#123;</span><br><span class="line">		len = left;</span><br><span class="line">		/* IF: it doesn&#x27;t fit, use &#x27;mtu&#x27; - the data space left */</span><br><span class="line">		if (len &gt; mtu)//如果这个数据还是大于mtu，表示不是最后一个分片，还要继续分片处理</span><br><span class="line">			len = mtu;</span><br><span class="line">		/* IF: we are not sending upto and including the packet end</span><br><span class="line">		   then align the next start on an eight byte boundary */</span><br><span class="line">		if (len &lt; left)</span><br><span class="line">		&#123;</span><br><span class="line">//得到小于mtu的最大的一个为8的倍数的数值，这个运算很有意思，值得借鉴一下</span><br><span class="line">//可以看出分片的原则是每个分片在条件下尽量携带最多数据，这个条件就是不能大于mtu值，且必须是8的倍数</span><br><span class="line">			len/=8;</span><br><span class="line">			len*=8;</span><br><span class="line">		&#125;</span><br><span class="line">		/*</span><br><span class="line">		 *	Allocate buffer.</span><br><span class="line">		 */</span><br><span class="line">//分配一个skb_buff，注意这里分配的大小，hlen是ip首部大小，得加上ip首部</span><br><span class="line">//这里可以看出，每个分片数据包还得加上ip首部，典型的1+1&gt;2，相比不分片下降低了效率，</span><br><span class="line">//但是这是不可避免的，必须增加火车头，不然不知道往哪开</span><br><span class="line">		if ((skb2 = alloc_skb(len + hlen,GFP_ATOMIC)) == NULL)</span><br><span class="line">		&#123;</span><br><span class="line">			printk(&quot;IP: frag: no memory for new fragment!\n&quot;);</span><br><span class="line">			ip_statistics.IpFragFails++;</span><br><span class="line">			return;</span><br><span class="line">		&#125;</span><br><span class="line"> </span><br><span class="line">		/*</span><br><span class="line">		 *	Set up data on packet</span><br><span class="line">		 */</span><br><span class="line"> </span><br><span class="line">		skb2-&gt;arp = skb-&gt;arp;//表示mac首部是否创建成功，</span><br><span class="line">		//参见ip_build_header函数，其内部调用了ip_send函数(eth_header)</span><br><span class="line">		if(skb-&gt;free==0)</span><br><span class="line">			printk(&quot;IP fragmenter: BUG free!=1 in fragmenter\n&quot;);</span><br><span class="line">		skb2-&gt;free = 1;//数据包无须缓存</span><br><span class="line">		skb2-&gt;len = len + hlen;//数据部分长度(分片大小+ip首部)</span><br><span class="line">		skb2-&gt;h.raw=(char *) skb2-&gt;data;//让skb2对应层的raw指向分片数据包的数据部分</span><br><span class="line">		/*</span><br><span class="line">		 *	Charge the memory for the fragment to any owner</span><br><span class="line">		 *	it might possess</span><br><span class="line">		 */</span><br><span class="line"> </span><br><span class="line">		save_flags(flags);</span><br><span class="line">		if (sk)</span><br><span class="line">		&#123;</span><br><span class="line">			cli();</span><br><span class="line">			sk-&gt;wmem_alloc += skb2-&gt;mem_len;//设置sk当前写缓冲大小为分片数据包的大小</span><br><span class="line">			skb2-&gt;sk=sk;//关联</span><br><span class="line">		&#125;</span><br><span class="line">		restore_flags(flags);</span><br><span class="line">		skb2-&gt;raddr = skb-&gt;raddr;//数据包的下一站地址，所有分片数据包自然是原数据包是一个地址	/* For rebuild_header - must be here */</span><br><span class="line"> </span><br><span class="line">		/*</span><br><span class="line">		 *	Copy the packet header into the new buffer.</span><br><span class="line">		 */</span><br><span class="line">//把skb数据部分拷贝到raw指向的位置，这里拷贝的是首部(mac首部+ip首部)</span><br><span class="line">//实际上raw和skb2-&gt;data是指向同一个地址</span><br><span class="line">		memcpy(skb2-&gt;h.raw, raw, hlen);</span><br><span class="line">		//raw随着层次变化，链路层=eth，ip层=iph</span><br><span class="line"> </span><br><span class="line">		/*</span><br><span class="line">		 *	Copy a block of the IP datagram.</span><br><span class="line">		 */</span><br><span class="line">		//这里则是拷贝ip数据负载部分</span><br><span class="line">		memcpy(skb2-&gt;h.raw + hlen, ptr, len);</span><br><span class="line">		left -= len;//剩下未传送的数据大小</span><br><span class="line"> </span><br><span class="line">		skb2-&gt;h.raw+=dev-&gt;hard_header_len;//raw位置定位到了ip首部</span><br><span class="line">        //一定要清楚skb_buff-&gt;data到了某一层的数据布局</span><br><span class="line">		/*</span><br><span class="line">		 *	Fill in the new header fields.</span><br><span class="line">		 */</span><br><span class="line">		 //获取ip首部</span><br><span class="line">		iph = (struct iphdr *)(skb2-&gt;h.raw/*+dev-&gt;hard_header_len*/);</span><br><span class="line">		iph-&gt;frag_off = htons((offset &gt;&gt; 3));//片位移，offset在前面进行了设置</span><br><span class="line">		/*</span><br><span class="line">		 *	Added AC : If we are fragmenting a fragment thats not the</span><br><span class="line">		 *		   last fragment then keep MF on each bit</span><br><span class="line">		 */</span><br><span class="line">		if (left &gt; 0 || (is_frag &amp; 1))//left&gt;0，表示这不是最后一个分片，还有剩下数据包未发送</span><br><span class="line">			iph-&gt;frag_off |= htons(IP_MF);</span><br><span class="line"> </span><br><span class="line">	//ip数据负载已经发送了len各大小的分片数据包，那么就要更新下一个分片数据包的位置，以便发送</span><br><span class="line">		ptr += len;//ip数据负载位置更新</span><br><span class="line">		offset += len;//偏移量更新，</span><br><span class="line"> </span><br><span class="line">		/*</span><br><span class="line">		 *	Put this fragment into the sending queue.</span><br><span class="line">		 */</span><br><span class="line"> </span><br><span class="line">		ip_statistics.IpFragCreates++;</span><br><span class="line"> </span><br><span class="line">		ip_queue_xmit(sk, dev, skb2, 2);//发送数据包</span><br><span class="line">		//可以看出，发送一个数据包的过程就是，检查其大小是否小于mtu，否则需要进行分片，</span><br><span class="line">		//然后对分片进行发送，分片数据包自然是小于mtu，直到原来的大于mtu的数据包全部分片发送完</span><br><span class="line">	&#125;</span><br><span class="line">	ip_statistics.IpFragOKs++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ip_fragment 函数条理很清晰，就是将大的拆分为小的，其拆分过程为，新建指定大小（小于MTU的是8的倍数的最大值）的分片数据包，然后将原大数据包中的数据负载截取前分片大小，再加上ip首部，每个分片数据包都要加上ip首部，这样降低效率的措施不得不采用。然后就是发送这个分片数据包，直到大数据包分片发送完成。</p>
+<p>ip_queue_xmit 最后通过调用 dev_queue_xmit 函数将数据包发往链路层进行处理。</p>
+<h2 id="2、链路层——dev-queue-xmit-函数"><a href="#2、链路层——dev-queue-xmit-函数" class="headerlink" title="2、链路层——dev_queue_xmit 函数"></a>2、链路层——dev_queue_xmit 函数</h2><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line"> *	Send (or queue for sending) a packet. </span><br><span class="line"> *</span><br><span class="line"> *	IMPORTANT: When this is called to resend frames. The caller MUST</span><br><span class="line"> *	already have locked the sk_buff. Apart from that we do the</span><br><span class="line"> *	rest of the magic.</span><br><span class="line"> */</span><br><span class="line"> //该函数本身负责将数据包传递给驱动程序，由驱动程序最终将数据发送到物理介质上。</span><br><span class="line"> /*</span><br><span class="line"> skb:被发送的数据包；dev:数据包发送网络接口设备；pri:网络接口设备忙时，缓存该数据包时使用的优先级</span><br><span class="line"> */</span><br><span class="line">void dev_queue_xmit(struct sk_buff *skb, struct device *dev, int pri)</span><br><span class="line">&#123;</span><br><span class="line">	unsigned long flags;</span><br><span class="line">	int nitcount;</span><br><span class="line">	struct packet_type *ptype;//用于网络层协议</span><br><span class="line">	int where = 0;		/* used to say if the packet should go	*/</span><br><span class="line">				/* at the front or the back of the	*/</span><br><span class="line">				/* queue - front is a retransmit try	*/</span><br><span class="line"> </span><br><span class="line">	if (dev == NULL) </span><br><span class="line">	&#123;</span><br><span class="line">		printk(&quot;dev.c: dev_queue_xmit: dev = NULL\n&quot;);</span><br><span class="line">		return;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	//加锁</span><br><span class="line">	if(pri&gt;=0 &amp;&amp; !skb_device_locked(skb))</span><br><span class="line">		skb_device_lock(skb);	/* Shove a lock on the frame */</span><br><span class="line">#ifdef CONFIG_SLAVE_BALANCING</span><br><span class="line">	save_flags(flags);//保存状态</span><br><span class="line">	cli();</span><br><span class="line">	//检查是否使用了主从设备的连接方式</span><br><span class="line">	//如果采用了这种方式，则发送数据包时，可在两个设备之间平均负载</span><br><span class="line">	if(dev-&gt;slave!=NULL &amp;&amp; dev-&gt;slave-&gt;pkt_queue &lt; dev-&gt;pkt_queue &amp;&amp;</span><br><span class="line">				(dev-&gt;slave-&gt;flags &amp; IFF_UP))</span><br><span class="line">		dev=dev-&gt;slave;</span><br><span class="line">	restore_flags(flags);</span><br><span class="line">#endif		</span><br><span class="line">#ifdef CONFIG_SKB_CHECK </span><br><span class="line">	IS_SKB(skb);//检查数据包的合法性</span><br><span class="line">#endif    </span><br><span class="line">	skb-&gt;dev = dev;//指向数据包发送设备对应结构</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	This just eliminates some race conditions, but not all... </span><br><span class="line">	 */</span><br><span class="line">    //检查以免造成竞争条件，事实上skb-&gt;next == NULL的</span><br><span class="line">	if (skb-&gt;next != NULL) </span><br><span class="line">	&#123;</span><br><span class="line">		/*</span><br><span class="line">		 *	Make sure we haven&#x27;t missed an interrupt. </span><br><span class="line">		 */</span><br><span class="line">		printk(&quot;dev_queue_xmit: worked around a missed interrupt\n&quot;);</span><br><span class="line">		start_bh_atomic();//原子操作，宏定义</span><br><span class="line">		dev-&gt;hard_start_xmit(NULL, dev);</span><br><span class="line">		end_bh_atomic();</span><br><span class="line">		return;</span><br><span class="line">  	&#125;</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Negative priority is used to flag a frame that is being pulled from the</span><br><span class="line">	 *	queue front as a retransmit attempt. It therefore goes back on the queue</span><br><span class="line">	 *	start on a failure.</span><br><span class="line">	 */</span><br><span class="line">//优先级为负数，表示当前处理的数据包是从硬件队列中取下的，而非上层传递的新数据包</span><br><span class="line">  	if (pri &lt; 0) </span><br><span class="line">  	&#123;</span><br><span class="line">		pri = -pri-1;</span><br><span class="line">		where = 1;</span><br><span class="line">  	&#125;</span><br><span class="line"> </span><br><span class="line">	if (pri &gt;= DEV_NUMBUFFS) </span><br><span class="line">	&#123;</span><br><span class="line">		printk(&quot;bad priority in dev_queue_xmit.\n&quot;);</span><br><span class="line">		pri = 1;</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	If the address has not been resolved. Call the device header rebuilder.</span><br><span class="line">	 *	This can cover all protocols and technically not just ARP either.</span><br><span class="line">	 */</span><br><span class="line">//arp标识是否完成链路层的硬件地址解析，如果没完成，则需要调用rebuild_header(eth_rebuild_header函数)</span><br><span class="line">//完成链路层首部的创建工作</span><br><span class="line">	if (!skb-&gt;arp &amp;&amp; dev-&gt;rebuild_header(skb-&gt;data, dev, skb-&gt;raddr, skb)) &#123;</span><br><span class="line">		return;//这将启动arp地址解析过程，则数据包的发送则由arp协议模块负责，所以这里直接返回</span><br><span class="line">	&#125;</span><br><span class="line"> </span><br><span class="line">	save_flags(flags);</span><br><span class="line">	cli();	</span><br><span class="line">	if (!where) &#123;//where=1，表示这是从上层接受的新数据包</span><br><span class="line">#ifdef CONFIG_SLAVE_BALANCING	</span><br><span class="line">		skb-&gt;in_dev_queue=1;//标识该数据包缓存在设备队列中</span><br><span class="line">#endif		</span><br><span class="line">		skb_queue_tail(dev-&gt;buffs + pri,skb);//插入到设备缓存队列的尾部</span><br><span class="line">		skb_device_unlock(skb);		/* Buffer is on the device queue and can be freed safely */</span><br><span class="line">		skb = skb_dequeue(dev-&gt;buffs + pri);//从设备缓存队列的首部读取数据包，这样取得的数据包可能不是我们之前插入的数据包</span><br><span class="line">		skb_device_lock(skb);		/* New buffer needs locking down */</span><br><span class="line">#ifdef CONFIG_SLAVE_BALANCING		</span><br><span class="line">		skb-&gt;in_dev_queue=0;//该数据包当前不在缓存队列中</span><br><span class="line">#endif		</span><br><span class="line">	&#125;</span><br><span class="line">	restore_flags(flags);//恢复状态</span><br><span class="line"> </span><br><span class="line">	/* copy outgoing packets to any sniffer packet handlers */</span><br><span class="line">	//内核对混杂模式的支持。不明白...</span><br><span class="line">	if(!where)</span><br><span class="line">	&#123;</span><br><span class="line">		for (nitcount= dev_nit, ptype = ptype_base; nitcount &gt; 0 &amp;&amp; ptype != NULL; ptype = ptype-&gt;next) </span><br><span class="line">		&#123;</span><br><span class="line">			/* Never send packets back to the socket</span><br><span class="line">			 * they originated from - MvS (miquels@drinkel.ow.org)</span><br><span class="line">			 */</span><br><span class="line">			if (ptype-&gt;type == htons(ETH_P_ALL) &amp;&amp;</span><br><span class="line">			   (ptype-&gt;dev == dev || !ptype-&gt;dev) &amp;&amp;</span><br><span class="line">			   ((struct sock *)ptype-&gt;data != skb-&gt;sk))</span><br><span class="line">			&#123;</span><br><span class="line">				struct sk_buff *skb2;</span><br><span class="line">				if ((skb2 = skb_clone(skb, GFP_ATOMIC)) == NULL)//复制一份数据包</span><br><span class="line">					break;</span><br><span class="line">				/*</span><br><span class="line">				 *	The protocol knows this has (for other paths) been taken off</span><br><span class="line">				 *	and adds it back.</span><br><span class="line">				 */</span><br><span class="line">				skb2-&gt;len-=skb-&gt;dev-&gt;hard_header_len;//长度</span><br><span class="line">				ptype-&gt;func(skb2, skb-&gt;dev, ptype);//协议处理函数</span><br><span class="line">				nitcount--;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	start_bh_atomic();</span><br><span class="line">//下面调用hard_start_xmit函数，前面skb-&gt;next不为NULL时，也调用这个函数，不过参数数据包skb是NULL</span><br><span class="line">//驱动层发送数据包，关联到了具体的网络设备处理函数，将进入真实的网卡驱动(物理层)</span><br><span class="line">//高版本的内核协议栈，还有虚拟设备，这个版本就是直接进入真实设备</span><br><span class="line">	if (dev-&gt;hard_start_xmit(skb, dev) == 0) &#123;</span><br><span class="line">		end_bh_atomic();</span><br><span class="line">		/*</span><br><span class="line">		 *	Packet is now solely the responsibility of the driver</span><br><span class="line">		 */</span><br><span class="line">		return;</span><br><span class="line">	&#125;</span><br><span class="line">	end_bh_atomic();</span><br><span class="line"> </span><br><span class="line">	/*</span><br><span class="line">	 *	Transmission failed, put skb back into a list. Once on the list it&#x27;s safe and</span><br><span class="line">	 *	no longer device locked (it can be freed safely from the device queue)</span><br><span class="line">	 */</span><br><span class="line">	cli();</span><br><span class="line">#ifdef CONFIG_SLAVE_BALANCING</span><br><span class="line">	skb-&gt;in_dev_queue=1;//如果使用主从设备，就缓存在队列中</span><br><span class="line">	dev-&gt;pkt_queue++;//该设备缓存的待发送数据包个数加1</span><br><span class="line">#endif		</span><br><span class="line">	skb_device_unlock(skb);</span><br><span class="line">	skb_queue_head(dev-&gt;buffs + pri,skb);//把数据包插入到数据包队列头中</span><br><span class="line">	restore_flags(flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="3、物理层"><a href="#3、物理层" class="headerlink" title="3、物理层"></a>3、物理层</h2><p>物理层则牵扯到具体的网络接口硬件设备了，实则是一个网络驱动程序。不同的网卡其驱动程序有所不同，这跟硬件的时序，延迟等有关。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic4.zhimg.com/80/v2-a8c44790925bc12839c9817d1cfb83ff_720w.webp" alt="img"></p>
+<p>关于驱动，这里我们就不介绍了。</p>
+<p>这部分介绍的就是数据包的发送过程，从网络层到最底层的网卡驱动。下篇将介绍数据包的接收过程。</p>
+<p>connect 函数可真是渗透到网络栈的各个层啊，connect 函数是客户端向服务器端发出连接请求数据包，该数据包需要最终到达服务器端处理，自然要从客户端从上至下经过应用层、传输层、网络层、链路层、硬件接口到达对端（对端接收则是反过来从下往上）。所以通信双方进行数据传输的函数都要经过这些网络协议栈。</p>
+<p>从侧面可看出，内核网络协议栈的设计体现了高内聚，低耦合的原则，各层之间只提供接口函数，协议栈某一层的改动，不需要取改动其余层，保持接口的一致性就可以了，面对日益复杂的网络栈，这种设计风格无疑很有利于维护和升级。</p>
+<p>另外中间协议各层还有一些牵扯到的操作函数，会在后面一一介绍。</p>
+<hr>
+<p>版权声明：本文为知乎博主「<a target="_blank" rel="noopener" href="https://www.zhihu.com/people/linuxwang-xian-sheng">极致Linux内核</a>」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。</p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/549023845">https://zhuanlan.zhihu.com/p/549023845</a></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88%E5%A5%97%E6%8E%A5%E5%AD%97%E7%9A%84%E7%BB%91%E5%AE%9A%E3%80%81%E7%9B%91%E5%90%AC%E3%80%81%E8%BF%9E%E6%8E%A5%E5%92%8C%E6%96%AD%E5%BC%80/">Linux内核网络协议栈套接字的绑定、监听、连接和断开</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/">Linux内核网络协议栈计算机基础</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">博客</span><a href="/">近期</a><a href="/">分类</a><a href="/">标签</a><a href="/">归档</a></div><div class="sitemap-group"><span class="fs15">项目</span><a href="/">开源库</a></div><div class="sitemap-group"><span class="fs15">社交</span><a href="/">友链</a><a href="/">留言板</a></div><div class="sitemap-group"><span class="fs15">更多</span><a href="/">关于本站</a><a href="/">GitHub</a></div></div><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81%E7%BD%91%E7%BB%9C%E5%B1%82%E2%80%94%E2%80%94ip-queue-xmit-%E5%87%BD%E6%95%B0"><span class="toc-text">1、网络层——ip_queue_xmit 函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81%E9%93%BE%E8%B7%AF%E5%B1%82%E2%80%94%E2%80%94dev-queue-xmit-%E5%87%BD%E6%95%B0"><span class="toc-text">2、链路层——dev_queue_xmit 函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E7%89%A9%E7%90%86%E5%B1%82"><span class="toc-text">3、物理层</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

@@ -1,0 +1,655 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Linux 中的五种IO模型 - Blog</title>
+
+  
+    <meta name="description" content="IO模型的选择在Linux网络编程中十分重要，在Unix&#x2F;Linux环境中主要提供了五种不同的IO模型，分别是阻塞式IO、非阻塞式IO、IO多路复用、信号驱动式IO和异步IO。 通常一个输入操作包含两个不同阶段：  等待数据准备好 从内核向进程复制数据   例如，对于一个网络套接字上的输入操作，第一步通常涉及到发生系统调用，用户态切换到内核态并等待数据从网络中到达，当所有等待分组到达时，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 中的五种IO模型">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%20%E4%B8%AD%E7%9A%84%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="IO模型的选择在Linux网络编程中十分重要，在Unix&#x2F;Linux环境中主要提供了五种不同的IO模型，分别是阻塞式IO、非阻塞式IO、IO多路复用、信号驱动式IO和异步IO。 通常一个输入操作包含两个不同阶段：  等待数据准备好 从内核向进程复制数据   例如，对于一个网络套接字上的输入操作，第一步通常涉及到发生系统调用，用户态切换到内核态并等待数据从网络中到达，当所有等待分组到达时，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127826956-daff612a-711e-4f92-bcb3-89000b17d6a2.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127827045-ba456dab-4e96-4c38-a572-e6337824e476.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127827107-819785fd-e73d-4a88-a018-80179575931f.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127828345-ca062966-dfd9-4c80-86c0-539e723ddb7f.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127828408-034ea5dc-b86f-4014-8291-10cc05d025f3.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127828469-df0914b1-dff1-4f43-907a-225ac483bb03.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127828664-517706d2-58b9-4a11-bea7-59b0a2d84234.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127829018-be125f77-6a05-497b-ab7d-a7d3927a1e33.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127829103-223bdb2c-b788-4ccb-841e-025f4ef73601.png">
+<meta property="og:image" content="https://vcloud.ysme.top/">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T12:59:49.932Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/127826956-daff612a-711e-4f92-bcb3-89000b17d6a2.png">
+  
+  
+  
+  <meta name="keywords" content="Linux">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E4%B8%80%E6%96%87%E5%B8%A6%E4%BD%A0%EF%BC%8C%E5%BD%BB%E5%BA%95%E4%BA%86%E8%A7%A3%EF%BC%8C%E9%9B%B6%E6%8B%B7%E8%B4%9DZero-Copy%E6%8A%80%E6%9C%AF/"><span class="title">一文带你，彻底了解，零拷贝Zero-Copy技术</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E4%BB%BB%E5%8A%A1%E8%B0%83%E5%BA%A6/"><span class="title">任务调度</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E5%92%8C%E6%B4%BE%E7%94%9F/"><span class="title">进程、线程的创建和派生</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/08a41b181ce68.svg"/></a><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/3845874.svg"/></a><a class="social" href="/" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/3616429.svg"/></a><a class="social" href="/about/#comments" rel="noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/942ebbf1a4b91.svg"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux-doc-%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/">linux-doc 网络协议栈</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T12:59:49.932Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux 中的五种IO模型</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>IO模型的选择在Linux网络编程中十分重要，在Unix&#x2F;Linux环境中主要提供了五种不同的IO模型，分别是阻塞式IO、非阻塞式IO、IO多路复用、信号驱动式IO和异步IO。</p>
+<p>通常一个输入操作包含两个不同阶段：</p>
+<ol>
+<li>等待数据准备好<br></li>
+<li>从内核向进程复制数据<br></li>
+</ol>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127826956-daff612a-711e-4f92-bcb3-89000b17d6a2.png" alt="image"></p>
+<p>例如，对于一个网络套接字上的输入操作，第一步通常涉及到发生系统调用，用户态切换到内核态并等待数据从网络中到达，当所有等待分组到达时，数据被复制到内核中的某个缓冲区。第二步则是将数据从内核缓冲区复制到应用进程缓冲区。</p>
+<blockquote>
+<p>磁盘文件的IO比较特殊，内核采用缓冲区cache加速磁盘IO请求。因而一旦请求的数据到达内核缓冲区cache，对磁盘的write()操作立即返回，而不用等待将数据写入磁盘后再返回（除非在打开文件时指定了O_SYNC标志）。与之相对应的read()操作将数据从内核缓冲区cache移动到用户的缓冲区中，如果请求的数据不在内核缓冲区cache中，内核会让进程休眠，同时执行对磁盘的读操作。所以实际上在磁盘IO中，等待阶段是不存在的，因为磁盘文件并不像网络IO那样，需要等待远程传输数据。</p>
+</blockquote>
+<h2 id="阻塞式I-O模型"><a href="#阻塞式I-O模型" class="headerlink" title="阻塞式I&#x2F;O模型"></a>阻塞式I&#x2F;O模型</h2><p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127827045-ba456dab-4e96-4c38-a572-e6337824e476.png" alt="image"></p>
+<p>Linux中，默认情况下所有的socket都是阻塞的。这里有必要辨析以下阻塞和非阻塞这两个概念，这两个概念描述的是用户线程调用内核I&#x2F;O操作的方式，其中阻塞是指I&#x2F;O操作需要彻底完成后才返回到用户空间；而非阻塞则是指I&#x2F;O操作被调用后立即返回给用户一个状态值，不需要等到I&#x2F;O操作彻底完成。</p>
+<p>除非特别指定，几乎所有的I&#x2F;O接口都是阻塞型的，即系统调用时不返回调用结果，只有当该系统调用获得结果或者超时出错才返回。这样的机制给网络编程带来了较大的影响，当线程因处理数据而处于阻塞状态时，线程将无法执行任何运算或者相应任何网络请求。</p>
+<ul>
+<li>改进方案</li>
+</ul>
+<p>在服务器端使用阻塞I&#x2F;O模型时结合多进程&#x2F;多线程技术。让每一个连接都拥有独立的进程&#x2F;线程，任何一个连接的阻塞都不会影响到其他连接。（选择多进程还是多线程并无统一标准，因为进程的开销远大于线程，所以在连接数较大的情况下推荐使用多线程。而进程相较于线程具有更高的安全性，所以如果单个服务执行体需要消耗较多的CPU资源，如需要进行大规模或长时间的数据运算或文件访问推荐使用多进程）。</p>
+<p>当连接数规模继续增大，无论使用多线程还是多进程都会严重占据系统资源，降低系统对外界的响应效率，线程或者进程本身也更容易陷入假死。此时可以采用“线程池”或“连接池”来降低创建和销毁进程&#x2F;线程的频率，减少系统开销。</p>
+<h2 id="非阻塞式I-O模型"><a href="#非阻塞式I-O模型" class="headerlink" title="非阻塞式I&#x2F;O模型"></a>非阻塞式I&#x2F;O模型</h2><p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127827107-819785fd-e73d-4a88-a018-80179575931f.png" alt="image"></p>
+<p>进程把一个套接字设置成非阻塞是在通知内核：当请求的I&#x2F;O操作非得把本进程投入睡眠才能完成时，不要把本进程投入睡眠，而是返回一个错误。 因此如果在打开文件时设定了O_NONBLOCK标志，则会以非阻塞方式打开文件。如果I&#x2F;O系统调用不能立即完成，则会返回错误而不是阻塞进程。非阻塞式I&#x2F;O可以实现周期性检查（轮询）某个文件描述符是否可执行I&#x2F;O操作。比如，设定一个输入文件描述符为非阻塞式的，然后周期性的执行非阻塞式读操作。如果需要同时检测多个文件描述符，则将其都设为非阻塞，然后一次轮询。但是这种轮询的效率不高，在轮询频率不高的情况下，程序响应I&#x2F;O事件的延迟将难以接受。换句话说，在一个紧凑的循环中做轮询就是在浪费CPU时间，因为多数时间调用会立即出错并返回。</p>
+<blockquote>
+<p>对于不能满足非阻塞式I&#x2F;O操作，System V会返回EAGAIN错误而源于Berkeley的4.3BSD返回EWOULDBLOCK。如今大多数系统都把这两个错误码定义为相同的值。（可查看&lt;sys&#x2F;errno.h&gt;）</p>
+</blockquote>
+<p>如果不希望进程在对文件描述符执行I&#x2F;O操作时被阻塞，则可以结合使用多进程&#x2F;多线程技术，创建一个新的进程来执行I&#x2F;O操作，而父进程则可以去做其他工作，子进程将阻塞到I&#x2F;O操作完成。当有多个文件描述符进行I&#x2F;O操作时，就需要创建多个子进程。当子进程收到文件结束符，那么该子进程将会终止，父进程收到SIGCHLD信号，但是当父进程终止，那么父进程应通知子进程停止，为此可以使用一个信号如SUGUSR1，这使得这种方法的开销将十分昂贵且复杂。使用多线程而不是多进程的方式将减少资源的占用，并有效简化程序设计。但线程之间仍然需要处理同步的问题，当面对大量并发客户线程时，但是这也使得程序编写十分复杂。</p>
+<h2 id="I-O多路复用模型"><a href="#I-O多路复用模型" class="headerlink" title="I&#x2F;O多路复用模型"></a>I&#x2F;O多路复用模型</h2><p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127828345-ca062966-dfd9-4c80-86c0-539e723ddb7f.png" alt="image"></p>
+<p>I&#x2F;O多路复用（也叫做事件驱动I&#x2F;O）通过系统调用select()、poll、或者epoll()实现进程同时检查多个文件描述符，以找出其中任何一个是否可执行I&#x2F;O操作。通过上图可以看出I&#x2F;O多路复用与阻塞I&#x2F;O模型差别并不大，事实上还要差一些，因为这里使用了两个系统调用而阻塞I&#x2F;O只是用了一个系统调用。但是I&#x2F;O多路复用的优势是其可以同时处理多个连接。因此如果处理的连接数不是特别多的情况下使用I&#x2F;O多路复用模型的web server不一定比使用多线程技术的阻塞I&#x2F;O模型好。</p>
+<p>select()和poll()的原理基本相同：<br></p>
+<ol>
+<li>注册待侦听的fd(这里的fd创建时最好使用非阻塞)<br></li>
+<li>每次调用都去检查这些fd的状态，当有一个或者多个fd就绪的时候返回<br></li>
+<li>返回结果中包括已就绪和未就绪的fd<br></li>
+</ol>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">select</span> <span class="params">(<span class="type">int</span> maxfdp, fd_set *readfds, fd_set *writefds, fd_set *errorfds, <span class="keyword">struct</span> timeval *timeout)</span>;</span><br></pre></td></tr></table></figure>
+<h3 id="select"><a href="#select" class="headerlink" title="select"></a>select</h3><ul>
+<li>maxfdp 指集合中所有文件描述符的范围，即所有文件描述符的最大值+1</li>
+<li>readfds、writefds、errorfds 指向文件描述符集合的指针，分别检测输入、输出是否就绪和异常情况是否发生</li>
+<li>timeout 时select()的超时时间，控制着select()的阻塞行为</li>
+</ul>
+<blockquote>
+<p>readfds、writefds、errorfds所指结构体都是保存结果的地方，在调用select()之前，这些参数指向的结构体必须初始化以包含我们所感兴趣的文件描述符集合。之后select()会修改这些结构体，当其返回时他们包含的就是处于就绪态的文件描述符集合。</p>
+</blockquote>
+<p>当timeout设为NULL或者其指向的结构体字段非零时，select()将阻塞到有下列事件发生<br></p>
+<ol>
+<li>readfds、writefds、errorfds 中指定的文件描述符中至少有一个成为就绪态（NULL）<br></li>
+<li>该调用被信号处理程序中断<br></li>
+<li>timeout中指定的时间上限已超时<br></li>
+</ol>
+<p>select()的返回值<br><br>当select()函数返回-1表示出错，错误码包括EBADF表示存在非法文件描述符，EINTR表示该调用被信号处理程序中断了（select不会自动恢复）。返回0表示超时，此时每个文件描述符集合都会被清空。返回一个正整数表示准备就绪的文件描述符个数，如果同一个文件描述符在返回的描述符集中出现多次，select会将其统计多次。</p>
+<blockquote>
+<p>一个文件描述符是否阻塞并不影响select()是否阻塞，也就是说如果希望读一个非阻塞文件描述符，并且以5s为超时值调用select()，则select()最多阻塞5s。同理若是指定超时值为NULL，则在该描述符就绪或者捕捉到一个信号之前select()会一直阻塞。</p>
+</blockquote>
+<p>所有关于文件描述符集合的操作都是通过以下四个宏完成，除此之外，常量FD_SETSIZE规定了文件描述符的最大容量。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/select.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">FD_ZERO</span><span class="params">(fd_set *fdset)</span>; <span class="comment">//将fdset所指集合初始化为空</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">FD_SET</span><span class="params">(<span class="type">int</span> fd, fd_set *fdset)</span>; <span class="comment">//将文件描述符fd添加到由fdset指向的集合中</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">FD_CLR</span><span class="params">(<span class="type">int</span> fd, fd_set *fdset)</span>; <span class="comment">//将文件描述符fd从fdset所指集合中移出</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">FD_ISSET</span><span class="params">(<span class="type">int</span> fd, fd_set *fdset)</span>; <span class="comment">//检测fd是否是fdset所指集合成员</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="poll"><a href="#poll" class="headerlink" title="poll"></a>poll</h3><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;poll.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">poll</span> <span class="params">(<span class="keyword">struct</span> pollfd fds[], <span class="type">nfds_t</span> nfds, <span class="type">int</span> timeout)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>poll和select的任务很相似，主要区别在于我们如何指定待检查的文件描述符（程序接口不同）。poll不为每个条件构造一个描述符集合，而是构造了一个pollfd结构的数组，每个数组元素指定一个描述符编号以及我们对该描述符感兴趣的条件。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">pollfd</span> &#123;</span></span><br><span class="line">  <span class="type">int</span> fd; <span class="comment">//文件描述符</span></span><br><span class="line">  <span class="type">short</span> events; <span class="comment">//等待的事件</span></span><br><span class="line">  <span class="type">short</span> revents; <span class="comment">//实际发生了的事件</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>每个pollfd结构体指定了一个被监视的文件描述符，可以传递多个结构体，指示poll()监视多个文件描述符。每个结构体的events域是监视该文件描述符的事件掩码，由用户来设置这个域的属性。revents域是文件描述符的操作结果事件掩码，内核在调用返回时设置这个域，并且events中请求的任何事件都可能在revents中返回。</p>
+<p>参数timeout的设置与select()中有所不同（poll的timeout参数是一个整型而select是一个结构体）。</p>
+<p>1、当timeout等于-1时，表示无限超时。poll会一直阻塞到fds数组中列出的文件描述符有一个达到就绪态（定义在对应的events字段中）或者捕捉到一个信号<br><br>2、当timeout等于0时，poll不会阻塞——只执行一次检查看看哪个文件描述符已经就绪<br><br>3、当timeout大于0时，poll至多阻塞timeout毫秒数，无论IO是否准备好，poll都会返回<br></p>
+<p>poll的返回值<br><br>当poll()函数返回-1表示出错，错误码包括EBADF表示存在非法文件描述符，EINTR表示该调用被信号处理程序中断了（poll不会自动恢复）。返回0表示超时。返回一个正整数表示准备就绪的文件描述符个数，与select不同，poll返回的就是就绪文件描述符的个数每个文件描述符只统计一次。</p>
+<h3 id="select-和poll-的区别"><a href="#select-和poll-的区别" class="headerlink" title="select()和poll()的区别"></a>select()和poll()的区别</h3><p>Linux实现层面</p>
+<p>select()和poll()都使用了相同的内核轮询（poll）程序集合，与系统调用poll()本身不同，内核的每个poll例程都返回有关单个文件描述符就绪的信息，这个信息以位掩码的形式返回，其值同poll()系统调用返回的revent字段中的比特值相关。poll()系统调用的实现包括为每个文件描述符调用内核poll例程，并将结果信息填入到对应的revents字段中。对于系统调用select()则可以使用一组宏将内核poll例程返回的信息转化为由select()返回的与之对应的事件集合。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> POLLIN_SET (POLLIN | POLLRDNORM | POLLRDBAND | POLLHUP | POLLERR) <span class="comment">/*读就绪*/</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> POLLOUT_SET (POLLOUT | POLLWRNORM | POLLWRBAND | POLLERR) <span class="comment">/*写就绪*/</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> POLLEX_SET (POLLPRI) <span class="comment">/*异常*/</span></span></span><br></pre></td></tr></table></figure>
+<p>以上宏定义展现了select()和poll()返回信息间的语义关系，唯一一点不同是如果被检查的文件描述符中有一个关闭了，poll()在revent字段中返回POLLNVAL，而select()返回-1并把错误码置为EBADF。</p>
+<p>API设计层面</p>
+<p>1、select()使用的数据类型fd_set对于被检查的文件描述数量有一个上限（FD_SETSIZE）。相对也较小（1024&#x2F;2048），如果要修改这个默认值需要重新编译内核。与之相反，poll()没有对于被检查文件描述符的数量限制。<br><br>2、由于select()的参数fd_set同时也是保存结果的地方，在select()返回之后会发生变化，所以每当在下一次进入select()之前需要重新初始化fd_set。poll()通过两个独立的字段events和revents将监控的输入输出分开，允许被监控的文件数组被复用而不需要重新初始化。<br><br>3、select()提供的超时精度（微妙）比poll()提供的超时精度（毫秒）高。<br><br>4、select()的超时参数在返回时也是未定义的，考虑到可移植性，每次在超时之后在下一次进入到select()之前都需要重新设置超时参数。<br><br>5、poll()不要求开发者计算最大文件描述符时进行+1操作<br></p>
+<p>性能层面</p>
+<p>在待检查文件描述符范围较小（最大文件描述符较低），或者有大量文件描述符待检查，但是其分布比较密集时poll()和select()性能相似。<br><br>在被检查文件描述符集合很稀疏的情况，poll()要优于select()。</p>
+<h3 id="select-和poll-的不足"><a href="#select-和poll-的不足" class="headerlink" title="select()和poll()的不足"></a>select()和poll()的不足</h3><p>1、IO效率随着文件描述符的数量增加而线性下降。每次调用select()或poll()内核都要检查所有的被指定的文件描述符的状态（但是实际上只有部分的文件描述符会是活跃的），当有文件描述符集合增大时，IO的效率也随之下降。<br><br>2、当检查大量文件描述符时，用户空间和内核空间消息传递速度较慢。每次调用select()或poll()时，程序都必须传递一个表示所有需要被检查的文件描述符的数据结构到内核，在内核完成检查之后，修个这个数据结构并返回给程序。（此外select()每次调用之前还需要初始化该数据结构）对于poll()调用需要将用户传入的pollfd数组拷贝到内核空间，这是一个O(n)的操作。当事件发生后，poll()将获得的数据传送到用户空间，并执行释放内存和剥离等待队列等工作同样是O(n)的操作。因此随着文件描述符的增加消息传递速度会逐步下降。对于select()来说，传递的数据结构大小固定为FD_SETSIZE，与待检查的文件描述符数量无关。<br><br>3、select()或poll()调用完成之后，程序必须检查返回的数据结构中每个元素，已确定那个文件描述符处于就绪态<br><br>4、select()对一个进程打开的文件描述符数目有上限值，而且较少（1024&#x2F;2048）。<br></p>
+<h3 id="epoll"><a href="#epoll" class="headerlink" title="epoll"></a>epoll</h3><p>epoll API是Linux专有的特性，相较于select和poll，epoll更加灵活且没有描述符限制。epoll设计也与select和poll不同，主要包含以下三个接口：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/epoll.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">epoll_create</span><span class="params">(<span class="type">int</span> size)</span>; <span class="comment">//创建一个epoll句柄</span></span><br></pre></td></tr></table></figure>
+
+<p>参数size指定内核需要监听的文件描述符个数，但该参数与select中的maxfdp不同，并非一个上限（Linux 2.6.8以后该参数被忽略不用）。此外函数返回代表新创建的epoll句柄的文件描述符（在Linux下查看&#x2F;proc&#x2F;进程的id&#x2F;fd&#x2F;可看到该fd的值），因此当不再使用该文件描述符时应该通过close()关闭，当所用与epoll句柄相关的文件描述符都关闭时，该句柄被销毁并被系统回收其资源。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;sys/epoll.h&gt;</span><br><span class="line"></span><br><span class="line">int epoll_ctl(int epfd, int op, int fd, struct epoll_event *ev); //修改兴趣列表（事件注册函数）</span><br></pre></td></tr></table></figure>
+
+<p>与select()的在监听事件时告诉内核需要监听的事件类型不同，epoll()需要先注册要监听的事件类型。参数op表示要执行的动作通过三个宏表示：1.EPOLL_CTL_ADD注册新的fd到epfd中；1.EPOLL_CTL_MOD修改已经注册的fd的监听事件；3.EPOLL_CTL_DEL从epfd中删除一个fd。参数fd表示需要监听的fd。最后一个参数ev指向结构体epoll_event则是告诉内核需要监听的事件类型，定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">epoll_event</span> &#123;</span></span><br><span class="line">  <span class="type">uint32_t</span> events; <span class="comment">//epoll events (bit mask)</span></span><br><span class="line">  <span class="type">epoll_data_t</span> data; <span class="comment">//user data variable</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中data的类型为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">union</span> <span class="title">epoll_data</span> &#123;</span></span><br><span class="line">  <span class="type">void</span>    *ptr; <span class="comment">//pointer to user defined data</span></span><br><span class="line">  <span class="type">int</span>     fd; <span class="comment">//file descriptor</span></span><br><span class="line">  uint_32 u32; <span class="comment">//32-bit integer</span></span><br><span class="line">  uint_64 u64; <span class="comment">//64-bit integer</span></span><br><span class="line">&#125; <span class="type">epoll_data_t</span>;</span><br></pre></td></tr></table></figure>
+<p>其中字段event表示事件掩码指定待监听的文件描述符fd上所感兴趣的事件集合，除了增加了一个前缀E外，这些掩码的名称与poll中对应名称相同（两个例外EPOLLET表示设置为边缘触发、EPOLLONESHOT表示只监听一次）。data字段是一个联合体，当描述符fd就绪后，联合体成员可以用来指定传回给调用进程的信息。data字段是唯一可以获知同这个事件相关的文件描述符的途径，因此调用epoll_ctl()将文件描述符添加到兴趣列表中时，应该要么将ev.data.fd设为文件描述符，要么将ev.data.ptr设为指向包含该文件描述的结构体。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/epoll.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">epoll_wait</span><span class="params">(<span class="type">int</span> epfd, <span class="keyword">struct</span> epoll_event *evlist, <span class="type">int</span> maxevents, <span class="type">int</span> timeout)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>等待事件的产生，参数evlist所指向的结构体数组中返回就需文件描述的信息，数组evlist的空间由调用者负责申请，所包含的元素个数由参数maxevents指定。</p>
+<h3 id="epoll的实现原理（以网络socket监听为例）"><a href="#epoll的实现原理（以网络socket监听为例）" class="headerlink" title="epoll的实现原理（以网络socket监听为例）"></a>epoll的实现原理（以网络socket监听为例）</h3><p>在linux，一切皆文件．所以当调用epoll_create时，内核给这个epoll分配一个文件描述符，但是这个不是普通的文件，而是只服务于epoll．</p>
+<p>所以当内核初始化epoll时，会开辟一块内核高速cache区，用于安置我们监听的socket，这些socket会以红黑树的形式保存在内核的cache里，以支持快速的查找，插入，删除．同时，建立了一个list链表，用于存储准备就绪的事件．所以调用epoll_wait时，在timeout时间内，只是简单的观察这个list链表是否有数据，如果没有，则睡眠至超时时间到返回；如果有数据，则在超时时间到，拷贝至用户态events数组中．</p>
+<p>那么，这个准备就绪list链表是怎么维护的呢？<br><br>当我们执行epoll_ctl()时，除了把socket放到epoll文件系统里file对象对应的红黑树上之外，还会给内核中断处理程序注册一个回调函数，告诉内核，如果这个句柄的中断到了，就把它放到准备就绪list链表里。所以，当一个socket上有数据到了，内核在把网卡上的数据copy到内核中后就来把socket插入到准备就绪链表里了。</p>
+<p>epoll支持两种模式LT(水平触发)和ET(边缘触发)，LT模式下，主要缓冲区数据一次没有处理完，那么下次epoll_wait返回时，还会返回这个句柄；而ET模式下，缓冲区数据一次没处理结束，那么下次是不会再通知了，只在第一次返回．所以在ET模式下，一般是通过while循环，一次性读完全部数据．epoll默认使用的是LT．</p>
+<p>这件事怎么做到的呢？当一个socket句柄上有事件时，内核会把该句柄插入上面所说的准备就绪list链表，这时我们调用epoll_wait，会把准备就绪的socket拷贝到用户态内存，然后清空准备就绪list链表，最后，epoll_wait干了件事，就是检查这些socket，如果不是ET模式（就是LT模式的句柄了），并且这些socket上确实有未处理的事件时，又把该句柄放回到刚刚清空的准备就绪链表了。所以，非ET的句柄，只要它上面还有事件，epoll_wait每次都会返回。而ET模式的句柄，除非有新中断到，即使socket上的事件没有处理完，也是不会次次从epoll_wait返回的．</p>
+<p>经常看到比较ET和LT模式到底哪个效率高的问题．有一个回答是说ET模式下减少epoll系统调用．这话没错，也可以理解，但是在ET模式下，为了避免数据饿死问题，用户态必须用一个循环，将所有的数据一次性处理结束．所以在ET模式下下，虽然epoll系统调用减少了，但是用户态的逻辑复杂了，write&#x2F;read调用增多了．所以这不好判断，要看用户的性能瓶颈在哪．</p>
+<h3 id="epoll设计的特点"><a href="#epoll设计的特点" class="headerlink" title="epoll设计的特点"></a>epoll设计的特点</h3><p>1、功能分离<br><br>socket低效的原因之一便是将“维护等待队列”和“阻塞进程”两个功能不加分离，每次调用 select 都需要这两步操作，然而大多数应用场景中，需要监视的 socket 相对固定，并不需要每次都修改。epoll 将这两个操作分开，先用epoll_ctl()维护等待队列，再调用 epoll_wait 阻塞进程。显而易见地，效率就能得到提升。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127828408-034ea5dc-b86f-4014-8291-10cc05d025f3.png" alt="image"></p>
+<p>而epoll则是实现了功能分离，通过epoll_create()创建一个 epoll 对象 epfd，再通过epoll_ctl()将需要监视的 socket 添加到 epfd 中，最后调用 epoll_wait() 等待数据使得epoll有了优化的可能。</p>
+<p>2、就绪列表<br><br>select 低效的另一个原因在于程序不知道哪些 socket 收到数据，只能一个个遍历。如果内核维护一个“就绪列表”，引用收到数据的 socket，就能避免遍历。如下图所示，计算机共有三个 socket，收到数据的 sock2 和 sock3 被就绪列表 rdlist 所引用。当进程被唤醒后，只要获取 rdlist 的内容，就能够知道哪些 socket 收到数据。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127828469-df0914b1-dff1-4f43-907a-225ac483bb03.png" alt="image"></p>
+<h3 id="epoll的实现细节"><a href="#epoll的实现细节" class="headerlink" title="epoll的实现细节"></a>epoll的实现细节</h3><p>epoll主要由两个结构体：eventpoll与epitem。epitem是每一个IO所对应的的事件。比如 epoll_ctl()的EPOLL_CTL_ADD操作的时候，就需要创建一个epitem。eventpoll是每一个epoll所对应的。比如epoll_create就是创建一个eventpoll。如下图所示，eventpoll 包含了 lock、mtx、wq（等待队列）与 rdlist 等成员，其中 rdlist 和 rbr 是我们所关心的。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127828664-517706d2-58b9-4a11-bea7-59b0a2d84234.png" alt="image"></p>
+<ul>
+<li>就绪列表的数据结构（rdlist）<br>就绪列表引用着就绪的 socket，所以它应能够快速的插入数据。</li>
+</ul>
+<p>程序可能随时调用 epoll_ctl() 添加监视 socket，也可能随时删除。当删除时，若该 socket 已经存放在就绪列表中，它也应该被移除。所以就绪列表应是一种能够快速插入和删除的数据结构。</p>
+<p>双向链表就是这样一种数据结构，epoll 使用双向链表来实现就绪队列。</p>
+<ul>
+<li>索引结构（rbr)<br>既然 epoll 将“维护监视队列”和“进程阻塞”分离，也意味着需要有个数据结构来保存监视的 socket，至少要方便地添加和移除，还要便于搜索，以避免重复添加。红黑树是一种自平衡二叉查找树，搜索、插入和删除时间复杂度都是O(log(N))，效率较好，epoll 使用了红黑树作为索引结构（对应上图的 rbr）。</li>
+</ul>
+<p>注：因为操作系统要兼顾多种功能，以及由更多需要保存的数据，rdlist 并非直接引用 socket，而是通过 epitem 间接引用，红黑树的节点也是 epitem 对象。同样，文件系统也并非直接引用着 socket。为方便理解，本文中省略了一些间接结构。</p>
+<h3 id="epoll的优点"><a href="#epoll的优点" class="headerlink" title="epoll的优点"></a>epoll的优点</h3><p>1、没有最大打开文件描述符限制<br><br>epoll支持的最大打开文件数与系统内存相关，可通<br>过cat &#x2F;proc&#x2F;sys&#x2F;fs&#x2F;file-max查看具体数目<br><br>2、IO效率不随文件描述符数目增加而线性下降<br><br>传统的select&#x2F;poll在拥有较大的一个socket集合时，不过由于网络延迟，任意时间只有部分socket是活跃的，但是select&#x2F;poll每次调用都会线性扫描全部的集合，导致效率呈线性下降。而epoll通过在内核中实现的根据每个文件描述符上的回调函数callback函数实现了每次只对“活跃的”的socket进行操作，从而使epoll实现了一个伪AIO，使其效率不会随文件描述符的增加而先行下降。<br><br>3、使用mmap加速内核与用户空间的消息传递<br><br>select、poll和epoll都需要内核把fd消息通知给用户空间，但是epoll采用了内核与用户空间mmap处于同一块内存来实现，具有较高的效率。<br></p>
+<h2 id="信号驱动式I-O模型"><a href="#信号驱动式I-O模型" class="headerlink" title="信号驱动式I&#x2F;O模型"></a>信号驱动式I&#x2F;O模型</h2><p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127829018-be125f77-6a05-497b-ab7d-a7d3927a1e33.png" alt="image"></p>
+<p>信号驱动I&#x2F;O中，当文件描述符上可执行I&#x2F;O操作时，进程请求内核为自己发送一个信号，之后进程可以执行其他任务直到I&#x2F;O就绪为止，此时内核会发送信号给进程。建立一个针对套接字的信号驱动式I&#x2F;O需要进程执行以下三个步骤：</p>
+<ol>
+<li>建立SIGIO信号处理函数 2. 设置该套接字的属主，通常使用fcntl的F_SETOWN命令设置 3. 开启该套接字的信号驱动式I&#x2F;O，通常通过使用fcnt的F_SETFL命令打开O_ASYNC标志完成</li>
+</ol>
+<p>使用信号驱动式I&#x2F;O模型的主要优点是在等待数据到达期间，进程不会被阻塞。</p>
+<h3 id="信号驱动式I-O的应用"><a href="#信号驱动式I-O的应用" class="headerlink" title="信号驱动式I&#x2F;O的应用"></a>信号驱动式I&#x2F;O的应用</h3><ul>
+<li>对于UDP上的使用比较简单，SIGIO信号只有在数据报到达套接字或者套接字发生异步错误时产生。因此当捕获对于某个UDP套接字的SIGIO信号时，我们调用recvfrom或者读入到达的数据报或者获取发生的异步错误。</li>
+<li>信号驱动式I&#x2F;O对于TCP套接字几乎无用，主要原因是SIGIO信号产生会过于频繁，并且其出现并没有告知我们发生了什么事件。比如，当一个进程既读又写一个TCP套接字时，当有数据到达或者当前写出的数据得到确认时，SIGIO信号都会产生，而信号处理函数无法区分这两种情况。 &gt; 应该只考虑对监听TCP套接字使用SIGIO，因为对于监听TCP套接字产生SIGIO的唯一条件是某个新连接的完成。</li>
+</ul>
+<p>实际上I&#x2F;O多路复用、信号驱动I&#x2F;O以及epoll都是用来实现同一个目标的技术——同时检查多个文件描述符是否准备好执行I&#x2F;O操作（准确的说是看I&#x2F;O系统调用是否可以非阻塞地执行）。文件描述符就绪状态的转化是通过一些I&#x2F;O事件来触发的，如输入数据到达、套接字连接建立完成或者是之前满载的套接字发送缓冲区在TCP将队列中的数据传送到对端之后有了剩余空间。但是以上这三种技术都不会实际执行I&#x2F;O操作，只会告诉我们某个文件描述符已经处于就绪状态，此时我们还需要调用其他系统调用来实际完成I&#x2F;O操作。AIO技术是POSIX异步I&#x2F;O，其允许进程将I&#x2F;O操作排列到一个文件中，当操作完成后得到通知，其优点是最初的I&#x2F;O调用会立刻返回，进程不会一直等待数据传达到内核或者等待操作完成。这使得进程可以同I&#x2F;O操作一起并行处理其他任务。</p>
+<h2 id="I-O模型的技术选择"><a href="#I-O模型的技术选择" class="headerlink" title="I&#x2F;O模型的技术选择"></a>I&#x2F;O模型的技术选择</h2><ul>
+<li>select()和poll()可移植性高但是当同时检查大量的文件描述符时性能延展性不佳。</li>
+<li>epoll()关键优势是可以高效的检查大量文件描述符，但是可移植性差属于只能用于Linux的API。</li>
+<li>信号驱动I&#x2F;O和epoll一样可以高效的检查大量文件描述符，但是epool具有许多信号驱动i&#x2F;O不具备的优势。<ul>
+<li>避免了处理信号的复杂性</li>
+<li>可以指定想要检查的事件类型（读就绪或者写就绪）</li>
+<li>可以选择水平触发或者边缘触发的形式来通知进程。</li>
+<li>如要用到信号驱动I&#x2F;O的优点需要用到不可移植的Linux的专有特性，如此其可移植性也不会优于epoll。<blockquote>
+<p>通过以上总结可知，select和poll具有良好的可移植性而epoll和信号驱动I&#x2F;O具有更好的性能，因此通过一个软件抽象层来检查文件描述符事件，从而可移植程序就能在提供epoll API系统上使用epoll而在其他系统使用select或poll了。如Libevent的底层机制能够使用以上四种机制中的任意一种。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="文件描述符准备就绪的通知方式"><a href="#文件描述符准备就绪的通知方式" class="headerlink" title="文件描述符准备就绪的通知方式"></a>文件描述符准备就绪的通知方式</h2><ul>
+<li>水平触发通知：如果文件描述符上可以非阻塞地执行I&#x2F;O系统调用，此时认为其已经就绪。</li>
+<li>边缘触发通知：如果文件描述符自上次状态检查以来有了新的I&#x2F;O活动（如新的输入），此时需要触发通知。</li>
+</ul>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127829103-223bdb2c-b788-4ccb-841e-025f4ef73601.png" alt="image"></p>
+<p>通过上表可知，epoll与其他模式的区别在于其同时支持水平触发（默认）与边缘触发。</p>
+<h3 id="触发方式对程序设计的影响"><a href="#触发方式对程序设计的影响" class="headerlink" title="触发方式对程序设计的影响"></a>触发方式对程序设计的影响</h3><ul>
+<li><p>水平触发 当采用水平触发时，我们可以在任意时刻检查文件描述符的就绪状态。当确定其就绪状态后就可以对其进行I&#x2F;O操作，然后重复检查文件描述符，已确定是否仍然处于就绪状态，此时就可以执行更多的I&#x2F;O。也就是说，因为水平触发允许我们在任意时刻重复检查I&#x2F;O状态，也就没有必要每次文件描述符就绪后就尽可能多地执行I&#x2F;O（尽可能多地读取字节，亦或是不去执行I&#x2F;O）。</p>
+</li>
+<li><p>边缘触发 当采用边缘触发时，只有当I&#x2F;O事件发生时才会得到通知。在另一个I&#x2F;O时间到来之前我们不会收到任何新的通知。此外当文件描述符收到I&#x2F;O事件通知时，我们并不知道要处理多少I&#x2F;O（有多少数据可读）。因此采用边缘触发通知的程序应该在接收到一个I&#x2F;O事件通知后，程序在某个时刻（在有些时候我们确定文件描述符是就绪态时，此时不适合大量的I&#x2F;O操作。因为如果我们仅对一个文件描述符执行大量I&#x2F;O操作，可能会让其他文件描述符处于饥饿状态）应该在相应的文件描述符上尽可能多地执行I&#x2F;O（尽可能多地读取字节，与水平触发相反）。但是若是程序如此设计，就可能失去执行I&#x2F;O的机会。因为知道产生另一个I&#x2F;O事件为止，在此之前程序都不会在接收到通知了，也就不知道何时执行I&#x2F;O了。这也将导致数据丢失或者程序中出现阻塞。</p>
+</li>
+</ul>
+<p>如果程序采用循环来对文件描述符执行尽可能多的I&#x2F;O，而文件描述符又被置为可阻塞的，那么最终当没有更多文件可执行时，I&#x2F;O系统调用就会阻塞。因此，每个被检查的文件描述符通常都应该被设为非阻塞模式。在得到I&#x2F;O事件通知后会重复执行I&#x2F;O操作，直到相应的系统调用 (如read()、write()) 以错误码EAGAIN或EWOULDBLOCK的形式失败。</p>
+<h2 id="异步I-O模型"><a href="#异步I-O模型" class="headerlink" title="异步I&#x2F;O模型"></a>异步I&#x2F;O模型</h2><p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/" alt="Uploading image.png…"></p>
+<p>对于I&#x2F;O操作主要有两种分别是异步I&#x2F;O和同步I&#x2F;O，对于同步I&#x2F;O会导致请求进程阻塞，直到I&#x2F;O操作完成，即必须等待I&#x2F;O操作完成以后控制权才返回给用户进程；而异步I&#x2F;O不会导致请求进程阻塞，即无需等待I&#x2F;O操作完成就将控制权返回给用户进程。</p>
+<ul>
+<li><p>异步I&#x2F;O模型的工作机制 告知内核启动某个操作，并让内核在整个操作（包括将数据从内核复制到进程缓冲区）完成后通知我们。主要方式是调用aio_read函数向内核传递描述符、缓冲区指针、缓冲区大小（与read相同的三个参数）和文件偏移，并告知内核当整个操作完成时如何通知用户进程。该系统调用立即返回，在等待I&#x2F;O完成期间进程不被阻塞。</p>
+</li>
+<li><p>与信号驱动式I&#x2F;O模型的区别<br><br>信号驱动式I&#x2F;O是由内核告诉我们何时可以启动一个I&#x2F;O操作，而异步I&#x2F;O模型则是由内核通知我们I&#x2F;O操作何时完成。</p>
+</li>
+</ul>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E8%99%9A%E6%8B%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/">虚拟文件系统</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/15/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E4%B9%8Bepoll%E6%A8%A1%E5%9E%8B/">Linux内核之epoll模型</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="sitemap"><div class="sitemap-group"><span class="fs15">博客</span><a href="/">近期</a><a href="/">分类</a><a href="/">标签</a><a href="/">归档</a></div><div class="sitemap-group"><span class="fs15">项目</span><a href="/">开源库</a></div><div class="sitemap-group"><span class="fs15">社交</span><a href="/">友链</a><a href="/">留言板</a></div><div class="sitemap-group"><span class="fs15">更多</span><a href="/">关于本站</a><a href="/">GitHub</a></div></div><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%98%BB%E5%A1%9E%E5%BC%8FI-O%E6%A8%A1%E5%9E%8B"><span class="toc-text">阻塞式I&#x2F;O模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8FI-O%E6%A8%A1%E5%9E%8B"><span class="toc-text">非阻塞式I&#x2F;O模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I-O%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%E6%A8%A1%E5%9E%8B"><span class="toc-text">I&#x2F;O多路复用模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#select"><span class="toc-text">select</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#poll"><span class="toc-text">poll</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#select-%E5%92%8Cpoll-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-text">select()和poll()的区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#select-%E5%92%8Cpoll-%E7%9A%84%E4%B8%8D%E8%B6%B3"><span class="toc-text">select()和poll()的不足</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll"><span class="toc-text">epoll</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%EF%BC%88%E4%BB%A5%E7%BD%91%E7%BB%9Csocket%E7%9B%91%E5%90%AC%E4%B8%BA%E4%BE%8B%EF%BC%89"><span class="toc-text">epoll的实现原理（以网络socket监听为例）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll%E8%AE%BE%E8%AE%A1%E7%9A%84%E7%89%B9%E7%82%B9"><span class="toc-text">epoll设计的特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll%E7%9A%84%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82"><span class="toc-text">epoll的实现细节</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#epoll%E7%9A%84%E4%BC%98%E7%82%B9"><span class="toc-text">epoll的优点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8%E5%BC%8FI-O%E6%A8%A1%E5%9E%8B"><span class="toc-text">信号驱动式I&#x2F;O模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8%E5%BC%8FI-O%E7%9A%84%E5%BA%94%E7%94%A8"><span class="toc-text">信号驱动式I&#x2F;O的应用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#I-O%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%8A%80%E6%9C%AF%E9%80%89%E6%8B%A9"><span class="toc-text">I&#x2F;O模型的技术选择</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%E5%87%86%E5%A4%87%E5%B0%B1%E7%BB%AA%E7%9A%84%E9%80%9A%E7%9F%A5%E6%96%B9%E5%BC%8F"><span class="toc-text">文件描述符准备就绪的通知方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%A7%A6%E5%8F%91%E6%96%B9%E5%BC%8F%E5%AF%B9%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-text">触发方式对程序设计的影响</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%82%E6%AD%A5I-O%E6%A8%A1%E5%9E%8B"><span class="toc-text">异步I&#x2F;O模型</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
