@@ -1,0 +1,592 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Blog</title>
+
+  
+    <meta name="description" content="Linux的一切皆文件Linux 中的各种事物比如像文档、目录（Mac OS X 和 Windows 系统下称之为文件夹）、键盘、监视器、硬盘、可移动媒体设备、打印机、调制解调器、虚拟终端，还有进程间通信（IPC）和网络通信等输入&#x2F;输出资源都是定义在文件系统空间下的字节流。一切都可看作是文件，其最显著的好处是对于上面所列出的输入&#x2F;输出资源，只需要相同的一套 Linux 工具、实">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Blog">
+<meta property="og:url" content="https://vcloud.ysme.top/2024/04/05/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/Linux%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="Linux的一切皆文件Linux 中的各种事物比如像文档、目录（Mac OS X 和 Windows 系统下称之为文件夹）、键盘、监视器、硬盘、可移动媒体设备、打印机、调制解调器、虚拟终端，还有进程间通信（IPC）和网络通信等输入&#x2F;输出资源都是定义在文件系统空间下的字节流。一切都可看作是文件，其最显著的好处是对于上面所列出的输入&#x2F;输出资源，只需要相同的一套 Linux 工具、实">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127275223-4e6d656a-bf3b-440c-966d-c5d366a8c2ab.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127280770-5acec908-89d3-4fa1-94a0-79eab26eafb4.png">
+<meta property="article:published_time" content="2024-04-05T11:10:12.967Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.967Z">
+<meta property="article:author" content="ysme">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/127275223-4e6d656a-bf3b-440c-966d-c5d366a8c2ab.png">
+  
+  
+  
+  
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-04-05T11:10:12.967Z">2024-04-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.967Z">2024-04-05</time></span></div></div></div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="Linux的一切皆文件"><a href="#Linux的一切皆文件" class="headerlink" title="Linux的一切皆文件"></a>Linux的一切皆文件</h2><p>Linux 中的各种事物比如像文档、目录（Mac OS X 和 Windows 系统下称之为文件夹）、键盘、监视器、硬盘、可移动媒体设备、打印机、调制解调器、虚拟终端，还有进程间通信（IPC）和网络通信等输入&#x2F;输出资源都是定义在文件系统空间下的字节流。<br><br>一切都可看作是文件，其最显著的好处是对于上面所列出的输入&#x2F;输出资源，只需要相同的一套 Linux 工具、实用程序和 API。你可以使用同一套api(read, write)和工具(cat , 重定向, 管道)来处理unix中大多数的资源.<br><br>设计一个系统的终极目标往往就是要找到原子操作，一旦锁定了原子操作，设计工作就会变得简单而有序。“文件”作为一个抽象概念，其原子操作非常简单，只有读和写，这无疑是一个非常好的模型。通过这个模型，API的设计可以化繁为简，用户可以使用通用的方式去访问任何资源，自有相应的中间件做好对底层的适配。<br><br>现代操作系统为解决信息能独立于进程之外被长期存储引入了文件，文件作为进程创建信息的逻辑单元可被多个进程并发使用。在 UNIX 系统中，操作系统为磁盘上的文本与图像、鼠标与键盘等输入设备及网络交互等 I&#x2F;O 操作设计了一组通用 API，使他们被处理时均可统一使用字节流方式。换言之，UNIX 系统中除进程之外的一切皆是文件，而 Linux 保持了这一特性。为了便于文件的管理，Linux 还引入了目录（有时亦被称为文件夹）这一概念。目录使文件可被分类管理，且目录的引入使 Linux 的文件系统形成一个层级结构的目录树</p>
+<blockquote>
+<p>在Linux系统中，一切都是文件，理解文件系统，对于学习Linux来说，是一个非常有必要的前提</p>
+</blockquote>
+<p>Linux上的文件系统一般来说就是EXT2或EXT3，但这篇文章并不准备一上来就直接讲它们，而希望结合Linux操作系统并从文件系统建立的基础——硬盘开始，一步步认识Linux的文件系统。</p>
+<h2 id="1-机械硬盘的物理存储机制"><a href="#1-机械硬盘的物理存储机制" class="headerlink" title="1. 机械硬盘的物理存储机制"></a>1. 机械硬盘的物理存储机制</h2><blockquote>
+<ul>
+<li>现代计算机大部分文件存储功能都是由机械硬盘这种设备提供的。（现在的SSD和闪存从概念和逻辑上都部分继承自机械硬盘，所以使用机械硬盘来进行理解也是没有问题的）</li>
+<li>机械硬盘能实现信息存储的功能基于：磁性存储介质能够被磁化，且磁化后会长久保留被磁化的状态，这种被磁化状态能够被读取出来，同时这种磁化状态还能够不断被修改，磁化正好有两个方向，所以可以表示0和1。于是硬盘就是把这种磁性存储介质做成一个个盘片，每一个盘片上都分布着数量巨大的磁性存储单位，使用磁性读写头对盘片进行写入和读取（从原理上类似黑胶唱片的播放）。</li>
+<li>一个硬盘中的磁性存储单位数以亿计（1T硬盘就有约80亿个），所以需要一套规则来规划信息如何存取（比如一本存储信息的书我们还会分为页，每一页从上到下从左到右读取，同时还有章节目录）于是就有了这些物理、逻辑概念：<br><br>1、一个硬盘有多张盘片叠成，不同盘片有编号<br><br>2、每张盘片上的存储颗粒成环形一圈圈地排布，每一圈称为磁道，有编号<br><br>3、每条磁道上都有一圈存储颗粒，每512*8（512字节，0.5KB）个存储颗粒作为一个扇区，扇区是硬盘上存储的最小物理单位<br><br>4、N个扇区可以组成簇，N取决于不同的文件系统或是文件系统的配置，簇是此文件系统中的最小存储单位<br><br>5、所有盘面上的同一磁道构成一个圆柱，称为柱面，柱面是系统分区的最小单位<br><br>磁头读写文件的时候，首先是分区读写的，由inode编号（区内唯一的编号后面介绍）找到对应的磁道和扇区，然后一个柱面一个柱面地进行读写。机械硬盘的读写控制系统是一个令人叹为观止的精密工程（一个盘面上有几亿个存储单位，每个磁道宽度不到几十纳米，磁盘每分钟上万转），同时关于读写的逻辑也是有诸多细节（比如扇区的编号并不是连续的），非常有意思，可以自行搜索文章拓展阅读。<br>有了硬盘并不意味着LInux可以立刻把它用来存储，还需要组合进Linux的文件体系才能被Linux使用。</li>
+</ul>
+</blockquote>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127275223-4e6d656a-bf3b-440c-966d-c5d366a8c2ab.png" alt="image"></p>
+<h2 id="2-Linux文件体系"><a href="#2-Linux文件体系" class="headerlink" title="2.Linux文件体系"></a>2.Linux文件体系</h2><p>Linux以文件的形式对计算机中的数据和硬件资源进行管理，也就是彻底的一切皆文件，反映在Linux的文件类型上就是：普通文件、目录文件（也就是文件夹）、设备文件、链接文件、管道文件、套接字文件（数据通信的接口）等等。而这些种类繁多的文件被Linux使用目录树进行管理， 所谓的目录树就是以根目录（&#x2F;）为主，向下呈现分支状的一种文件结构。不同于纯粹的ext2之类的文件系统，我把它称为文件体系，一切皆文件和文件目录树的资源管理方式一起构成了Linux的文件体系，让Linux操作系统可以方便使用系统资源。所以文件系统比文件体系涵盖的内容少很多，Linux文件体系主要在于把操作系统相关的东西用文件这个载体实现：文件系统挂载在操作系统上，操作系统整个系统又放在文件系统里。但本文中文件体系的相关内容不是很多，大部分地方都可以用文件系统代替文件体系。</p>
+<h3 id="1-Linux中的文件类型"><a href="#1-Linux中的文件类型" class="headerlink" title="1. Linux中的文件类型:"></a>1. Linux中的文件类型:</h3><h4 id="1-1-普通文件（-）"><a href="#1-1-普通文件（-）" class="headerlink" title="1.1. 普通文件（-）"></a>1.1. 普通文件（-）</h4><p>从Linux的角度来说，类似mp4、pdf、html这样应用层面上的文件类型都属于普通文件Linux用户可以根据访问权限对普通文件进行查看、更改和删除</p>
+<h4 id="1-2-目录文件（d，directory-file）"><a href="#1-2-目录文件（d，directory-file）" class="headerlink" title="1.2. 目录文件（d，directory file）"></a>1.2. 目录文件（d，directory file）</h4><p>目录文件对于用惯Windows的用户来说不太容易理解，目录也是文件的一种目录文件包含了各自目录下的文件名和指向这些文件的指针，打开目录事实上就是打开目录文件，只要有访问权限，你就可以随意访问这些目录下的文件（普通文件的执行权限就是目录文件的访问权限），但是只有内核的进程能够修改它们虽然不能修改，但是我们能够通过vim去查看目录文件的内容</p>
+<h4 id="1-3-符号链接（l，symbolic-link）"><a href="#1-3-符号链接（l，symbolic-link）" class="headerlink" title="1.3. 符号链接（l，symbolic link）"></a>1.3. 符号链接（l，symbolic link）</h4><p>这种类型的文件类似Windows中的快捷方式，是指向另一个文件的间接指针，也就是我们常说的软链接</p>
+<h4 id="1-4-块设备文件（b，block）和字符设备文件（c，char）"><a href="#1-4-块设备文件（b，block）和字符设备文件（c，char）" class="headerlink" title="1.4. 块设备文件（b，block）和字符设备文件（c，char）"></a>1.4. 块设备文件（b，block）和字符设备文件（c，char）</h4><p>这些文件一般隐藏在&#x2F;dev目录下，在进行设备读取和外设交互时会被使用到比如磁盘光驱就是块设备文件，串口设备则属于字符设备文件系统中的所有设备要么是块设备文件，要么是字符设备文件，无一例外</p>
+<h4 id="1-5-FIFO（p，pipe）"><a href="#1-5-FIFO（p，pipe）" class="headerlink" title="1.5. FIFO（p，pipe）"></a>1.5. FIFO（p，pipe）</h4><p>管道文件主要用于进程间通讯。比如使用mkfifo命令可以创建一个FIFO文件，启用一个进程A从FIFO文件里读数据，启动进程B往FIFO里写数据，先进先出，随写随读。</p>
+<h4 id="1-6-套接字（s，socket）"><a href="#1-6-套接字（s，socket）" class="headerlink" title="1.6. 套接字（s，socket）"></a>1.6. 套接字（s，socket）</h4><p>用于进程间的网络通信，也可以用于本机之间的非网络通信这些文件一般隐藏在&#x2F;var&#x2F;run目录下，证明着相关进程的存在<br><br>Linux 的文件是没有所谓的扩展名的，一个 Linux文件能不能被执行与它是否可执行的属性有关，只要你的权限中有 x ，比如[ -rwx-r-xr-x ] 就代表这个文件可以被执行，与文件名没有关系。跟在 Windows下能被执行的文件扩展名通常是 .com .exe .bat 等不同。不过，可以被执行跟可以执行成功不一样。比如在 root 主目彔下的 install.log 是一个文本文件，修改权限成为 -rwxrwxrwx 后这个文件能够真的执行成功吗？ 当然不行，因为它的内容根本就没有可以执行的数据。所以说，这个 x 代表这个文件具有可执行的能力， 但是能不能执行成功，当然就得要看该文件的内容了。<br><br>虽然如此，不过我们仍然希望能从扩展名来了解该文件是什么东西，所以一般我们还是会以适当的扩展名来表示该文件是什么种类的。所以Linux 系统上的文件名真的只是让你了解该文件可能的用途而已， 真正的执行与否仍然需要权限的规范才行。比如常见的&#x2F;bin&#x2F;ls 这个显示文件属性的指令要是权限被修改为无法执行，那么ls 就变成不能执行了。这种问题最常发生在文件传送的过程中。例如你在网络上下载一个可执行文件，但是偏偏在你的 Linux 系统中就是无法执行，那就可能是档案的属性被改变了。而且从网络上传送到你 的 Linux 系统中，文件的属性权限确实是会被改变的</p>
+<h3 id="2-Linux目录树"><a href="#2-Linux目录树" class="headerlink" title="2. Linux目录树"></a>2. Linux目录树</h3><p>对Linux系统和用户来说，所有可操作的计算机资源都存在于目录树这个逻辑结构中，对计算机资源的访问都可以认为是目录树的访问。就硬盘来说，所有对硬盘的访问都变成了对目录树中某个节点也就是文件夹的访问，访问时不需要知道它是硬盘还是硬盘中的文件夹。目录树的逻辑结构也非常简单，就是从根目录（&#x2F;）开始，不断向下展开各级子目录。</p>
+<h2 id="3-硬盘分区"><a href="#3-硬盘分区" class="headerlink" title="3.硬盘分区"></a>3.硬盘分区</h2><p>硬盘分区是硬盘结合到文件体系的第一步，本质是「硬盘」这个物理概念转换成「区」这个逻辑概念，为下一步格式化做准备。所以分本身并不是必须的，你完全可以把一整块硬盘作为一个区。但从数据的安全性以及系统性能角度来看，分区还是有很多用处的，所以一般都会对硬盘进行分区。</p>
+<p>讲分区就不得不先提每块硬盘上最重要的第一扇区，这个扇区中有硬盘主引导记录(Master boot record, MBR) 及分区表(partition table)， 其中 MBR 占有 446 bytes，而分区表占有 64 bytes。硬盘主引导记录放有最基本的引导加载程序，是系统开机启动的关键环节，在附录中有更详细的说明。而分区表则跟分区有关，它记录了硬盘分区的相关信息，但因分区表仅有 64bytes ， 所以最多只能记彔四块分区（分区本身其实就是对分区表进行设置）。</p>
+<p>只能分四个区实在太少了，于是就有了扩展分区的概念，既然第一个扇区所在的分区表只能记录四条数据， 那我可否利用额外的扇区来记录更多的分区信息。<br><br>把普通可以访问的分区称为主分区，扩展分区不同于主分区，它本身并没有内容，它是为进一步逻辑分区提供空间的。在某块分区指定为扩展分区后，就可以对这块扩展分区进一步分成多个逻辑分区。操作系统规定：</p>
+<p>1、四块分区每块都可以是主分区或扩展分区<br><br>2、扩展分区最多只能有一个（也没必要有多个）<br><br>3、扩展分区可以进一步分割为多个逻辑分区<br><br>4、扩展分区只是逻辑概念，本身不能被访问，也就是不能被格式化后作为数据访问的分区，能够作为数据访问的分区只有主分区和逻辑分区<br><br>5、逻辑分区的数量依操作系统而不同，在 Linux 系统中，IDE 硬盘最多有 59 个逻辑分区(5 号到 63 号)， SATA 硬盘则有 11 个逻辑分区(5 号到 15 号)</p>
+<p>一般给硬盘进行分区时，一个主分区一个扩展分区，然后把扩展分区划分为N个逻辑分区是最好的</p>
+<p>是否可以不要主分区呢？不知道，但好像不用管，你创建分区的时候会自动给你配置类型特殊的，你最好单独分一个swap区（内存置换空间），它独为一类，功能是：当有数据被存放在物理内存里面，但是这些数据又不是常被 CPU 所取用时，那么这些不常被使用的程序将会被丢到硬盘的 swap 置换空间当中， 而将速度较快的物理内存空间释放出来给真正需要的程序使用</p>
+<h2 id="4-格式化"><a href="#4-格式化" class="headerlink" title="4.格式化"></a>4.格式化</h2><p>我们知道Linux操作系统支持很多不同的文件系统，比如ext2、ext3、XFS、FAT等等，而Linux把对不同文件系统的访问交给了VFS（虚拟文件系统），VFS能访问和管理各种不同的文件系统。所以有了区之后就需要把它格式化成具体的文件系统以便VFS访问。</p>
+<p>标准的Linux文件系统Ext2是使用「基于inode的文件系统」</p>
+<p>1、我们知道一般操作系统的文件数据除了文件实际内容外， 还带有很多属性，例如 Linux 操作系统的文件权限(rwx)与文件属性(拥有者、群组、 时间参数等)，文件系统通常会将属性和实际内容这两部分数据分别存放在不同的区块<br><br>2、在基于inode的文件系统中，权限与属性放置到 inode 中，实际数据放到 data block 区块中，而且inode和data block都有编号</p>
+<p>Ext2 文件系统在此基础上</p>
+<p>1、文件系统最前面有一个启动扇区(boot sector)<br></p>
+<ul>
+<li>这个启动扇区可以安装开机管理程序， 这个设计让我们能将不同的引导装载程序安装到个别的文件系统前端，而不用覆盖整个硬盘唯一的MBR， 也就是这样才能实现多重引导的功能</li>
+</ul>
+<p>2、把每个区进一步分为多个块组 (block group)，每个块组有独立的inode&#x2F;block体系<br></p>
+<ul>
+<li>如果文件系统高达数百 GB 时，把所有的 inode 和block 通通放在一起会因为 inode 和 block的数量太庞大，不容易管理</li>
+<li>这其实很好理解，因为分区是用户的分区，实际计算机管理时还有个最适合的大小，于是计算机会进一步的在分区中分块</li>
+<li>（但这样岂不是可能出现大文件放不了的问题？有什么机制善后吗？）</li>
+</ul>
+<p>3、每个块组实际还会分为分为6个部分，除了inode table 和 data block外还有4个附属模块，起到优化和完善系统性能的作用<br></p>
+<p>所以整个分区大概会这样划分：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127280770-5acec908-89d3-4fa1-94a0-79eab26eafb4.png" alt="image"></p>
+<h3 id="inode-table"><a href="#inode-table" class="headerlink" title="inode table"></a>inode table</h3><p>1.主要记录文件的属性以及该文件实际数据是放置在哪些block中，它记录的信息至少有这些：<br></p>
+<ul>
+<li>大小、真正内容的block号码（一个或多个）<br></li>
+<li>访问模式(read&#x2F;write&#x2F;excute)<br></li>
+<li>拥有者与群组(owner&#x2F;group)<br></li>
+<li>各种时间：建立或状态改变的时间、最近一次的读取时间、最近修改的时间<br></li>
+<li>没有文件名！文件名在目录的block中！<br></li>
+</ul>
+<p>2、一个文件占用一个 inode，每个inode有编号<br><br>3、Linux 系统存在 inode 号被用完但磁盘空间还有剩余的情况<br><br>4、注意，这里的文件不单单是普通文件，目录文件也就是文件夹其实也是一个文件，还有其他的也是<br><br>5、inode 的数量与大小在格式化时就已经固定了，每个inode 大小均固定为128 bytes (新的ext4 与xfs 可设定到256 bytes)<br><br>6、文件系统能够建立的文件数量与inode 的数量有关，存在空间还够但inode不够的情况<br><br>7、系统读取文件时需要先找到inode，并分析inode 所记录的权限与使用者是否符合，若符合才能够开始实际读取 block 的内容<br><br>8、inode 要记录的资料非常多，但偏偏又只有128bytes ， 而inode 记录一个block 号码要花掉4byte ，假设我一个文件有400MB 且每个block 为4K 时， 那么至少也要十万条block 号码的记录！inode 哪有这么多空间来存储？为此我们的系统很聪明的将inode 记录block 号码的区域定义为12个直接，一个间接, 一个双间接与一个三间接记录区（详细见附录）</p>
+<h3 id="data-block"><a href="#data-block" class="headerlink" title="data block"></a>data block</h3><p>1、放置文件内容数据的地方<br><br>2、在格式化时block的大小就固定了，且每个block都有编号，以方便inode的记录<br></p>
+<ul>
+<li>原则上，block 的大小与数量在格式化完就不能够再改变了(除非重新格式化)<br></li>
+</ul>
+<p>3、在Ext2文件系统中所支持的block大小有1K, 2K及4K三种，由于block大小的区别，会导致该文件系统能够支持的最大磁盘容量与最大单一文件容量各不相同：<br></p>
+<ul>
+<li>Block 大小 1KB 2KB 4KB</li>
+<li>最大单一档案限制 16GB 256GB 2TB</li>
+<li>最大档案系统总容量 2TB 8TB 16TB</li>
+</ul>
+<p>4、每个block 内最多只能够放置一个文件的资料，但一个文件可以放在多个block中（大的话）<br><br>5、若文件小于block ，则该block 的剩余容量就不能够再被使用了(磁盘空间会浪费)<br></p>
+<ul>
+<li>所以如果你的档案都非常小，但是你的block 在格式化时却选用最大的4K 时，可能会产生容量的浪费<br></li>
+<li>既然大的block 可能会产生较严重的磁碟容量浪费，那么我们是否就将block 大小定为1K ？这也不妥，因为如果block 较小的话，那么大型档案将会占用数量更多的block ，而inode 也要记录更多的block 号码，此时将可能导致档案系统不良的读写效能<br></li>
+<li>事实上现在的磁盘容量都太大了，所以一般都会选择4K 的block 大小</li>
+</ul>
+<h3 id="superblock"><a href="#superblock" class="headerlink" title="superblock"></a>superblock</h3><p>1、记录整个文件系统相关信息的地方，一般大小为1024bytes，记录的信息主要有：<br></p>
+<ul>
+<li>block 与inode 的总量</li>
+<li>未使用与已使用的inode &#x2F; block 数量</li>
+<li>一个valid bit 数值，若此文件系统已被挂载，则valid bit 为0 ，若未被挂载，则valid bit 为1</li>
+<li>block 与inode 的大小 (block 为1, 2, 4K，inode 为128bytes 或256bytes)；</li>
+<li>其他各种文件系统相关信息：filesystem 的挂载时间、最近一次写入资料的时间、最近一次检验磁碟(fsck) 的时间</li>
+</ul>
+<p>2、Superblock是非常重要的， 没有Superblock ，就没有这个文件系统了，因此如果superblock死掉了，你的文件系统可能就需要花费很多时间去挽救<br><br>3、每个块都可能含有superblock，但是我们也说一个文件系统应该仅有一个superblock 而已，那是怎么回事？事实上除了第一个块内会含有superblock 之外，后续的块不一定含有superblock，而若含有superblock则该superblock主要是做为第一个块内superblock的备份，这样可以进行superblock的救援</p>
+<h3 id="Filesystem-Description"><a href="#Filesystem-Description" class="headerlink" title="Filesystem Description"></a>Filesystem Description</h3><p>1、文件系统描述<br><br>2、这个区段可以描述每个block group的开始与结束的block号码，以及说明每个区段(superblock, bitmap, inodemap, data block)分别介于哪一个block号码之间</p>
+<h3 id="block-bitmap"><a href="#block-bitmap" class="headerlink" title="block bitmap"></a>block bitmap</h3><p>1、块对照表<br><br>2、如果你想要新增文件时要使用哪个block 来记录呢？当然是选择「空的block」来记录。那你怎么知道哪个block 是空的？这就得要通过block bitmap了，它会记录哪些block是空的，因此我们的系统就能够很快速的找到可使用的空间来记录<br><br>3、同样在你删除某些文件时，那些文件原本占用的block号码就得要释放出来， 此时在block bitmap 中对应该block号码的标志位就得要修改成为「未使用中」</p>
+<h3 id="inode-bitmap"><a href="#inode-bitmap" class="headerlink" title="inode bitmap"></a>inode bitmap</h3><p>1、与block bitmap 是类似的功能，只是block bitmap 记录的是使用与未使用的block 号码， 至于inode bitmap 则是记录使用与未使用的inode 号码</p>
+<h2 id="5-挂载"><a href="#5-挂载" class="headerlink" title="5.挂载"></a>5.挂载</h2><p>在一个区被格式化为一个文件系统之后，它就可以被Linux操作系统使用了，只是这个时候Linux操作系统还找不到它，所以我们还需要把这个文件系统「注册」进Linux操作系统的文件体系里，这个操作就叫「挂载」 (mount)。挂载是利用一个目录当成进入点（类似选一个现成的目录作为代理），将文件系统放置在该目录下，也就是说，进入该目录就可以读取该文件系统的内容，类似整个文件系统只是目录树的一个文件夹（目录）。这个进入点的目录我们称为「挂载点」。</p>
+<p>由于整个 Linux 系统最重要的是根目录，因此根目录一定需要挂载到某个分区。 而其他的目录则可依用户自己的需求来给予挂载到不同的分去。</p>
+<p>到这里Linux的文件体系的构建过程其实已经大体讲完了，总结一下就是：硬盘经过分区和格式化，每个区都成为了一个文件系统，挂载这个文件系统后就可以让Linux操作系统通过VFS访问硬盘时跟访问一个普通文件夹一样。这里通过一个在目录树中读取文件的实际例子来细讲一下目录文件和普通文件。</p>
+<h2 id="6-目录树的读取过程"><a href="#6-目录树的读取过程" class="headerlink" title="6.目录树的读取过程"></a>6.目录树的读取过程</h2><p>首先我们要知道</p>
+<p>1、每个文件（不管是一般文件还是目录文件）都会占用一个inode<br><br>2、依据文件内容的大小来分配一个或多个block给该文件使用<br><br>3、创建一个文件后，文件完整信息分布在3处地方，生成2个新文件：<br></p>
+<ul>
+<li>文件名记录在该文件所在目录的目录文件的block中，没有新文件生成<br></li>
+<li>文件属性、权限信息、记录具体内容的block编号记录在inode中，inode是新生成文件<br></li>
+<li>文件具体内存记录在block中，block是新生成文件<br></li>
+</ul>
+<p>4、因为文件名的记录是在目录的block当中，「新增&#x2F;删除&#x2F;更名文件名」与目录的w权限有关所以在Linux&#x2F;Unix中，文件名称只是文件的一个属性，叫别名也好，叫绰号也罢，仅为了方便用户记忆和使用，但系统内部并不需要用文件名来定为文件位置，这样处理最直观的好处就是，你可以对正在使用的文件改名，换目录，甚至放到废纸篓，都不会影响当前文件的使用，这在Windows里是无法想象的。比如你打开个Word文件，然后对其进行重命名操作，Windows会告诉你门儿都没有，关闭文件先！但在Mac里就毫无压力，因为Mac的操作系统同样采用了inode的设计。</p>
+<h3 id="创建文件过程"><a href="#创建文件过程" class="headerlink" title="创建文件过程"></a>创建文件过程</h3><p>当在ext2下建立一个一般文件时， ext2 会分配一个inode 与相对于该文件大小的block 数量给该文件</p>
+<ul>
+<li>例如：假设我的一个block 为4 Kbytes ，而我要建立一个100 KBytes 的文件，那么linux 将分配一个inode 与25 个block 来储存该文件</li>
+<li>但同时请注意，由于inode 仅有12 个直接指向，因此还要多一个block 来作为区块号码的记录</li>
+</ul>
+<h3 id="创建目录过程"><a href="#创建目录过程" class="headerlink" title="创建目录过程"></a>创建目录过程</h3><p>当在ext2文件系统建立一个目录时（就是新建了一个目录文件），文件系统会分配一个inode与至少一块block给该目录</p>
+<ul>
+<li>inode记录该目录的相关权限与属性，并记录分配到的那块block号码</li>
+<li>而block则是记录在这个目录下的文件名与该文件对应的inode号</li>
+<li>block中还会自动生成两条记录，一条是.文件夹记录，inode指向自身，另一条是..文件夹记录，inode指向父文件夹</li>
+</ul>
+<h3 id="从目录树中读取某个文件过程"><a href="#从目录树中读取某个文件过程" class="headerlink" title="从目录树中读取某个文件过程"></a>从目录树中读取某个文件过程</h3><ul>
+<li>因为文件名是记录在目录的block当中，因此当我们要读取某个文件时，就一定会经过目录的inode与block ，然后才能够找到那个待读取文件的inode号码，最终才会读到正确的文件的block内的资料。</li>
+<li>由于目录树是由根目录开始，因此操作系统先通过挂载信息找到挂载点的inode号，由此得到根目录的inode内容，并依据该inode读取根目录的block信息，再一层一层的往下读到正确的文件。举例来说，如果我想要读取&#x2F;etc&#x2F;passwd 这个文件时，系统是如何读取的呢？先看一下这个文件以及有关路径文件夹的信息：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1$ ll -di / /etc /etc/passwd</span><br><span class="line">2     128 dr-xr-x r-x . 17 root root 4096 May 4 17:56 /</span><br><span class="line">333595521 drwxr-x r-x . 131 root root 8192 Jun 17 00:20 /et</span><br><span class="line">c436628004 -rw-r-- r-- . 1 root root 2092 Jun 17 00:20 /etc/passwd</span><br></pre></td></tr></table></figure>
+
+<p>于是该文件的读取流程为：</p>
+<p>1、&#x2F;的inode：<br><br>通过挂载点的信息找到inode号码为128的根目录inode，且inode规定的权限让我们可以读取该block的内容(有r与x)<br><br>2、&#x2F;的block：<br><br>经过上个步骤取得block的号码，并找到该内容有etc&#x2F;目录的inode号码(33595521)<br><br>3、etc&#x2F;的inode：<br><br>读取33595521号inode得知具有r与x的权限，因此可以读取etc&#x2F;的block内容<br><br>4、etc&#x2F;的block：<br><br>经过上个步骤取得block号码，并找到该内容有passwd文件的inode号码(36628004)<br><br>5、passwd的inode：<br><br>读取36628004号inode得知具有r的权限，因此可以读取passwd的block内容<br><br>6、passwd的block：<br><br>最后将该block内容的资料读出来<br></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/04/05/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AD%A6%E4%B9%A0%E4%B9%8B%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/">2024-04-05</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/04/05/linux-docs/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/%E7%A3%81%E7%9B%98IO%E9%82%A3%E4%BA%9B%E4%BA%8B/">2024-04-05</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Linux%E7%9A%84%E4%B8%80%E5%88%87%E7%9A%86%E6%96%87%E4%BB%B6"><span class="toc-text">Linux的一切皆文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E6%9C%BA%E6%A2%B0%E7%A1%AC%E7%9B%98%E7%9A%84%E7%89%A9%E7%90%86%E5%AD%98%E5%82%A8%E6%9C%BA%E5%88%B6"><span class="toc-text">1. 机械硬盘的物理存储机制</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Linux%E6%96%87%E4%BB%B6%E4%BD%93%E7%B3%BB"><span class="toc-text">2.Linux文件体系</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Linux%E4%B8%AD%E7%9A%84%E6%96%87%E4%BB%B6%E7%B1%BB%E5%9E%8B"><span class="toc-text">1. Linux中的文件类型:</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-%E6%99%AE%E9%80%9A%E6%96%87%E4%BB%B6%EF%BC%88-%EF%BC%89"><span class="toc-text">1.1. 普通文件（-）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-%E7%9B%AE%E5%BD%95%E6%96%87%E4%BB%B6%EF%BC%88d%EF%BC%8Cdirectory-file%EF%BC%89"><span class="toc-text">1.2. 目录文件（d，directory file）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-%E7%AC%A6%E5%8F%B7%E9%93%BE%E6%8E%A5%EF%BC%88l%EF%BC%8Csymbolic-link%EF%BC%89"><span class="toc-text">1.3. 符号链接（l，symbolic link）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-4-%E5%9D%97%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%EF%BC%88b%EF%BC%8Cblock%EF%BC%89%E5%92%8C%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6%EF%BC%88c%EF%BC%8Cchar%EF%BC%89"><span class="toc-text">1.4. 块设备文件（b，block）和字符设备文件（c，char）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-5-FIFO%EF%BC%88p%EF%BC%8Cpipe%EF%BC%89"><span class="toc-text">1.5. FIFO（p，pipe）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-6-%E5%A5%97%E6%8E%A5%E5%AD%97%EF%BC%88s%EF%BC%8Csocket%EF%BC%89"><span class="toc-text">1.6. 套接字（s，socket）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Linux%E7%9B%AE%E5%BD%95%E6%A0%91"><span class="toc-text">2. Linux目录树</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E7%A1%AC%E7%9B%98%E5%88%86%E5%8C%BA"><span class="toc-text">3.硬盘分区</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E6%A0%BC%E5%BC%8F%E5%8C%96"><span class="toc-text">4.格式化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#inode-table"><span class="toc-text">inode table</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#data-block"><span class="toc-text">data block</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#superblock"><span class="toc-text">superblock</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Filesystem-Description"><span class="toc-text">Filesystem Description</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#block-bitmap"><span class="toc-text">block bitmap</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#inode-bitmap"><span class="toc-text">inode bitmap</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E6%8C%82%E8%BD%BD"><span class="toc-text">5.挂载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-%E7%9B%AE%E5%BD%95%E6%A0%91%E7%9A%84%E8%AF%BB%E5%8F%96%E8%BF%87%E7%A8%8B"><span class="toc-text">6.目录树的读取过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E6%96%87%E4%BB%B6%E8%BF%87%E7%A8%8B"><span class="toc-text">创建文件过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E7%9B%AE%E5%BD%95%E8%BF%87%E7%A8%8B"><span class="toc-text">创建目录过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%8E%E7%9B%AE%E5%BD%95%E6%A0%91%E4%B8%AD%E8%AF%BB%E5%8F%96%E6%9F%90%E4%B8%AA%E6%96%87%E4%BB%B6%E8%BF%87%E7%A8%8B"><span class="toc-text">从目录树中读取某个文件过程</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

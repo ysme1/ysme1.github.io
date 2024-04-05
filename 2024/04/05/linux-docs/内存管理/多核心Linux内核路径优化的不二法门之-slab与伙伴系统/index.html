@@ -1,0 +1,538 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Blog</title>
+
+  
+    <meta name="description" content="Linux内核的slab来自一种很简单的思想，即事先准备好一些会频繁分配，释放的数据结构。然而标准的slab实现太复杂且维护开销巨大，因此便分化 出了更加小巧的slub，因此本文讨论的就是slub，后面所有提到slab的地方，指的都是slub。另外又由于本文主要描述内核优化方面的内容，并不 是基本原理介绍，因此想了解slab细节以及代码实现的请自行百度或者看源码。 单CPU上单纯的slab下图给出">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Blog">
+<meta property="og:url" content="https://vcloud.ysme.top/2024/04/05/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%A4%9A%E6%A0%B8%E5%BF%83Linux%E5%86%85%E6%A0%B8%E8%B7%AF%E5%BE%84%E4%BC%98%E5%8C%96%E7%9A%84%E4%B8%8D%E4%BA%8C%E6%B3%95%E9%97%A8%E4%B9%8B-slab%E4%B8%8E%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="Linux内核的slab来自一种很简单的思想，即事先准备好一些会频繁分配，释放的数据结构。然而标准的slab实现太复杂且维护开销巨大，因此便分化 出了更加小巧的slub，因此本文讨论的就是slub，后面所有提到slab的地方，指的都是slub。另外又由于本文主要描述内核优化方面的内容，并不 是基本原理介绍，因此想了解slab细节以及代码实现的请自行百度或者看源码。 单CPU上单纯的slab下图给出">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127661860-7794aa49-2c58-4a3b-b04e-6e4606a7bc53.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127661919-4dd9f2f0-77e6-476b-8ebf-915761f9580d.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127661976-071e27e8-9ffc-4a34-bd16-be02ba3a33fd.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127662044-3b803ad9-f37a-4a84-9538-76168bc440da.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127662092-f5c14a2e-5124-4231-95db-841f74e7395f.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127869263-b574e7ef-21ba-4633-a048-926e8489b11a.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127662299-8e03a0bb-2917-44ba-a219-51d12674ee5a.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127662336-7c93e32e-dfd5-4d6b-9696-866f1ead7d28.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127662366-177b02d9-895b-4717-8b13-17dbbb59e8ee.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127662869-feeea0d4-1e27-47bd-ab30-ff9c04dc00fb.jpg">
+<meta property="article:published_time" content="2024-04-05T11:10:12.963Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.963Z">
+<meta property="article:author" content="ysme">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/127661860-7794aa49-2c58-4a3b-b04e-6e4606a7bc53.png">
+  
+  
+  
+  
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-04-05T11:10:12.963Z">2024-04-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.963Z">2024-04-05</time></span></div></div></div>
+    
+  </div>
+  </div><article class="md-text content"><p>Linux内核的slab来自一种很简单的思想，即事先准备好一些会频繁分配，释放的数据结构。然而标准的slab实现太复杂且维护开销巨大，因此便分化 出了更加小巧的slub，因此本文讨论的就是slub，后面所有提到slab的地方，指的都是slub。另外又由于本文主要描述内核优化方面的内容，并不 是基本原理介绍，因此想了解slab细节以及代码实现的请自行百度或者看源码。</p>
+<h2 id="单CPU上单纯的slab"><a href="#单CPU上单纯的slab" class="headerlink" title="单CPU上单纯的slab"></a>单CPU上单纯的slab</h2><p>下图给出了单CPU上slab在分配和释放对象时的情景序列：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127661860-7794aa49-2c58-4a3b-b04e-6e4606a7bc53.png" alt="image"></p>
+<p>可以看出，非常之简单，而且完全达到了slab设计之初的目标。</p>
+<h2 id="扩展到多核心CPU"><a href="#扩展到多核心CPU" class="headerlink" title="扩展到多核心CPU"></a>扩展到多核心CPU</h2><p>现在我们简单的将上面的模型扩展到多核心CPU，同样差不多的分配序列如下图所示：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127661919-4dd9f2f0-77e6-476b-8ebf-915761f9580d.png" alt="image"></p>
+<p>我们看到，在只有单一slab的时候，如果多个CPU同时分配对象，冲突是不可避免的，解决冲突的几乎是唯一的办法就是加锁排队，然而这将大大增加延迟，我们看到，申请单一对象的整个时延从T0开始，到T4结束，这太久了。</p>
+<p>多CPU无锁化并行化操作的直接思路-复制给每个CPU一套相同的数据结构。</p>
+<p>不二法门就是增加“每CPU变量”。对于slab而言，可以扩展成下面的样子：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127661976-071e27e8-9ffc-4a34-bd16-be02ba3a33fd.png" alt="image"></p>
+<p>如果以为这么简单就结束了，那这就太没有意义了。</p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>首先，我们来看一个简单的问题，如果单独的某个CPU的slab缓存没有对象可分配了，但是其它CPU的slab缓存仍有大量空闲对象的情况，如下图所示：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127662044-3b803ad9-f37a-4a84-9538-76168bc440da.png" alt="image"></p>
+<p>这 是可能的，因为对单独一种slab的需求是和该CPU上执行的进程&#x2F;线程紧密相关的，比如如果CPU0只处理网络，那么它就会对skb等数据结构有大量的 需求，对于上图最后引出的问题，如果我们选择从伙伴系统中分配一个新的page(或者pages，取决于对象大小以及slab cache的order)，那么久而久之就会造成slab在CPU间分布的不均衡，更可能会因此吃掉大量的物理内存，这都是不希望看到的。</p>
+<p>在继续之前，首先要明确的是，我们需要在CPU间均衡slab，并且这些必须靠slab内部的机制自行完成，这个和进程在CPU间负载均衡是完全不同的， 对进程而言，拥有一个核心调度机制，比如基于时间片，或者虚拟时钟的步进速率等，但是对于slab，完全取决于使用者自身，只要对象仍然在使用，就不能剥 夺使用者继续使用的权利，除非使用者自己释放。因此slab的负载均衡必须设计成合作型的，而不是抢占式的。</p>
+<p>好了。现在我们知道，从伙伴系统重新分配一个page(s)并不是一个好主意，它应该是最终的决定，在执行它之前，首先要试一下别的路线。</p>
+<p>现在，我们引出第二个问题，如下图所示：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127662092-f5c14a2e-5124-4231-95db-841f74e7395f.png" alt="image"></p>
+<p>谁也不能保证分配slab对象的CPU和释放slab对象的CPU是同一个CPU，谁也不能保证一个CPU在一个slab对象的生命周期内没有分配新的 page(s)，这期间的复杂操作谁也没有规定。这些问题该怎么解决呢？事实上，理解了这些问题是怎么解决的，一个slab框架就彻底理解了。</p>
+<h2 id="问题的解决-分层slab-cache"><a href="#问题的解决-分层slab-cache" class="headerlink" title="问题的解决-分层slab cache"></a>问题的解决-分层slab cache</h2><p>无级变速总是让人向往。</p>
+<p>如果一个CPU的slab缓存满了，直接去抢同级别的别的CPU的slab缓存被认为是一种鲁莽且不道义的做法。那么为何不设置另外一个slab缓存，获 取它里面的对象不像直接获取CPU的slab缓存那么简单且直接，但是难度却又不大，只是稍微增加一点消耗，这不是很好吗？事实上，CPU的 L1，L2，L3 cache不就是这个方案设计的吗？这事实上已经成为cache设计的不二法门。这个设计思想同样作用于slab，就是Linux内核的slub实现。<br>现在可以给出概念和解释了。</p>
+<ul>
+<li>Linux kernel slab cache：一个分为3层的对象cache模型。</li>
+<li>Level 1 slab cache：一个空闲对象链表，每个CPU一个的独享cache，分配释放对象无需加锁。</li>
+<li>Level 2 slab cache：一个空闲对象链表，每个CPU一个的共享page(s) cache，分配释放对象时仅需要锁住该page(s)，与Level 1 slab cache互斥，不互相包容。</li>
+<li>Level 3 slab cache：一个page(s)链表，每个NUMA NODE的所有CPU共享的cache，单位为page(s)，获取后被提升到对应CPU的Level 1 slab cache，同时该page(s)作为Level 2的共享page(s)存在。</li>
+<li>共享page(s)：该page(s)被一个或者多个CPU占 有，每一个CPU在该page(s)上都可以拥有互相不充图的空闲对象链表，该page(s)拥有一个唯一的Level 2 slab cache空闲链表，该链表与上述一个或多个Level 1 slab cache空闲链表亦不冲突，多个CPU获取该Level 2 slab cache时必须争抢，获取后可以将该链表提升成自己的Level 1 slab cache。</li>
+</ul>
+<p>该slab cache的图示如下：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127869263-b574e7ef-21ba-4633-a048-926e8489b11a.png" alt="127662257-9c2ec8e1-7989-40f7-8413-a8016b86394c"></p>
+<p>其行为如下图所示：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127662299-8e03a0bb-2917-44ba-a219-51d12674ee5a.png" alt="image"></p>
+<h2 id="2个场景"><a href="#2个场景" class="headerlink" title="2个场景"></a>2个场景</h2><p>对于常规的对象分配过程，下图展示了其细节：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127662336-7c93e32e-dfd5-4d6b-9696-866f1ead7d28.png" alt="image"></p>
+<p>事实上，对于多个CPU共享一个page(s)的情况，还可以有另一种玩法，如下图所示：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127662366-177b02d9-895b-4717-8b13-17dbbb59e8ee.png" alt="image"></p>
+<h2 id="伙伴系统"><a href="#伙伴系统" class="headerlink" title="伙伴系统"></a>伙伴系统</h2><p>前面我们简短的体会了Linux内核的slab设计,不宜过长,太长了不易理解.但是最后,如果Level 3也没有获取page(s)，那么最终会落到终极的伙伴系统。</p>
+<p>伙伴系统是为了防内存分配碎片化的，所以它尽可能地做两件事：</p>
+<p><strong>1).尽量分配尽可能大的内存</strong><br><br><strong>2).尽量合并连续的小块内存成一块大内存</strong><br></p>
+<p>我们可以通过下面的图解来理解上面的原则：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127662869-feeea0d4-1e27-47bd-ab30-ff9c04dc00fb.jpg" alt="wKiom1X4ieTC39RgAAWN9sx0r2g463"></p>
+<p>注意，本文是关于优化的，不是伙伴系统的科普，所以我假设大家已经理解了伙伴系统。</p>
+<p>鉴于slab缓存对象大多数都是不超过1个页面的小结构(不仅仅slab系统，超过1个页面的内存需求相比1个页面的内存需求，很少)，因此会有大量的针 对1个页面的内存分配需求。从伙伴系统的分配原理可知，如果持续大量分配单一页面，会有大量的order大于0的页面分裂成单一页面，在单核心CPU上， 这不是问题，但是在多核心CPU上，由于每一个CPU都会进行此类分配，而伙伴系统的分裂，合并操作会涉及大量的链表操作，这个锁开销是巨大的，因此需要 优化！</p>
+<p>Linux内核对伙伴系统针对单一页面的分配需求采取的批量分配“每CPU单一页面缓存”的方式！</p>
+<p>每一个CPU拥有一个单一页面缓存池，需要单一页面的时候，可以无需加锁从当前CPU对应的页面池中获取页面。而当池中页面不足时，系统会批量从伙伴系统中拉取一堆页面到池中，反过来，在单一页面释放的时候，会择优将其释放到每CPU的单一页面缓存中。</p>
+<p>为了维持“每CPU单一页面缓存”中页面的数量不会太多或太少(太多会影响伙伴系统，太少会影响CPU的需求)，系统保持了两个值，当缓存页面数量低于 low值的时候，便从伙伴系统中批量获取页面到池中，而当缓存页面数量大于high的时候，便会释放一些页面到伙伴系统中。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>多 CPU操作系统内核中，关键的开销就是锁的开销。我认为这是一开始的设计导致的，因为一开始，多核CPU并没有出现，单核CPU上的共享保护几乎都是可以 用“禁中断”，“禁抢占”来简单实现的，到了多核时代，操作系统同样简单平移到了新的平台，因此同步操作是在单核的基础上后来添加的。简单来讲，目前的主 流操作系统都是在单核年代创造出来的，因此它们都是顺应单核环境的，对于多核环境，可能它们一开始的设计就有问题。</p>
+<p>不管怎么说，优化操作的不二法门就是禁止或者尽量减少锁的操作。随之而来的思路就是为共享的关键数据结构创建”每CPU的缓存“，而这类缓存分为两种类型：</p>
+<p>1).数据通路缓存。<br><br>比如路由表之类的数据结构，你可以用RCU锁来保护，当然如果为每一个CPU都创建一个本地路由表缓存，也是不错的，现在的问题是何时更新它们，因为所有的缓存都是平级的，因此一种批量同步的机制是必须的。<br><br>2).管理机制缓存。<br><br>比 如slab对象缓存这类，其生命周期完全取决于使用者，因此不存在同步问题，然而却存在管理问题。采用分级cache的思想是好的，这个非常类似于CPU 的L1&#x2F;L2&#x2F;L3缓存，采用这种平滑的开销逐渐增大，容量逐渐增大的机制，并配合以设计良好的换入&#x2F;换出等算法，效果是非常明显的。</p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/04/05/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E4%B9%8B%E5%88%86%E9%A1%B5/">2024-04-05</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/04/05/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%B0%BD%E6%83%85%E9%98%85%E8%AF%BB%EF%BC%8C%E6%8A%80%E6%9C%AF%E8%BF%9B%E9%98%B6%EF%BC%8C%E8%AF%A6%E8%A7%A3mmap%E5%8E%9F%E7%90%86/">2024-04-05</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95CPU%E4%B8%8A%E5%8D%95%E7%BA%AF%E7%9A%84slab"><span class="toc-text">单CPU上单纯的slab</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%A9%E5%B1%95%E5%88%B0%E5%A4%9A%E6%A0%B8%E5%BF%83CPU"><span class="toc-text">扩展到多核心CPU</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98"><span class="toc-text">问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3-%E5%88%86%E5%B1%82slab-cache"><span class="toc-text">问题的解决-分层slab cache</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E4%B8%AA%E5%9C%BA%E6%99%AF"><span class="toc-text">2个场景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F"><span class="toc-text">伙伴系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-text">小结</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

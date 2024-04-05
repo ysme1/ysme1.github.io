@@ -1,0 +1,521 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Blog</title>
+
+  
+    <meta name="description" content="1.前言本文首先从宏观上概述了数据包发送的流程，然后分析了协议层注册进内核以及被套接字的过程，最后介绍了通过套接字发送网络数据的过程。 2.数据包发送宏观视角从宏观上看，一个数据包从用户程序到达硬件网卡的整个过程如下： 1、使用系统调用（如 sendto，sendmsg 等）写数据2、数据分段socket顶部，进入socket协议族（protocol family）系统3、协议族处理：数据跨越协议">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Blog">
+<meta property="og:url" content="https://vcloud.ysme.top/2024/04/05/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9Cudp%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81(%E4%B8%80)/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="1.前言本文首先从宏观上概述了数据包发送的流程，然后分析了协议层注册进内核以及被套接字的过程，最后介绍了通过套接字发送网络数据的过程。 2.数据包发送宏观视角从宏观上看，一个数据包从用户程序到达硬件网卡的整个过程如下： 1、使用系统调用（如 sendto，sendmsg 等）写数据2、数据分段socket顶部，进入socket协议族（protocol family）系统3、协议族处理：数据跨越协议">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-04-05T11:10:12.971Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.971Z">
+<meta property="article:author" content="ysme">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-04-05T11:10:12.971Z">2024-04-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.971Z">2024-04-05</time></span></div></div></div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="1-前言"><a href="#1-前言" class="headerlink" title="1.前言"></a>1.前言</h2><p>本文首先从宏观上概述了数据包发送的流程，然后分析了协议层注册进内核以及被套接字的过程，最后介绍了通过套接字发送网络数据的过程。</p>
+<h2 id="2-数据包发送宏观视角"><a href="#2-数据包发送宏观视角" class="headerlink" title="2.数据包发送宏观视角"></a>2.数据包发送宏观视角</h2><p>从宏观上看，一个数据包从用户程序到达硬件网卡的整个过程如下：<br></p>
+<p>1、使用系统调用（如 sendto，sendmsg 等）写数据<br><br>2、数据分段socket顶部，进入socket协议族（protocol family）系统<br><br>3、协议族处理：数据跨越协议层，这一过程（在许多情况下）转变数据（数据）转换成数据包（packet）<br><br>4、数据传输路由层，这会涉及路由缓存和ARP缓存的更新；如果目的MAC不在ARP缓存表中，将触发一次ARP广播来查找MAC地址<br><br>5、穿过协议层，packet到达设备无关层（设备不可知层）<br><br>6、使用XPS（如果启用）或散列函数选择发送坐标<br><br>7、调用网卡驱动的发送函数<br><br>8、数据传送到网卡的 qdisc（queue纪律，排队规则）<br><br>9、qdisc会直接发送数据（如果可以），或者将其放到串行，然后触发NET_TX类型软中断（softirq）的时候再发送<br><br>10、数据从qdisc传送给驱动程序<br><br>11、驱动程序创建所需的DMA映射，刹车网卡从RAM读取数据<br><br>12、驱动向网卡发送信号，通知数据可以发送了<br><br>13、网卡从RAM中获取数据并发送<br><br>14、发送完成后，设备触发一个硬中断（IRQ），表示发送完成<br><br>15、中断硬处理函数被唤醒执行。对许多设备来说，会这触发NET_RX类型的软中断，然后NAPI投票循环开始收包<br><br>16、poll函数会调用驱动程序的相应函数，解除DMA映射，释放数据<br></p>
+<h2 id="3-协议层注册"><a href="#3-协议层注册" class="headerlink" title="3.协议层注册"></a>3.协议层注册</h2><p>协议层分析我们将关注IP和UDP层，其他协议层可参考这个过程。<br><br>当用户程序像下面这样创建UDP套接字时会发生什么？<br></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)</span><br></pre></td></tr></table></figure>
+
+<p>简单来说，内核会去查找由UDP协议栈创建的一个单独的函数（其中包括用于发送和接收网络数据的函数），并赋予给套接字相应的分区 AF_INET 。<br><br>内核初始化的很早阶段就执行了 inet_init 函数，这个函数会注册 AF_INET 协议族，以及该协议族内部的各协议栈（TCP，UDP，ICMP和RAW），并初始化函数使协议栈准备好处理网络数据。inet_init 定义在net &#x2F; ipv4 &#x2F; af_inet.c。<br><br>AF_INET 协议族源自一个包含 create 方法的 struct net_proto_family 类型实例。当从用户程序创建socket时，内核会调用此方法：<br></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">net_proto_family</span> <span class="title">inet_family_ops</span> =</span> &#123;</span><br><span class="line">    .family = PF_INET,</span><br><span class="line">    .create = inet_create,</span><br><span class="line">    .owner  = THIS_MODULE,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>inet_create 根据传递的套接字参数，在已注册的协议中查找对应的协议：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Look for the requested type/protocol pair. */</span></span><br><span class="line">lookup_protocol:</span><br><span class="line">        err = -ESOCKTNOSUPPORT;</span><br><span class="line">        rcu_read_lock();</span><br><span class="line">        list_for_each_entry_rcu(answer, &amp;inetsw[sock-&gt;type], <span class="built_in">list</span>) &#123;</span><br><span class="line"></span><br><span class="line">                err = <span class="number">0</span>;</span><br><span class="line">                <span class="comment">/* Check the non-wild match. */</span></span><br><span class="line">                <span class="keyword">if</span> (protocol == answer-&gt;protocol) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (protocol != IPPROTO_IP)</span><br><span class="line">                                <span class="keyword">break</span>;</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                        <span class="comment">/* Check for the two wild cases. */</span></span><br><span class="line">                        <span class="keyword">if</span> (IPPROTO_IP == protocol) &#123;</span><br><span class="line">                                protocol = answer-&gt;protocol;</span><br><span class="line">                                <span class="keyword">break</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">if</span> (IPPROTO_IP == answer-&gt;protocol)</span><br><span class="line">                                <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                err = -EPROTONOSUPPORT;</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后，引入协议的某些方法（集合）赋给这个新创建的socket：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sock-&gt;ops = answer-&gt;ops;</span><br></pre></td></tr></table></figure>
+
+<p>可以在 af_inet.c 中看到所有协议的初始化参数。下面是TCP和UDP的初始化参数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Upon startup we insert all the elements in inetsw_array[] into</span></span><br><span class="line"><span class="comment"> * the linked list inetsw.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">inet_protosw</span> <span class="title">inetsw_array</span>[] =</span></span><br><span class="line">&#123;</span><br><span class="line">        &#123;</span><br><span class="line">                .type =       SOCK_STREAM,</span><br><span class="line">                .protocol =   IPPROTO_TCP,</span><br><span class="line">                .prot =       &amp;tcp_prot,</span><br><span class="line">                .ops =        &amp;inet_stream_ops,</span><br><span class="line">                .no_check =   <span class="number">0</span>,</span><br><span class="line">                .flags =      INET_PROTOSW_PERMANENT |</span><br><span class="line">                              INET_PROTOSW_ICSK,</span><br><span class="line">        &#125;,</span><br><span class="line"></span><br><span class="line">        &#123;</span><br><span class="line">                .type =       SOCK_DGRAM,</span><br><span class="line">                .protocol =   IPPROTO_UDP,</span><br><span class="line">                .prot =       &amp;udp_prot,</span><br><span class="line">                .ops =        &amp;inet_dgram_ops,</span><br><span class="line">                .no_check =   UDP_CSUM_DEFAULT,</span><br><span class="line">                .flags =      INET_PROTOSW_PERMANENT,</span><br><span class="line">       &#125;,</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* .... more protocols ... */</span></span><br></pre></td></tr></table></figure>
+
+<p>IPPROTO_UDP 协议类型有一个 ops 变量，包含很多信息，包括用于发送和接收数据的替代函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">proto_ops</span> <span class="title">inet_dgram_ops</span> =</span> &#123;</span><br><span class="line">	.family          = PF_INET,</span><br><span class="line">	.owner           = THIS_MODULE,</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* ... */</span></span><br><span class="line">	</span><br><span class="line">	.sendmsg     = inet_sendmsg,</span><br><span class="line">	.recvmsg     = inet_recvmsg,</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* ... */</span></span><br><span class="line">&#125;;</span><br><span class="line">EXPORT_SYMBOL(inet_dgram_ops);</span><br></pre></td></tr></table></figure>
+
+<p>prot UDP协议对应的 prot 变量为 udp_prot，定义在net &#x2F; ipv4 &#x2F; udp.c：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">proto</span> <span class="title">udp_prot</span> =</span> &#123;</span><br><span class="line">	.name        = <span class="string">&quot;UDP&quot;</span>,</span><br><span class="line">	.owner           = THIS_MODULE,</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* ... */</span></span><br><span class="line">	</span><br><span class="line">	.sendmsg     = udp_sendmsg,</span><br><span class="line">	.recvmsg     = udp_recvmsg,</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* ... */</span></span><br><span class="line">&#125;;</span><br><span class="line">EXPORT_SYMBOL(udp_prot);</span><br></pre></td></tr></table></figure>
+
+<p>现在，让我们转向发送UDP数据的用户程序，看看 udp_sendmsg 是如何在内核中被调用的。</p>
+<h2 id="4-通过套接字发送网络数据"><a href="#4-通过套接字发送网络数据" class="headerlink" title="4.通过套接字发送网络数据"></a>4.通过套接字发送网络数据</h2><p>用户程序想发送UDP网络数据，因此它使用 sendto 系统调用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ret = sendto(socket, buffer, buflen, 0, &amp;dest, sizeof(dest));</span><br></pre></td></tr></table></figure>
+
+<p>该系统调用串联Linux系统调用（系统调用）层，最后到达net &#x2F; socket.c中的这个函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> *      Send a datagram to a given address. We move the address into kernel</span></span><br><span class="line"><span class="comment"> *      space and check the user space data area is readable before invoking</span></span><br><span class="line"><span class="comment"> *      the protocol.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line">SYSCALL_DEFINE6(sendto, <span class="type">int</span>, fd, <span class="type">void</span> __user *, buff, <span class="type">size_t</span>, len,</span><br><span class="line">                <span class="type">unsigned</span> <span class="type">int</span>, flags, <span class="keyword">struct</span> sockaddr __user *, addr,</span><br><span class="line">                <span class="type">int</span>, addr_len)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/*  ... code ... */</span></span><br><span class="line"></span><br><span class="line">    err = sock_sendmsg(sock, &amp;msg, len);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* ... code  ... */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>SYSCALL_DEFINE6 宏会展开成一堆宏，并通过一波复杂操作创建出一个带。6个参数的系统调用（因此叫 DEFINE6）。作为结果之一，会看到内核中的所有系统调用都带 sys_相连。<br><br>sendto 代码会先将数据整理成一体的可能可以处理的格式，然后调用 sock_sendmsg。特别地，依次传递给 sendto 的地址放到另一个变量（msg）中：<br></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">iov.iov_base = buff;</span><br><span class="line">iov.iov_len = len;</span><br><span class="line">msg.msg_name = <span class="literal">NULL</span>;</span><br><span class="line">msg.msg_iov = &amp;iov;</span><br><span class="line">msg.msg_iovlen = <span class="number">1</span>;</span><br><span class="line">msg.msg_control = <span class="literal">NULL</span>;</span><br><span class="line">msg.msg_controllen = <span class="number">0</span>;</span><br><span class="line">msg.msg_namelen = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">if</span> (addr) &#123;</span><br><span class="line">        err = move_addr_to_kernel(addr, addr_len, &amp;address);</span><br><span class="line">        <span class="keyword">if</span> (err &lt; <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">goto</span> out_put;</span><br><span class="line">        msg.msg_name = (<span class="keyword">struct</span> sockaddr *)&amp;address;</span><br><span class="line">        msg.msg_namelen = addr_len;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这段代码将用户程序传入到内核的（存放待发送数据的）地址，作为 msg_name 字段嵌入到 struct msghdr 类型变量中。状语从句：这用户程序直接调用 sendmsg 而不是 sendto 发送数据差不多，这之所以可行，因为的英文 sendto 状语从句： sendmsg 底层都会调用 sock_sendmsg。</p>
+<h3 id="4-1-sock-sendmsg，-sock-sendmsg，-sock-sendmsg-nosec"><a href="#4-1-sock-sendmsg，-sock-sendmsg，-sock-sendmsg-nosec" class="headerlink" title="4.1  sock_sendmsg，  __sock_sendmsg， __sock_sendmsg_nosec"></a>4.1  <code>sock_sendmsg</code>，  <code>__sock_sendmsg</code>， <code>__sock_sendmsg_nosec</code></h3><p><code>sock_sendmsg</code> 做一些错误检查，然后调用<code>__sock_sendmsg</code>;后者做一些自己的错误检查，然后调用<code>__sock_sendmsg_nosec</code>。</p>
+<p><code>__sock_sendmsg_nosec </code>将数据传递到插座子系统的更深处：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">int</span> __sock_sendmsg_nosec(<span class="keyword">struct</span> kiocb *iocb, <span class="keyword">struct</span> socket *sock,</span><br><span class="line">                                       <span class="keyword">struct</span> msghdr *msg, <span class="type">size_t</span> size)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sock_iocb</span> *<span class="title">si</span> =</span>  ....</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* other code ... */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> sock-&gt;ops-&gt;sendmsg(iocb, sock, msg, size);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过前面介绍的socket创建过程，可以知道注册到这里的 sendmsg 方法就是 inet_sendmsg。</p>
+<h3 id="4-2-inet-sendmsg"><a href="#4-2-inet-sendmsg" class="headerlink" title="4.2 inet_sendmsg"></a>4.2 inet_sendmsg</h3><p>从名字可以猜到，的英文这 AF_INET 协议族提供的通用函数此函数首先调用。 sock_rps_record_flow 来记录最后一个处理该（数据所属的）流的CPU; 接下来，调用套接字的协议类型（本例是UDP）对应的 sendmsg 方法：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">inet_sendmsg</span><span class="params">(<span class="keyword">struct</span> kiocb *iocb, <span class="keyword">struct</span> socket *sock, <span class="keyword">struct</span> msghdr *msg,</span></span><br><span class="line"><span class="params">                 <span class="type">size_t</span> size)</span></span><br><span class="line">&#123;</span><br><span class="line">      <span class="class"><span class="keyword">struct</span> <span class="title">sock</span> *<span class="title">sk</span> =</span> sock-&gt;sk;</span><br><span class="line"></span><br><span class="line">      sock_rps_record_flow(sk);</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* We may need to bind the socket. */</span></span><br><span class="line">      <span class="keyword">if</span> (!inet_sk(sk)-&gt;inet_num &amp;&amp; !sk-&gt;sk_prot-&gt;no_autobind &amp;&amp; inet_autobind(sk))</span><br><span class="line">              <span class="keyword">return</span> -EAGAIN;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">return</span> sk-&gt;sk_prot-&gt;sendmsg(iocb, sk, msg, size);</span><br><span class="line">&#125;</span><br><span class="line">EXPORT_SYMBOL(inet_sendmsg);</span><br></pre></td></tr></table></figure>
+
+<p>本例是UDP协议，因此上面的 sk-&gt;sk_prot-&gt;sendmsg 指向的是之前udp_prot 看到的（通过 导出的）udp_sendmsg 函数。<br><br>sendmsg（）函数作为分界点，处理逻辑从AF_INET协议族通用处理转移到特定的UDP协议的处理。<br></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/04/05/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9CUDP%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81%EF%BC%88%E4%B8%89%EF%BC%89%E2%80%94IP%E5%8D%8F%E8%AE%AE%E5%B1%82%E5%88%86%E6%9E%90/">2024-04-05</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/04/05/linux-docs/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE%E6%A0%88/Linux%E5%86%85%E6%A0%B8%E7%BD%91%E7%BB%9Cudp%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81%EF%BC%88%E4%BA%8C%EF%BC%89-UDP%E5%8D%8F%E8%AE%AE%E5%B1%82%E5%88%86%E6%9E%90/">2024-04-05</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%89%8D%E8%A8%80"><span class="toc-text">1.前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%95%B0%E6%8D%AE%E5%8C%85%E5%8F%91%E9%80%81%E5%AE%8F%E8%A7%82%E8%A7%86%E8%A7%92"><span class="toc-text">2.数据包发送宏观视角</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E5%8D%8F%E8%AE%AE%E5%B1%82%E6%B3%A8%E5%86%8C"><span class="toc-text">3.协议层注册</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E9%80%9A%E8%BF%87%E5%A5%97%E6%8E%A5%E5%AD%97%E5%8F%91%E9%80%81%E7%BD%91%E7%BB%9C%E6%95%B0%E6%8D%AE"><span class="toc-text">4.通过套接字发送网络数据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-sock-sendmsg%EF%BC%8C-sock-sendmsg%EF%BC%8C-sock-sendmsg-nosec"><span class="toc-text">4.1  sock_sendmsg，  __sock_sendmsg， __sock_sendmsg_nosec</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-inet-sendmsg"><span class="toc-text">4.2 inet_sendmsg</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

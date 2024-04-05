@@ -1,0 +1,511 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Linux内核进程管理几种进程状态 - Blog</title>
+
+  
+    <meta name="description" content="进程生命周期在Linux内核里，无论是进程还是线程，统一使用 task_struct{} 结构体来表示，也就是统一抽象为任务（task）。task_struct{} 定义在 include&#x2F;linux&#x2F;sched.h 文件中，十分复杂，这里简单了解下。 123456789101112131415161718192021222324252627282930313233343536">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核进程管理几种进程状态">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%87%A0%E7%A7%8D%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="进程生命周期在Linux内核里，无论是进程还是线程，统一使用 task_struct{} 结构体来表示，也就是统一抽象为任务（task）。task_struct{} 定义在 include&#x2F;linux&#x2F;sched.h 文件中，十分复杂，这里简单了解下。 123456789101112131415161718192021222324252627282930313233343536">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-e5a63b6d74aaca755243cda0f15a75fc_720w.webp">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-0fbc601c3e6455cf70b41588ea249f44_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.975Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux开发">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pic1.zhimg.com/80/v2-e5a63b6d74aaca755243cda0f15a75fc_720w.webp">
+  
+  
+  
+  <meta name="keywords" content="Linux开发">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux/">linux</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.975Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux内核进程管理几种进程状态</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="进程生命周期"><a href="#进程生命周期" class="headerlink" title="进程生命周期"></a>进程生命周期</h2><p>在Linux内核里，无论是进程还是线程，统一使用 task_struct{} 结构体来表示，也就是统一抽象为任务（task）。task_struct{} 定义在 include&#x2F;linux&#x2F;sched.h 文件中，十分复杂，这里简单了解下。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/sched.h</span></span><br><span class="line"><span class="comment">// ... 省略</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">task_struct</span> &#123;</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_THREAD_INFO_IN_TASK</span></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * For reasons of header soup (see current_thread_info()), this</span></span><br><span class="line"><span class="comment">	 * must be the first element of task_struct.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">thread_info</span>		thread_info;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	<span class="comment">/* -1 unrunnable, 0 runnable, &gt;0 stopped: */</span></span><br><span class="line">	<span class="keyword">volatile</span> <span class="type">long</span>			state;</span><br><span class="line">	<span class="type">int</span>				exit_state;</span><br><span class="line">	<span class="type">int</span>				exit_code;</span><br><span class="line">	<span class="type">int</span>				exit_signal;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	 * This begins the randomizable portion of task_struct. Only</span></span><br><span class="line"><span class="comment">	 * scheduling-critical items should be added above here.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	randomized_struct_fields_start</span><br><span class="line"></span><br><span class="line">	<span class="type">void</span>				*stack;</span><br><span class="line">	<span class="type">refcount_t</span>			usage;</span><br><span class="line">	<span class="comment">/* Per task flags (PF_*), defined further below: */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>			flags;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>			ptrace;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_SMP</span></span><br><span class="line">	<span class="type">int</span>				on_cpu;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">__call_single_node</span>	wake_entry;</span><br><span class="line"><span class="meta">#<span class="keyword">ifdef</span> CONFIG_THREAD_INFO_IN_TASK</span></span><br><span class="line">	<span class="comment">/* Current CPU: */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>			cpu;</span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>			wakee_flips;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>			wakee_flip_decay_ts;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">task_struct</span>		*last_wakee;</span><br><span class="line">  <span class="comment">// ...省略</span></span><br><span class="line">  <span class="keyword">struct</span> <span class="title class_">sched_info</span>		sched_info;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">list_head</span>		tasks;   <span class="comment">// 链表，将所有task_struct串起来</span></span><br><span class="line"></span><br><span class="line">	<span class="type">pid_t</span>				pid;    <span class="comment">// process id，指的是线程id</span></span><br><span class="line">	<span class="type">pid_t</span>				tgid;   <span class="comment">// thread group ID，指的是进程的主线程id</span></span><br><span class="line">  <span class="keyword">struct</span> <span class="title class_">task_struct</span>		*group_leader;  <span class="comment">// 指向的是进程的主线程</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* Signal handlers: */</span></span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">signal_struct</span>		*signal;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">sighand_struct</span> __rcu		*sighand;</span><br><span class="line">	<span class="type">sigset_t</span>			blocked;</span><br><span class="line">	<span class="type">sigset_t</span>			real_blocked;</span><br><span class="line">	<span class="comment">/* Restored if set_restore_sigmask() was used: */</span></span><br><span class="line">	<span class="type">sigset_t</span>			saved_sigmask;</span><br><span class="line">	<span class="keyword">struct</span> <span class="title class_">sigpending</span>		pending;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span>			sas_ss_sp;</span><br><span class="line">	<span class="type">size_t</span>				sas_ss_size;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">int</span>			sas_ss_flags;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ... 省略</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>查阅相关资料后，对Linux中进程的生命周期总结如下：</strong></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic1.zhimg.com/80/v2-e5a63b6d74aaca755243cda0f15a75fc_720w.webp" alt="img"></p>
+<p>从图上可以看出，进程的睡眠状态是最多的，那进程一般在何时进入睡眠状态呢？答案是I&#x2F;O操作时，因为I&#x2F;O操作的速度与CPU运行速度相比，相差太大，所以此时进程会释放CPU，进入睡眠状态。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic1.zhimg.com/80/v2-0fbc601c3e6455cf70b41588ea249f44_720w.webp" alt="img"></p>
+<p>进程状态相关的定义同样在 include&#x2F;linux&#x2F;sched.h 文件的开头部分，以 #define TASK_KILLABLE (TASK_WAKEKILL | TASK_UNINTERRUPTIBLE) 为例，TASK_WAKEKILL表示用于在接收到致命信号时唤醒进程，将它与 TASK_UNINTERRUPTIBLE 按位或，就得到了 TASK_KILLABLE。代码注释中提到了 fs&#x2F;proc&#x2F;array.c，所以也将其代码贴出，作为补充。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/sched.h</span></span><br><span class="line"><span class="comment">// ... 省略</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * Task state bitmask. NOTE! These bits are also</span></span><br><span class="line"><span class="comment"> * encoded in fs/proc/array.c: get_task_state().</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * We have two separate sets of flags: task-&gt;state</span></span><br><span class="line"><span class="comment"> * is about runnability, while task-&gt;exit_state are</span></span><br><span class="line"><span class="comment"> * about the task exiting. Confusing, but this way</span></span><br><span class="line"><span class="comment"> * modifying one set can&#x27;t modify the other one by</span></span><br><span class="line"><span class="comment"> * mistake.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* Used in tsk-&gt;state: */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_RUNNING			0x0000</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_INTERRUPTIBLE		0x0001</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_UNINTERRUPTIBLE		0x0002</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> __TASK_STOPPED			0x0004</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> __TASK_TRACED			0x0008</span></span><br><span class="line"><span class="comment">/* Used in tsk-&gt;exit_state: */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXIT_DEAD			0x0010</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXIT_ZOMBIE			0x0020</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> EXIT_TRACE			(EXIT_ZOMBIE | EXIT_DEAD)</span></span><br><span class="line"><span class="comment">/* Used in tsk-&gt;state again: */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_PARKED			0x0040</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_DEAD			0x0080</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_WAKEKILL			0x0100</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_WAKING			0x0200</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_NOLOAD			0x0400</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_NEW			0x0800</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_STATE_MAX			0x1000</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* Convenience macros for the sake of set_current_state: */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_KILLABLE			(TASK_WAKEKILL | TASK_UNINTERRUPTIBLE)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_STOPPED			(TASK_WAKEKILL | __TASK_STOPPED)</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_TRACED			(TASK_WAKEKILL | __TASK_TRACED)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_IDLE			(TASK_UNINTERRUPTIBLE | TASK_NOLOAD)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* Convenience macros for the sake of wake_up(): */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_NORMAL			(TASK_INTERRUPTIBLE | TASK_UNINTERRUPTIBLE)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* get_task_state(): */</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> TASK_REPORT			(TASK_RUNNING | TASK_INTERRUPTIBLE | \</span></span><br><span class="line"><span class="meta">					 TASK_UNINTERRUPTIBLE | __TASK_STOPPED | \</span></span><br><span class="line"><span class="meta">					 __TASK_TRACED | EXIT_DEAD | EXIT_ZOMBIE | \</span></span><br><span class="line"><span class="meta">					 TASK_PARKED)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> task_is_traced(task)		((task-&gt;state &amp; __TASK_TRACED) != 0)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> task_is_stopped(task)		((task-&gt;state &amp; __TASK_STOPPED) != 0)</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> task_is_stopped_or_traced(task)	((task-&gt;state &amp; (__TASK_STOPPED | __TASK_TRACED)) != 0)</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// ... 省略</span></span><br><span class="line"><span class="comment">// fs/proc/array.c</span></span><br><span class="line"><span class="comment">// ... 省略</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * The task state array is a strange &quot;bitmap&quot; of</span></span><br><span class="line"><span class="comment"> * reasons to sleep. Thus &quot;running&quot; is zero, and</span></span><br><span class="line"><span class="comment"> * you can test for combinations of others with</span></span><br><span class="line"><span class="comment"> * simple bit tests.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="type">char</span> * <span class="type">const</span> task_state_array[] = &#123;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* states in TASK_REPORT: */</span></span><br><span class="line">	<span class="string">&quot;R (running)&quot;</span>,		<span class="comment">/* 0x00 */</span></span><br><span class="line">	<span class="string">&quot;S (sleeping)&quot;</span>,		<span class="comment">/* 0x01 */</span></span><br><span class="line">	<span class="string">&quot;D (disk sleep)&quot;</span>,	<span class="comment">/* 0x02 */</span></span><br><span class="line">	<span class="string">&quot;T (stopped)&quot;</span>,		<span class="comment">/* 0x04 */</span></span><br><span class="line">	<span class="string">&quot;t (tracing stop)&quot;</span>,	<span class="comment">/* 0x08 */</span></span><br><span class="line">	<span class="string">&quot;X (dead)&quot;</span>,		<span class="comment">/* 0x10 */</span></span><br><span class="line">	<span class="string">&quot;Z (zombie)&quot;</span>,		<span class="comment">/* 0x20 */</span></span><br><span class="line">	<span class="string">&quot;P (parked)&quot;</span>,		<span class="comment">/* 0x40 */</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">/* states beyond TASK_REPORT: */</span></span><br><span class="line">	<span class="string">&quot;I (idle)&quot;</span>,		<span class="comment">/* 0x80 */</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">const</span> <span class="type">char</span> *<span class="title">get_task_state</span><span class="params">(<span class="keyword">struct</span> task_struct *tsk)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="built_in">BUILD_BUG_ON</span>(<span class="number">1</span> + <span class="built_in">ilog2</span>(TASK_REPORT_MAX) != <span class="built_in">ARRAY_SIZE</span>(task_state_array));</span><br><span class="line">	<span class="keyword">return</span> task_state_array[<span class="built_in">task_state_index</span>(tsk)];</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// ... 省略</span></span><br></pre></td></tr></table></figure>
+
+<p>在单核的CPU上，同一时刻只有一个task会被调度，所以即使看到了 R 状态，也不代表进程就被分配到了CPU时间片。但了解了进程状态之后，我们再通过 top, ps aux 等命令查看进程，<strong>分析问题起来效率就更高了:</strong></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">top - <span class="number">17</span>:<span class="number">24</span>:<span class="number">07</span> up <span class="number">10</span>:<span class="number">20</span>,  <span class="number">1</span> user,  load average: <span class="number">0.15</span>, <span class="number">0.08</span>, <span class="number">0.02</span></span><br><span class="line">Tasks: <span class="number">216</span> total,   <span class="number">1</span> running, <span class="number">215</span> sleeping,   <span class="number">0</span> stopped,   <span class="number">0</span> zombie</span><br><span class="line">%<span class="built_in">Cpu</span>(s):  <span class="number">0.4</span> us,  <span class="number">0.3</span> sy,  <span class="number">0.0</span> ni, <span class="number">99.2</span> id,  <span class="number">0.0</span> wa,  <span class="number">0.0</span> hi,  <span class="number">0.0</span> si,  <span class="number">0.0</span> st</span><br><span class="line">MiB Mem :   <span class="number">5945.2</span> total,   <span class="number">2655.4</span> free,   <span class="number">1580.8</span> used,   <span class="number">1709.1</span> buff/cache</span><br><span class="line">MiB Swap:   <span class="number">2048.0</span> total,   <span class="number">2048.0</span> free,      <span class="number">0.0</span> used.   <span class="number">4084.6</span> avail Mem </span><br><span class="line"></span><br><span class="line">    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                                                                            </span><br><span class="line">   <span class="number">1914</span> demonlee  <span class="number">20</span>   <span class="number">0</span> <span class="number">5252100</span> <span class="number">395940</span> <span class="number">132816</span> S   <span class="number">1.0</span>   <span class="number">6.5</span>   <span class="number">1</span>:<span class="number">33.09</span> gnome-shell                                                                        </span><br><span class="line">    <span class="number">824</span> root      <span class="number">20</span>   <span class="number">0</span> <span class="number">2495652</span>  <span class="number">89512</span>  <span class="number">48936</span> S   <span class="number">0.7</span>   <span class="number">1.5</span>   <span class="number">0</span>:<span class="number">05.59</span> dockerd                                                                            </span><br><span class="line">   <span class="number">1687</span> demonlee  <span class="number">20</span>   <span class="number">0</span> <span class="number">1153156</span>  <span class="number">81436</span>  <span class="number">50128</span> S   <span class="number">0.3</span>   <span class="number">1.3</span>   <span class="number">0</span>:<span class="number">15.90</span> Xorg                                                                               </span><br><span class="line">   <span class="number">1957</span> demonlee  <span class="number">20</span>   <span class="number">0</span>  <span class="number">206556</span>  <span class="number">28348</span>  <span class="number">18504</span> S   <span class="number">0.3</span>   <span class="number">0.5</span>   <span class="number">0</span>:<span class="number">00.26</span> ibus-x11                                                                           </span><br><span class="line">   <span class="number">2897</span> demonlee  <span class="number">20</span>   <span class="number">0</span>  <span class="number">874684</span>  <span class="number">61296</span>  <span class="number">44532</span> S   <span class="number">0.3</span>   <span class="number">1.0</span>   <span class="number">0</span>:<span class="number">06.22</span> gnome-terminal-                                                                    </span><br><span class="line">  <span class="number">19984</span> demonlee  <span class="number">20</span>   <span class="number">0</span>   <span class="number">20632</span>   <span class="number">4036</span>   <span class="number">3376</span> R   <span class="number">0.3</span>   <span class="number">0.1</span>   <span class="number">0</span>:<span class="number">00.02</span> top                                                                                </span><br><span class="line">      <span class="number">1</span> root      <span class="number">20</span>   <span class="number">0</span>  <span class="number">169076</span>  <span class="number">12952</span>   <span class="number">8288</span> S   <span class="number">0.0</span>   <span class="number">0.2</span>   <span class="number">0</span>:<span class="number">04.61</span> systemd                                                                            </span><br><span class="line">      <span class="number">2</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.01</span> kthreadd                                                                           </span><br><span class="line">      <span class="number">3</span> root       <span class="number">0</span> <span class="number">-20</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> I   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> rcu_gp                                                                             </span><br><span class="line">      <span class="number">4</span> root       <span class="number">0</span> <span class="number">-20</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> I   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> rcu_par_gp                                                                         </span><br><span class="line">      <span class="number">6</span> root       <span class="number">0</span> <span class="number">-20</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> I   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> kworker/<span class="number">0</span>:<span class="number">0</span>H-kblockd                                                               </span><br><span class="line">      <span class="number">9</span> root       <span class="number">0</span> <span class="number">-20</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> I   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> mm_percpu_wq                                                                       </span><br><span class="line">     <span class="number">10</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.08</span> ksoftirqd/<span class="number">0</span>                                                                        </span><br><span class="line">     <span class="number">11</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> I   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">03.60</span> rcu_sched                                                                          </span><br><span class="line">     <span class="number">12</span> root      rt   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.51</span> migration/<span class="number">0</span>                                                                        </span><br><span class="line">     <span class="number">13</span> root     <span class="number">-51</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> idle_inject/<span class="number">0</span>                                                                      </span><br><span class="line">     <span class="number">14</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> cpuhp/<span class="number">0</span>                                                                            </span><br><span class="line">     <span class="number">15</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> cpuhp/<span class="number">1</span>                                                                            </span><br><span class="line">     <span class="number">16</span> root     <span class="number">-51</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> idle_inject/<span class="number">1</span>                                                                      </span><br><span class="line">     <span class="number">17</span> root      rt   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.89</span> migration/<span class="number">1</span>                                                                        </span><br><span class="line">     <span class="number">18</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.09</span> ksoftirqd/<span class="number">1</span>                                                                        </span><br><span class="line">     <span class="number">20</span> root       <span class="number">0</span> <span class="number">-20</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> I   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> kworker/<span class="number">1</span>:<span class="number">0</span>H                                                                       </span><br><span class="line">     <span class="number">21</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> cpuhp/<span class="number">2</span>                                                                            </span><br><span class="line">     <span class="number">22</span> root     <span class="number">-51</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> idle_inject/<span class="number">2</span>                                                                      </span><br><span class="line">     <span class="number">23</span> root      rt   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.83</span> migration/<span class="number">2</span>                                                                        </span><br><span class="line">     <span class="number">24</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.07</span> ksoftirqd/<span class="number">2</span>                                                                        </span><br><span class="line">     <span class="number">26</span> root       <span class="number">0</span> <span class="number">-20</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> I   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> kworker/<span class="number">2</span>:<span class="number">0</span>H-kblockd                                                               </span><br><span class="line">     <span class="number">27</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> cpuhp/<span class="number">3</span>                                                                            </span><br><span class="line">     <span class="number">28</span> root     <span class="number">-51</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> idle_inject/<span class="number">3</span>                                                                      </span><br><span class="line">     <span class="number">29</span> root      rt   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.77</span> migration/<span class="number">3</span>                                                                        </span><br><span class="line">     <span class="number">30</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.18</span> ksoftirqd/<span class="number">3</span>                                                                        </span><br><span class="line">     <span class="number">32</span> root       <span class="number">0</span> <span class="number">-20</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> I   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> kworker/<span class="number">3</span>:<span class="number">0</span>H-kblockd                                                               </span><br><span class="line">     <span class="number">33</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> kdevtmpfs                                                                          </span><br><span class="line">     <span class="number">34</span> root       <span class="number">0</span> <span class="number">-20</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> I   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> netns                                                                              </span><br><span class="line">     <span class="number">35</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> rcu_tasks_kthre                                                                    </span><br><span class="line">     <span class="number">36</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> rcu_tasks_rude_                                                                    </span><br><span class="line">     <span class="number">37</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> rcu_tasks_trace                                                                    </span><br><span class="line">     <span class="number">38</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.00</span> kauditd                                                                            </span><br><span class="line">     <span class="number">39</span> root      <span class="number">20</span>   <span class="number">0</span>       <span class="number">0</span>      <span class="number">0</span>      <span class="number">0</span> S   <span class="number">0.0</span>   <span class="number">0.0</span>   <span class="number">0</span>:<span class="number">00.03</span> khungtaskd                                                                         </span><br><span class="line">demonlee@demonlee-ubuntu:~$</span><br></pre></td></tr></table></figure>
+
+<p>最后，再补充一个知识点：使用ps命令查看进程时，会发现状态上面有其他符号，比如 S+、Z+ 等，如下所示，</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">demonlee@demonlee-ubuntu:~$ </span><br><span class="line">demonlee    <span class="number">1704</span>  <span class="number">0.0</span>  <span class="number">0.6</span> <span class="number">557904</span> <span class="number">37256</span> ?        Sl   <span class="number">05</span>:<span class="number">01</span>   <span class="number">0</span>:<span class="number">00</span> /usr/libexec/goa-daemon</span><br><span class="line">demonlee    <span class="number">1707</span>  <span class="number">0.0</span>  <span class="number">0.1</span> <span class="number">172652</span>  <span class="number">6936</span> tty2     Ssl+ <span class="number">05</span>:<span class="number">01</span>   <span class="number">0</span>:<span class="number">00</span> /usr/lib/gdm3/gdm-x-session --run-script env GNOME_SHELL_SESSION_MODE=ubuntu /usr/bin/g</span><br><span class="line">demonlee    <span class="number">1714</span>  <span class="number">0.0</span>  <span class="number">0.1</span> <span class="number">323388</span>  <span class="number">9068</span> ?        Sl   <span class="number">05</span>:<span class="number">01</span>   <span class="number">0</span>:<span class="number">00</span> /usr/libexec/goa-identity-service</span><br><span class="line">demonlee    <span class="number">1720</span>  <span class="number">0.1</span>  <span class="number">1.3</span> <span class="number">1151880</span> <span class="number">80576</span> tty2    Sl+  <span class="number">05</span>:<span class="number">01</span>   <span class="number">1</span>:<span class="number">05</span> /usr/lib/xorg/Xorg vt2 -displayfd <span class="number">3</span> -auth /run/user/<span class="number">1000</span>/gdm/Xauthority -background non</span><br><span class="line">demonlee    <span class="number">1723</span>  <span class="number">0.0</span>  <span class="number">0.1</span> <span class="number">325356</span>  <span class="number">9016</span> ?        Ssl  <span class="number">05</span>:<span class="number">01</span>   <span class="number">0</span>:<span class="number">02</span> /usr/libexec/gvfs-afc-volume-monitor</span><br><span class="line">demonlee    <span class="number">1728</span>  <span class="number">0.0</span>  <span class="number">0.1</span> <span class="number">244336</span>  <span class="number">6532</span> ?        Ssl  <span class="number">05</span>:<span class="number">01</span>   <span class="number">0</span>:<span class="number">00</span> /usr/libexec/gvfs-mtp-volume-monitor</span><br><span class="line">demonlee    <span class="number">1759</span>  <span class="number">0.0</span>  <span class="number">0.2</span> <span class="number">197052</span> <span class="number">14276</span> tty2     Sl+  <span class="number">05</span>:<span class="number">01</span>   <span class="number">0</span>:<span class="number">00</span> /usr/libexec/gnome-session-binary --systemd --systemd --session=ubuntu</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>这个 + 是啥意思呢，其实manps中就有描述，只是我们从来都没认真看说明文档：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">PROCESS STATE CODES</span><br><span class="line">       Here are the different values that the s, <span class="function">stat <span class="keyword">and</span> state output <span class="title">specifiers</span> <span class="params">(header <span class="string">&quot;STAT&quot;</span> <span class="keyword">or</span> <span class="string">&quot;S&quot;</span>)</span> will display to describe the state of a</span></span><br><span class="line"><span class="function">       process:</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">               D    uninterruptible sleep (usually IO)</span></span><br><span class="line"><span class="function">               I    Idle kernel thread</span></span><br><span class="line"><span class="function">               R    running or runnable (on run queue)</span></span><br><span class="line"><span class="function">               S    interruptible sleep (waiting for an event to complete)</span></span><br><span class="line"><span class="function">               T    stopped by job control signal</span></span><br><span class="line"><span class="function">               t    stopped by debugger during the tracing</span></span><br><span class="line"><span class="function">               W    paging (not valid since the <span class="number">2.6</span>.xx kernel)</span></span><br><span class="line"><span class="function">               X    dead (should never be seen)</span></span><br><span class="line"><span class="function">               Z    defunct (<span class="string">&quot;zombie&quot;</span>) process, terminated but not reaped by its parent</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">       For BSD formats and when the stat keyword is used, additional characters may be displayed:</span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">               &lt;    high-priority (not nice to other users)</span></span><br><span class="line"><span class="function">               N    low-priority (nice to other users)</span></span><br><span class="line"><span class="function">               L    has pages locked into memory (for real-time and custom IO)</span></span><br><span class="line"><span class="function">               s    is a session leader</span></span><br><span class="line"><span class="function">               l    is multi-threaded (using CLONE_THREAD, like NPTL pthreads do)</span></span><br><span class="line"><span class="function">               +    is in the foreground process group</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>版权声明：本文为知乎博主「玩转Linux内核」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/442905446">https://zhuanlan.zhihu.com/p/442905446</a></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%87%A0%E7%A7%8DCPU%E8%B0%83%E5%BA%A6%E7%AD%96%E7%95%A5/">Linux内核进程管理几种CPU调度策略</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%8E%9F%E7%90%86%E8%AF%A6%E8%A7%A3(%E4%BB%A3%E7%A0%81%E6%BC%94%E7%A4%BA)/">Linux内核进程管理原理详解(代码演示)</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="toc-text">进程生命周期</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

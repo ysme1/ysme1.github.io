@@ -1,0 +1,606 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Linux内核进程栈内存底层原理到Segmentation fault报错 - Blog</title>
+
+  
+    <meta name="description" content="栈是编程中使用内存最简单的方式。例如，下面的简单代码中的局部变量 n 就是在堆栈中分配内存的。 123456#include &lt;stdio.h&gt;void main()&#123; int n &#x3D; 0; printf(&quot;0x%x\n&quot;,&amp;v); &#125;  那么我有几个问题想问问大家，看看大家对于堆栈内存是否真的了解。  堆栈的物理内存是什么时候分配的？">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核进程栈内存底层原理到Segmentation fault报错">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E6%A0%88%E5%86%85%E5%AD%98%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86%E5%88%B0Segmentation%20fault%E6%8A%A5%E9%94%99/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="栈是编程中使用内存最简单的方式。例如，下面的简单代码中的局部变量 n 就是在堆栈中分配内存的。 123456#include &lt;stdio.h&gt;void main()&#123; int n &#x3D; 0; printf(&quot;0x%x\n&quot;,&amp;v); &#125;  那么我有几个问题想问问大家，看看大家对于堆栈内存是否真的了解。  堆栈的物理内存是什么时候分配的？">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-65c9df9b151c25df39283157eb473f58_720w.webp">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-b4460f3c4da6938f1548410ab562b612_720w.webp">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-67dc52318a0b598168a2509acc495f29_720w.webp">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-e3c4101a6975c49a4602c5c814892939_720w.webp">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-29cda8752da193f919c7e1d79f1fdc1f_720w.webp">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-a3ea1ac0ec54715a1b24f908b9c3e04b_720w.webp">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-c40035a9cf5fa602efa48b7f43a689c7_720w.webp">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-cff6204b9aa9ec2e34875f38963c2d44_720w.webp">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-a3ea1ac0ec54715a1b24f908b9c3e04b_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.975Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux开发">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pic1.zhimg.com/80/v2-65c9df9b151c25df39283157eb473f58_720w.webp">
+  
+  
+  
+  <meta name="keywords" content="Linux开发">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux/">linux</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.975Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux内核进程栈内存底层原理到Segmentation fault报错</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>栈是编程中使用内存最简单的方式。例如，下面的简单代码中的局部变量 n 就是在堆栈中分配内存的。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">void main()</span><br><span class="line">&#123;</span><br><span class="line"> int n = 0;</span><br><span class="line"> printf(&quot;0x%x\n&quot;,&amp;v); </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那么我有几个问题想问问大家，看看大家对于堆栈内存是否真的了解。</p>
+<ul>
+<li>堆栈的物理内存是什么时候分配的？</li>
+<li>堆栈的大小限制是多大？这个限制可以调整吗？</li>
+<li>当堆栈发生溢出后应用程序会发生什么？</li>
+</ul>
+<p>如果你对以上问题还理解不是特别深刻，今天来带你好好修炼进程堆栈内存这块的内功！</p>
+<h2 id="1、进程堆栈的初始化"><a href="#1、进程堆栈的初始化" class="headerlink" title="1、进程堆栈的初始化"></a>1、进程堆栈的初始化</h2><p>进程启动调用 exec 加载可执行文件过程的时候，会给进程栈申请一个 4 KB 的初始内存。我们今天来专门抽取并看一下这段逻辑。</p>
+<p>加载系统调用 execve 依次调用 do_execve、do_execve_common 来完成实际的可执行程序加载。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">//file:fs/exec.c</span><br><span class="line">static int do_execve_common(const char *filename, ...)</span><br><span class="line">&#123;</span><br><span class="line"> bprm_mm_init(bprm);</span><br><span class="line"> ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 bprm_mm_init 中会申请一个全新的地址空间 mm_struct 对象，准备留着给新进程使用。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">//file:fs/exec.c</span><br><span class="line">static int bprm_mm_init(struct linux_binprm *bprm)</span><br><span class="line">&#123;</span><br><span class="line"> //申请个全新的地址空间 mm_struct 对象</span><br><span class="line"> bprm-&gt;mm = mm = mm_alloc();</span><br><span class="line"> __bprm_mm_init(bprm);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>还会给新进程的栈申请一页大小的虚拟内存空间，作为给新进程准备的栈内存。申请完后把栈的指针保存到 bprm-&gt;p 中记录起来。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//file:fs/exec.c</span><br><span class="line">static int __bprm_mm_init(struct linux_binprm *bprm)</span><br><span class="line">&#123;</span><br><span class="line"> bprm-&gt;vma = vma = kmem_cache_zalloc(vm_area_cachep, GFP_KERNEL);</span><br><span class="line"> vma-&gt;vm_end = STACK_TOP_MAX;</span><br><span class="line"> vma-&gt;vm_start = vma-&gt;vm_end - PAGE_SIZE;</span><br><span class="line"> ...</span><br><span class="line"></span><br><span class="line"> bprm-&gt;p = vma-&gt;vm_end - sizeof(void *);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们平时所说的进程虚拟地址空间在 Linux 是通过一个个的 vm_area_struct 对象来表示的。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic1.zhimg.com/80/v2-65c9df9b151c25df39283157eb473f58_720w.webp" alt="img"></p>
+<p>每一个 vm_area_struct（就是上面 __bprm_mm_init 函数中的 vma）对象表示进程虚拟地址空间里的一段范围，其 vm_start 和 vm_end 表示启用的虚拟地址范围的开始和结束。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">//file:include/linux/mm_types.h</span><br><span class="line">struct vm_area_struct &#123;</span><br><span class="line"> unsigned long vm_start;</span><br><span class="line"> unsigned long vm_end;</span><br><span class="line"> ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>要注意的是这只是地址范围，而不是真正的物理内存分配</strong> 。</p>
+<p>在上面 __bprm_mm_init 函数中通过 kmem_cache_zalloc 申请了一个 vma 内核对象。vm_end 指向了 STACK_TOP_MAX（地址空间的顶部附近的位置），vm_start 和 vm_end 之间留了一个 Page 大小。<strong>也就是说默认给栈准备了 4KB 的大小</strong> 。最后把栈的指针记录到 bprm-&gt;p 中。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic3.zhimg.com/80/v2-b4460f3c4da6938f1548410ab562b612_720w.webp" alt="img"></p>
+<p>接下来进程加载过程会使用 load_elf_binary 真正开始加载可执行二进制程序。在加载时，会把前面准备的进程栈的地址空间指针设置到了新进程 mm 对象上。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//file:fs/binfmt_elf.c</span><br><span class="line">static int load_elf_binary(struct linux_binprm *bprm)</span><br><span class="line">&#123; //ELF 文件头解析</span><br><span class="line"> //Program Header 读取</span><br><span class="line"> //清空父进程继承来的资源</span><br><span class="line"> retval = flush_old_exec(bprm);</span><br><span class="line"> ...</span><br><span class="line"></span><br><span class="line"> current-&gt;mm-&gt;start_stack = bprm-&gt;p;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic2.zhimg.com/80/v2-67dc52318a0b598168a2509acc495f29_720w.webp" alt="img"></p>
+<p>这样新进程将来就可以使用栈进行函数调用，以及局部变量的申请了。</p>
+<p>前面我们说了，这里只是给栈申请了地址空间对象，并没有真正申请物理内存。我们接着再来看一下，物理内存页究竟是什么时候分配的。</p>
+<h2 id="2、物理页的申请"><a href="#2、物理页的申请" class="headerlink" title="2、物理页的申请"></a>2、物理页的申请</h2><p>当进程在运行的过程中在栈上开始分配和访问变量的时候，如果物理页还没有分配，会触发缺页中断。在缺页中断种来真正地分配物理内存。</p>
+<p>为了避免篇幅过长，触发缺页中断的过程就先不展开了。我们直接看一下缺页中断的核心处理入口 __do_page_fault，它位于 arch&#x2F;x86&#x2F;mm&#x2F;fault.c 文件下。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">//file:arch/x86/mm/fault.c</span><br><span class="line">static void __kprobes</span><br><span class="line">__do_page_fault(struct pt_regs *regs, unsigned long error_code)</span><br><span class="line">&#123;</span><br><span class="line"> ...</span><br><span class="line"> //根据新的 address 查找对应的 vma</span><br><span class="line"> vma = find_vma(mm, address);</span><br><span class="line"></span><br><span class="line"> //如果找到的 vma 的开始地址比 address 小</span><br><span class="line"> //那么就不调用expand_stack了，直接调用</span><br><span class="line"> if (likely(vma-&gt;vm_start &lt;= address))</span><br><span class="line">  goto good_area;</span><br><span class="line"> ...</span><br><span class="line"> if (unlikely(expand_stack(vma, address))) &#123;</span><br><span class="line">  bad_area(regs, error_code, address);</span><br><span class="line">  return;</span><br><span class="line"> &#125;</span><br><span class="line">good_area:</span><br><span class="line"> //调用handle_mm_fault来完成真正的内存申请</span><br><span class="line"> fault = handle_mm_fault(mm, vma, address, flags);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>当访问栈上变量的内存的时候，首先会调用 find_vma 根据变量地址 address 找到其所在的 vma 对象。接下来调用的 if (vma-&gt;vm_start &lt;&#x3D; address) 是在判断地址空间还够不够用。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic2.zhimg.com/80/v2-e3c4101a6975c49a4602c5c814892939_720w.webp" alt="img"></p>
+<p>如果栈内存 vma 的 start 比要访问的 address 小，则证明地址空间够用，只需要分配物理内存页就行了。如果栈内存 vma 的 start 比要访问的 address 大，则需要调用 expand_stack 先扩展一下栈的虚拟地址空间 vma。扩展虚拟地址空间的具体细节我们在第三节再讲。</p>
+<p>这里先假设要访问的变量地址 address 处于栈内存 vma 对象的 vm_start 和 vm_end 之间。那么缺页中断处理就会跳转到 good_area 处运行。在这里调用 handle_mm_fault 来<strong>完成真正物理内存的申请</strong> 。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">//file:mm/memory.c</span><br><span class="line">int handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,</span><br><span class="line">  unsigned long address, unsigned int flags)</span><br><span class="line">&#123;</span><br><span class="line"> ...</span><br><span class="line"></span><br><span class="line"> //依次查看每一级页表项</span><br><span class="line"> pgd = pgd_offset(mm, address);</span><br><span class="line"> pud = pud_alloc(mm, pgd, address);</span><br><span class="line"> pmd = pmd_alloc(mm, pud, address);</span><br><span class="line"> pte = pte_offset_map(pmd, address);</span><br><span class="line"></span><br><span class="line"> return handle_pte_fault(mm, vma, address, pte, pmd, flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Linux 是用四级页表来管理虚拟地址空间到物理内存之间的映射管理的。所以在实际申请物理页面之前，需要先 check 一遍需要的每一级页表项是否存在，不存在的话需要申请。</p>
+<p>为了好区分，Linux 还给每一级页表都起了一个名字。</p>
+<ul>
+<li>一级页表：Page Global Dir，简称 pgd</li>
+<li>二级页表：Page Upper Dir，简称 pud</li>
+<li>三级页表：Page Mid Dir，简称 pmd</li>
+<li>四级页表：Page Table，简称 pte</li>
+</ul>
+<p>看一下下面这个图就比较好理解了</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic4.zhimg.com/80/v2-29cda8752da193f919c7e1d79f1fdc1f_720w.webp" alt="img"></p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">//file:mm/memory.c</span><br><span class="line">int handle_pte_fault(struct mm_struct *mm,</span><br><span class="line">       struct vm_area_struct *vma, unsigned long address,</span><br><span class="line">       pte_t *pte, pmd_t *pmd, unsigned int flags)</span><br><span class="line">&#123;</span><br><span class="line"> ...</span><br><span class="line"></span><br><span class="line"> //匿名映射页处理</span><br><span class="line"> return do_anonymous_page(mm, vma, address,</span><br><span class="line">       pte, pmd, flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 handle_pte_fault 会处理很多种的内存缺页处理，比如文件映射缺页处理、swap缺页处理、写时复制缺页处理、匿名映射页处理等等几种情况。我们今天讨论的主题是栈内存，这个对应的是匿名映射页处理，会进入到 do_anonymous_page 函数中。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">//file:mm/memory.c</span><br><span class="line">static int do_anonymous_page(struct mm_struct *mm, struct vm_area_struct *vma,</span><br><span class="line">  unsigned long address, pte_t *page_table, pmd_t *pmd,</span><br><span class="line">  unsigned int flags)</span><br><span class="line">&#123;</span><br><span class="line"> // 分配可移动的匿名页面，底层通过 alloc_page</span><br><span class="line"> page = alloc_zeroed_user_highpage_movable(vma, address);</span><br><span class="line"> ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 do_anonymous_page 调用 alloc_zeroed_user_highpage_movable 分配一个可移动的匿名物理页出来。在底层会调用到伙伴系统的 alloc_pages 进行实际物理页面的分配。</p>
+<p>内核是用伙伴系统来管理所有的物理内存页的。其它模块需要物理页的时候都会调用伙伴系统对外提供的函数来申请物理内存。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic4.zhimg.com/80/v2-a3ea1ac0ec54715a1b24f908b9c3e04b_720w.webp" alt="img"></p>
+<p>到了这里，开篇的问题一就有答案了，堆栈的物理内存是什么时候分配的？进程在加载的时候只是会给新进程的栈内存分配一段地址空间范围。而真正的物理内存是等到访问的时候触发缺页中断，再从伙伴系统中申请的。</p>
+<h2 id="3、栈的自动增长"><a href="#3、栈的自动增长" class="headerlink" title="3、栈的自动增长"></a>3、栈的自动增长</h2><p>前面我们看到了，进程在被加载启动的时候，栈内存默认只分配了 4 KB 的空间。那么随着程序的运行，当栈中保存的调用链，局部变量越来越多的时候，必然会超过 4 KB。</p>
+<p>我回头看下缺页处理函数 __do_page_fault。如果栈内存 vma 的 start 比要访问的 address 大，则需要调用 expand_stack 先扩展一下栈的虚拟地址空间 vma。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic4.zhimg.com/80/v2-c40035a9cf5fa602efa48b7f43a689c7_720w.webp" alt="img"></p>
+<p>回顾 __do_page_fault 源码，看到扩充栈空间的是由 expand_stack 函数来完成的。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">//file:arch/x86/mm/fault.c</span><br><span class="line">static void __kprobes</span><br><span class="line">__do_page_fault(struct pt_regs *regs, unsigned long error_code)</span><br><span class="line">&#123;</span><br><span class="line"> ...</span><br><span class="line"> if (likely(vma-&gt;vm_start &lt;= address))</span><br><span class="line">  goto good_area;</span><br><span class="line"> </span><br><span class="line"> //如果栈 vma 的开始地址比 address 大，需要扩大栈</span><br><span class="line"> if (unlikely(expand_stack(vma, address))) &#123;</span><br><span class="line">  bad_area(regs, error_code, address);</span><br><span class="line">  return;</span><br><span class="line"> &#125;</span><br><span class="line">good_area:</span><br><span class="line"> ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们来看下 expand_stack 的内部细节。</p>
+<blockquote>
+<p>其实在 Linux 栈地址空间增长是分两种方向的，一种是从高地址往低地址增长，一种是反过来。大部分情况都是由高往低增长的。本文只以向下增长为例。</p>
+</blockquote>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">//file:mm/mmap.c</span><br><span class="line">int expand_stack(struct vm_area_struct *vma, unsigned long address)</span><br><span class="line">&#123;</span><br><span class="line"> ...</span><br><span class="line"> return expand_downwards(vma, address);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int expand_downwards(struct vm_area_struct *vma, unsigned long address)</span><br><span class="line">&#123;</span><br><span class="line"> ...</span><br><span class="line"> //计算栈扩大后的最后大小</span><br><span class="line"> size = vma-&gt;vm_end - address;</span><br><span class="line"></span><br><span class="line"> //计算需要扩充几个页面</span><br><span class="line"> grow = (vma-&gt;vm_start - address) &gt;&gt; PAGE_SHIFT;</span><br><span class="line"></span><br><span class="line"> //判断是否允许扩充</span><br><span class="line"> acct_stack_growth(vma, size, grow);</span><br><span class="line"></span><br><span class="line"> //如果允许则开始扩充</span><br><span class="line"> vma-&gt;vm_start = address;</span><br><span class="line"></span><br><span class="line"> return ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 expand_downwards 中先进行了几个计算。</p>
+<ul>
+<li>计算出新的堆栈大小。计算公式是 size &#x3D; vma-&gt;vm_end - address;</li>
+<li>计算需要增长的页数。计算公式是 grow &#x3D; (vma-&gt;vm_start - address) &gt;&gt; PAGE_SHIFT;</li>
+</ul>
+<p>然后会判断此次栈空间是否被允许扩充， 判断是在 acct_stack_growth 中完成的。如果允许扩展，则简单修改一下 vma-&gt;vm_start 就可以了！</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic1.zhimg.com/80/v2-cff6204b9aa9ec2e34875f38963c2d44_720w.webp" alt="img"></p>
+<p>我们再来看 acct_stack_growth 都进行了哪些限制判断。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">//file:mm/mmap.c</span><br><span class="line">static int acct_stack_growth(struct vm_area_struct *vma, unsigned long size, unsigned long grow)</span><br><span class="line">&#123;</span><br><span class="line"> ...</span><br><span class="line"> //检查地址空间是否超出限制</span><br><span class="line"> if (!may_expand_vm(mm, grow))</span><br><span class="line">  return -ENOMEM;</span><br><span class="line"></span><br><span class="line"> //检查是否超出栈的大小限制</span><br><span class="line"> if (size &gt; ACCESS_ONCE(rlim[RLIMIT_STACK].rlim_cur))</span><br><span class="line">  return -ENOMEM;</span><br><span class="line"> ...</span><br><span class="line"> return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 acct_stack_growth 中只是进行一系列的判断。may_expand_vm 判断的是增长完这几个页后是否超出整体虚拟地址空间大小的限制。rlim[RLIMIT_STACK].rlim_cur 中记录的是栈空间大小的限制。这些限制都可以通过 ulimit 命令查看到。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># ulimit -a</span><br><span class="line">......</span><br><span class="line">max memory size         (kbytes, -m) unlimited</span><br><span class="line">stack size              (kbytes, -s) 8192</span><br><span class="line">virtual memory          (kbytes, -v) unlimited</span><br></pre></td></tr></table></figure>
+
+<p>上面的这个输出表示虚拟地址空间大小没有限制，栈空间的限制是 8 MB。如果进程栈大小超过了这个限制，会返回 -ENOMEM。如果觉得系统默认的大小不合适可以通过 ulimit 命令修改。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># ulimit -s 10240</span><br><span class="line"># ulimit -a</span><br><span class="line">stack size              (kbytes, -s) 10240</span><br></pre></td></tr></table></figure>
+
+<p>到这里开篇的第二个问题也有答案了，堆栈的大小限制是多大？这个限制可以调整吗？<br>进程堆栈大小的限制在每个机器上都是不一样的，可以通过 ulimit 命令来查看，也同样可以使用该命令修改。</p>
+<p>至于开篇的问题3，当堆栈发生溢出后应用程序会发生什么？写个简单的无限递归调用就知道了，估计你也遇到过。报错结果就是</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x27;Segmentation fault (core dumped)</span><br></pre></td></tr></table></figure>
+
+<h2 id="4、本文总结"><a href="#4、本文总结" class="headerlink" title="4、本文总结"></a>4、本文总结</h2><p>来总结下本文的内容，本文讨论了进程栈内存的工作原理。</p>
+<p>第一，进程在加载的时候给进程栈申请了一块虚拟地址空间 vma 内核对象。vm_start 和 vm_end 之间留了一个 Page ，也就是说默认给栈准备了 4KB 的空间。<br>第二，当进程在运行的过程中在栈上开始分配和访问变量的时候，如果物理页还没有分配，会触发缺页中断。在缺页中断中调用内核的伙伴系统真正地分配物理内存。<br>第三，当栈中的存储超过 4KB 的时候会自动进行扩大。不过大小要受到限制，其大小限制可以通过 ulimit -s来查看和设置。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic4.zhimg.com/80/v2-a3ea1ac0ec54715a1b24f908b9c3e04b_720w.webp" alt="img"></p>
+<p>注意，今天我们讨论的都是进程栈。线程栈和进程栈有些不一样。</p>
+<p>在回顾和总结下开篇我们抛出的三个问题：</p>
+<p>问题一：堆栈的物理内存是什么时候分配的？进程在加载的时候只是会给新进程的栈内存分配一段地址空间范围。而真正的物理内存是等到访问的时候触发缺页中断，再从伙伴系统中申请的。</p>
+<p>问题二：堆栈的大小限制是多大？这个限制可以调整吗？<br>进程堆栈大小的限制在每个机器上都是不一样的，可以通过 ulimit 命令来查看，也同样可以使用该命令修改。</p>
+<p>问题3：当堆栈发生溢出后应用程序会发生什么？当堆栈溢出的时候，我们会收到报错 “Segmentation fault (core dumped)”</p>
+<p>最后，抛个问题大家一起思考吧。你觉得内核为什么要对进程栈的地址空间进行限制呢？</p>
+<hr>
+<p>版权声明：本文为知乎博主「Linux内核库」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文 出处链接及本声明。</p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/606284748">https://zhuanlan.zhihu.com/p/606284748</a></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%B0%83%E5%BA%A6%E5%92%8C%E5%86%85%E6%A0%B8%E5%90%8C%E6%AD%A5/">Linux内核调度和内核同步</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%AE%A1%E7%90%86%E4%B8%8E%E8%B0%83%E5%BA%A6/">Linux内核进程的管理与调度</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81%E8%BF%9B%E7%A8%8B%E5%A0%86%E6%A0%88%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-text">1、进程堆栈的初始化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81%E7%89%A9%E7%90%86%E9%A1%B5%E7%9A%84%E7%94%B3%E8%AF%B7"><span class="toc-text">2、物理页的申请</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E6%A0%88%E7%9A%84%E8%87%AA%E5%8A%A8%E5%A2%9E%E9%95%BF"><span class="toc-text">3、栈的自动增长</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%E3%80%81%E6%9C%AC%E6%96%87%E6%80%BB%E7%BB%93"><span class="toc-text">4、本文总结</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

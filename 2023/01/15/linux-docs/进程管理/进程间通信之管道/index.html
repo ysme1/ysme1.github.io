@@ -1,0 +1,543 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>进程间通信之管道 - Blog</title>
+
+  
+    <meta name="description" content="一. 前言上文中我们介绍了进程间通信的方法之一：信号，本文将继续介绍另一种进程间通信的方法，即管道。管道是Linux中使用shell经常用到的一个技术，本文将深入剖析管道的实现和运行逻辑。 二. 管道简介在Linux的日常使用中，我们常常会用到管道，如下所示 ps -ef | grep 关键字 | awk &#39;&#123;print $2&#125;&#39; | xargs kill -9">
+<meta property="og:type" content="article">
+<meta property="og:title" content="进程间通信之管道">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E4%B9%8B%E7%AE%A1%E9%81%93/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="一. 前言上文中我们介绍了进程间通信的方法之一：信号，本文将继续介绍另一种进程间通信的方法，即管道。管道是Linux中使用shell经常用到的一个技术，本文将深入剖析管道的实现和运行逻辑。 二. 管道简介在Linux的日常使用中，我们常常会用到管道，如下所示 ps -ef | grep 关键字 | awk &#39;&#123;print $2&#125;&#39; | xargs kill -9">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/128118954-23f78086-e7fa-498c-8759-c897097b7f8c.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/128119058-30b537b4-d630-47f8-8dd9-0aaf60911d59.png">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.979Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux开发">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/128118954-23f78086-e7fa-498c-8759-c897097b7f8c.png">
+  
+  
+  
+  <meta name="keywords" content="Linux开发">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux/">linux</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.979Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>进程间通信之管道</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="一-前言"><a href="#一-前言" class="headerlink" title="一. 前言"></a>一. 前言</h2><p>上文中我们介绍了进程间通信的方法之一：信号，本文将继续介绍另一种进程间通信的方法，即管道。管道是Linux中使用shell经常用到的一个技术，本文将深入剖析管道的实现和运行逻辑。</p>
+<h2 id="二-管道简介"><a href="#二-管道简介" class="headerlink" title="二. 管道简介"></a>二. 管道简介</h2><p>在Linux的日常使用中，我们常常会用到管道，如下所示</p>
+<pre><code>ps -ef | grep 关键字 | awk &#39;&#123;print $2&#125;&#39; | xargs kill -9
+</code></pre>
+<p>这里面的竖线|就是一个管道。它会将前一个命令的输出，作为后一个命令的输入。从管道的这个名称可以看出来，管道是一种单向传输数据的机制，它其实是一段缓存，里面的数据只能从一端写入，从另一端读出。如果想互相通信，我们需要创建两个管道才行。</p>
+<p>管道分为两种类型，| 表示的管道称为匿名管道，意思就是这个类型的管道没有名字，用完了就销毁了。就像上面那个命令里面的一样，竖线代表的管道随着命令的执行自动创建、自动销毁。用户甚至都不知道自己在用管道这种技术，就已经解决了问题。另外一种类型是命名管道。这个类型的管道需要通过 mkfifo 命令显式地创建。</p>
+<pre><code>mkfifo hello
+</code></pre>
+<p>我们可以往管道里面写入东西。例如，写入一个字符串。</p>
+<pre><code># echo &quot;hello world&quot; &gt; hello
+</code></pre>
+<p>这个时候管道里面的内容没有被读出，这个命令就会停在这里。这个时候，我们就需要重新连接一个终端。在终端中用下面的命令读取管道里面的内容：</p>
+<pre><code># cat &lt; hello hello world
+</code></pre>
+<p>一方面，我们能够看到，管道里面的内容被读取出来，打印到了终端上；另一方面，echo 那个命令正常退出了。这就是有名管道的执行流程。</p>
+<h2 id="三-匿名管道创建"><a href="#三-匿名管道创建" class="headerlink" title="三. 匿名管道创建"></a>三. 匿名管道创建</h2><p>实际管道的创建调用的是系统调用pipe()，该函数建了一个管道 pipe，返回了两个文件描述符，这表示管道的两端，一个是管道的读取端描述符 fd[0]，另一个是管道的写入端描述符 fd[1]。</p>
+<pre><code>int pipe(int fd[2])
+</code></pre>
+<p>其内核实现如下所示，pipe2 ()调用 __do_pipe_flags() 创建一个数组 files来存放管道的两端的打开文件，另一个数组 fd 存放管道的两端的文件描述符。如果 __do_pipe_flags() 没有错误，那就调用 fd_install()将两个 fd 和两个 struct file 关联起来，这一点和打开一个文件的过程类似。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">SYSCALL_DEFINE1(pipe, <span class="type">int</span> __user *, fildes)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> sys_pipe2(fildes, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">SYSCALL_DEFINE2(pipe2, <span class="type">int</span> __user *, fildes, <span class="type">int</span>, flags)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">files</span>[2];</span></span><br><span class="line">    <span class="type">int</span> fd[<span class="number">2</span>];</span><br><span class="line">    <span class="type">int</span> error;</span><br><span class="line"></span><br><span class="line">    error = __do_pipe_flags(fd, files, flags);</span><br><span class="line">    <span class="keyword">if</span> (!error) &#123;</span><br><span class="line">        <span class="keyword">if</span> (unlikely(copy_to_user(fildes, fd, <span class="keyword">sizeof</span>(fd)))) &#123;</span><br><span class="line">......</span><br><span class="line">            error = -EFAULT;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            fd_install(fd[<span class="number">0</span>], files[<span class="number">0</span>]);</span><br><span class="line">            fd_install(fd[<span class="number">1</span>], files[<span class="number">1</span>]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> error;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>__do_pipe_flags()调用了create_pipe_files()生成fd，然后调用get_unused_fd_flags()赋值fdr和fdw，即读文件描述符和写文件描述符。由此也可以看出管道的特性：由一端写入，由另一端读出。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> __do_pipe_flags(<span class="type">int</span> *fd, <span class="keyword">struct</span> file **files, <span class="type">int</span> flags)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> error;</span><br><span class="line">    <span class="type">int</span> fdw, fdr;</span><br><span class="line">......</span><br><span class="line">    error = create_pipe_files(files, flags);</span><br><span class="line">......</span><br><span class="line">    error = get_unused_fd_flags(flags);</span><br><span class="line">......</span><br><span class="line">    fdr = error;</span><br><span class="line">    error = get_unused_fd_flags(flags);</span><br><span class="line">......</span><br><span class="line">    fdw = error;</span><br><span class="line">    audit_fd_pair(fdr, fdw);</span><br><span class="line">    fd[<span class="number">0</span>] = fdr;</span><br><span class="line">    fd[<span class="number">1</span>] = fdw;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>create_pipe_files()是管道创建的关键逻辑，从这里可以看出来管道实际上也是一种抽象的文件系统pipefs，有着对应的特殊文件以及inode。这里首先通过get_pipe_inode()获取特殊inode，然后调用alloc_file_pseudo()通过inode以及对应的挂载结构体pipe_mnt，文件操作结构体pipefifo_fops创建关联的dentry并以此创建文件结构体并分配内存，通过alloc_file_clone()创建一份新的file后将两个文件分别保存在res[0]和res[1]中。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">create_pipe_files</span><span class="params">(<span class="keyword">struct</span> file **res, <span class="type">int</span> flags)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">inode</span> *<span class="title">inode</span> =</span> get_pipe_inode();</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">f</span>;</span></span><br><span class="line">    <span class="keyword">if</span> (!inode)</span><br><span class="line">        <span class="keyword">return</span> -ENFILE;</span><br><span class="line">    f = alloc_file_pseudo(inode, pipe_mnt, <span class="string">&quot;&quot;</span>,</span><br><span class="line">                O_WRONLY | (flags &amp; (O_NONBLOCK | O_DIRECT)),</span><br><span class="line">                &amp;pipefifo_fops);</span><br><span class="line">    <span class="keyword">if</span> (IS_ERR(f)) &#123;</span><br><span class="line">        free_pipe_info(inode-&gt;i_pipe);</span><br><span class="line">        iput(inode);</span><br><span class="line">        <span class="keyword">return</span> PTR_ERR(f);</span><br><span class="line">    &#125;</span><br><span class="line">    f-&gt;private_data = inode-&gt;i_pipe;</span><br><span class="line">    res[<span class="number">0</span>] = alloc_file_clone(f, O_RDONLY | (flags &amp; O_NONBLOCK),</span><br><span class="line">                  &amp;pipefifo_fops);</span><br><span class="line">    <span class="keyword">if</span> (IS_ERR(res[<span class="number">0</span>])) &#123;</span><br><span class="line">        put_pipe_info(inode, inode-&gt;i_pipe);</span><br><span class="line">        fput(f);</span><br><span class="line">        <span class="keyword">return</span> PTR_ERR(res[<span class="number">0</span>]);</span><br><span class="line">    &#125;</span><br><span class="line">    res[<span class="number">0</span>]-&gt;private_data = inode-&gt;i_pipe;</span><br><span class="line">    res[<span class="number">1</span>] = f;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其虚拟文件系统pipefs对应的结构体和操作如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_system_type</span> <span class="title">pipe_fs_type</span> =</span> &#123;</span><br><span class="line">  .name    = <span class="string">&quot;pipefs&quot;</span>,</span><br><span class="line">  .mount    = pipefs_mount,</span><br><span class="line">  .kill_sb  = kill_anon_super,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> __init <span class="title function_">init_pipe_fs</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> err = register_filesystem(&amp;pipe_fs_type);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!err) &#123;</span><br><span class="line">        pipe_mnt = kern_mount(&amp;pipe_fs_type);</span><br><span class="line">    &#125;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">pipefifo_fops</span> =</span> &#123;</span><br><span class="line">    .open    = fifo_open,</span><br><span class="line">    .llseek    = no_llseek,</span><br><span class="line">    .read_iter  = pipe_read,</span><br><span class="line">    .write_iter  = pipe_write,</span><br><span class="line">    .poll    = pipe_poll,</span><br><span class="line">    .unlocked_ioctl  = pipe_ioctl,</span><br><span class="line">    .release  = pipe_release,</span><br><span class="line">    .fasync    = pipe_fasync,</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">struct</span> inode * <span class="title function_">get_pipe_inode</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">inode</span> *<span class="title">inode</span> =</span> new_inode_pseudo(pipe_mnt-&gt;mnt_sb);</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pipe_inode_info</span> *<span class="title">pipe</span>;</span></span><br><span class="line">......</span><br><span class="line">    inode-&gt;i_ino = get_next_ino();</span><br><span class="line"></span><br><span class="line">    pipe = alloc_pipe_info();</span><br><span class="line">......</span><br><span class="line">    inode-&gt;i_pipe = pipe;</span><br><span class="line">    pipe-&gt;files = <span class="number">2</span>;</span><br><span class="line">    pipe-&gt;readers = pipe-&gt;writers = <span class="number">1</span>;</span><br><span class="line">    inode-&gt;i_fop = &amp;pipefifo_fops;</span><br><span class="line">    inode-&gt;i_state = I_DIRTY;</span><br><span class="line">    inode-&gt;i_mode = S_IFIFO | S_IRUSR | S_IWUSR;</span><br><span class="line">    inode-&gt;i_uid = current_fsuid();</span><br><span class="line">    inode-&gt;i_gid = current_fsgid();</span><br><span class="line">    inode-&gt;i_atime = inode-&gt;i_mtime = inode-&gt;i_ctime = current_time(inode);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> inode;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>至此，一个匿名管道就创建成功了。如果对于 fd[1]写入，调用的是 pipe_write()，向 pipe_buffer 里面写入数据；如果对于 fd[0]的读入，调用的是 pipe_read()，也就是从 pipe_buffer 里面读取数据。至此，我们在一个进程内创建了管道，但是尚未实现进程间通信。</p>
+<h2 id="四-匿名管道通信"><a href="#四-匿名管道通信" class="headerlink" title="四. 匿名管道通信"></a>四. 匿名管道通信</h2><p>在上文中我们提到了匿名管道通过|符号实现进程间的通信，传递输入给下一个进程作为输出，其实现原理如下：</p>
+<ul>
+<li>利用fork创建子进程，复制file_struct会同样复制fd输入输出数组，但是fd指向的文件仅有一份，即两个进程间可以通过fd数组实现对同一个管道文件的跨进程读写操作</li>
+<li>禁用父进程的读，禁用子进程的写，即从父进程写入从子进程读出，从而实现了单向管道，避免了混乱</li>
+<li>对于A|B来说，shell首先创建子进程A，接着创建子进程B，由于二者均从shell创建，因此共用fd数组。shell关闭读写，A开写B开读，从而实现了A 和B之间的通信。</li>
+</ul>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/128118954-23f78086-e7fa-498c-8759-c897097b7f8c.png" alt="image"></p>
+<p>接着我们需要调用dup2()实现输入输出和管道两端的关联，该函数会将fd赋值给fd2</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Duplicate FD to FD2, closing the old FD2 and making FD2 be</span></span><br><span class="line"><span class="comment">   open the same file as FD is.  Return FD2 or -1.  */</span></span><br><span class="line"><span class="type">int</span></span><br><span class="line">__dup2 (<span class="type">int</span> fd, <span class="type">int</span> fd2)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">if</span> (fd &lt; <span class="number">0</span> || fd2 &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">      __set_errno (EBADF);</span><br><span class="line">      <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  <span class="keyword">if</span> (fd == fd2)</span><br><span class="line">    <span class="comment">/* No way to check that they are valid.  */</span></span><br><span class="line">    <span class="keyword">return</span> fd2;</span><br><span class="line">  __set_errno (ENOSYS);</span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 files_struct 里面，有这样一个表，下标是 fd，内容指向一个打开的文件 struct file。在这个表里面，前三项是定下来的，其中第零项 STDIN_FILENO 表示标准输入，第一项 STDOUT_FILENO 表示标准输出，第三项 STDERR_FILENO 表示错误输出。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">files_struct</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> __<span class="title">rcu</span> * <span class="title">fd_array</span>[<span class="title">NR_OPEN_DEFAULT</span>];</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在 A 进程写入端通过dup2(fd[1],STDOUT_FILENO)将 STDOUT_FILENO（也即第一项）不再指向标准输出，而是指向创建的管道文件，那么以后往标准输出写入的任何东西，都会写入管道文件。</li>
+<li>在 B 进程中读取端通过dup2(fd[0],STDIN_FILENO)将 STDIN_FILENO 也即第零项不再指向标准输入，而是指向创建的管道文件，那么以后从标准输入读取的任何东西，都来自于管道文件。</li>
+</ul>
+<p>至此，我们将 A|B 的功能完成。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/128119058-30b537b4-d630-47f8-8dd9-0aaf60911d59.png" alt="image"></p>
+<h2 id="五-有名管道"><a href="#五-有名管道" class="headerlink" title="五. 有名管道"></a>五. 有名管道</h2><p>对于有名管道，我们需要通过mkfifo创建，实际调用__xmknod()函数，最终调用mknod()，和字符设备创建一样。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* Create a named pipe (FIFO) named PATH with protections MODE.  */</span></span><br><span class="line"><span class="type">int</span></span><br><span class="line"><span class="title function_">mkfifo</span> <span class="params">(<span class="type">const</span> <span class="type">char</span> *path, <span class="type">mode_t</span> mode)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">dev_t</span> dev = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">return</span> __xmknod (_MKNOD_VER, path, mode | S_IFIFO, &amp;dev);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Create a device file named PATH, with permission and special bits MODE</span></span><br><span class="line"><span class="comment">   and device number DEV (which can be constructed from major and minor</span></span><br><span class="line"><span class="comment">   device numbers with the `makedev&#x27; macro above).  */</span></span><br><span class="line"><span class="type">int</span></span><br><span class="line">__xmknod (<span class="type">int</span> vers, <span class="type">const</span> <span class="type">char</span> *path, <span class="type">mode_t</span> mode, <span class="type">dev_t</span> *dev)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">unsigned</span> <span class="type">long</span> <span class="type">long</span> <span class="type">int</span> k_dev;</span><br><span class="line">    <span class="keyword">if</span> (vers != _MKNOD_VER)</span><br><span class="line">        <span class="keyword">return</span> INLINE_SYSCALL_ERROR_RETURN_VALUE (EINVAL);</span><br><span class="line">    <span class="comment">/* We must convert the value to dev_t type used by the kernel.  */</span></span><br><span class="line">    k_dev =  (*dev) &amp; ((<span class="number">1ULL</span> &lt;&lt; <span class="number">32</span>) - <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (k_dev != *dev)</span><br><span class="line">        <span class="keyword">return</span> INLINE_SYSCALL_ERROR_RETURN_VALUE (EINVAL);</span><br><span class="line">    <span class="keyword">return</span> INLINE_SYSCALL (mknod, <span class="number">3</span>, path, mode, (<span class="type">unsigned</span> <span class="type">int</span>) k_dev);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>mknod 在字符设备那一节已经解析过了，先是通过 user_path_create() 对于这个管道文件创建一个 dentry，然后因为是 S_IFIFO，所以调用 vfs_mknod()。由于这个管道文件是创建在一个普通文件系统上的，假设是在 ext4 文件上，于是 vfs_mknod 会调用 ext4_dir_inode_operations 的 mknod，也即会调用 ext4_mknod()。</p>
+<p>在 ext4_mknod() 中，ext4_new_inode_start_handle() 会调用 __ext4_new_inode()，在 ext4 文件系统上真的创建一个文件，但是会调用 init_special_inode()，创建一个内存中特殊的 inode，这个函数我们在字符设备文件中也遇到过，只不过当时 inode 的 i_fop 指向的是 def_chr_fops，这次换成管道文件了，inode 的 i_fop 变成指向 pipefifo_fops，这一点和匿名管道是一样的。这样，管道文件就创建完毕了。</p>
+<p>接下来，要打开这个管道文件，我们还是会调用文件系统的 open() 函数。还是沿着文件系统的调用方式，一路调用到 pipefifo_fops 的 open() 函数，也就是 fifo_open()。在 fifo_open() 里面会创建 pipe_inode_info，这一点和匿名管道也是一样的。这个结构里面有个成员是 struct pipe_buffer *bufs。我们可以知道，所谓的命名管道，其实是也是内核里面的一串缓存。接下来，对于命名管道的写入，我们还是会调用 pipefifo_fops 的 pipe_write() 函数，向 pipe_buffer 里面写入数据。对于命名管道的读入，我们还是会调用 pipefifo_fops 的 pipe_read()，也就是从 pipe_buffer 里面读取数据。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">static</span> <span class="type">int</span> <span class="title function_">fifo_open</span><span class="params">(<span class="keyword">struct</span> inode *inode, <span class="keyword">struct</span> file *filp)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">pipe_inode_info</span> *<span class="title">pipe</span>;</span></span><br><span class="line">    <span class="type">bool</span> is_pipe = inode-&gt;i_sb-&gt;s_magic == PIPEFS_MAGIC;</span><br><span class="line">    <span class="type">int</span> ret;</span><br><span class="line">    filp-&gt;f_version = <span class="number">0</span>;</span><br><span class="line">    spin_lock(&amp;inode-&gt;i_lock);</span><br><span class="line">    <span class="keyword">if</span> (inode-&gt;i_pipe) &#123;</span><br><span class="line">        pipe = inode-&gt;i_pipe;</span><br><span class="line">        pipe-&gt;files++;</span><br><span class="line">        spin_unlock(&amp;inode-&gt;i_lock);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        spin_unlock(&amp;inode-&gt;i_lock);</span><br><span class="line">        pipe = alloc_pipe_info();</span><br><span class="line">        <span class="keyword">if</span> (!pipe)</span><br><span class="line">            <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">        pipe-&gt;files = <span class="number">1</span>;</span><br><span class="line">        spin_lock(&amp;inode-&gt;i_lock);</span><br><span class="line">        <span class="keyword">if</span> (unlikely(inode-&gt;i_pipe)) &#123;</span><br><span class="line">            inode-&gt;i_pipe-&gt;files++;</span><br><span class="line">            spin_unlock(&amp;inode-&gt;i_lock);</span><br><span class="line">            free_pipe_info(pipe);</span><br><span class="line">            pipe = inode-&gt;i_pipe;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            inode-&gt;i_pipe = pipe;</span><br><span class="line">            spin_unlock(&amp;inode-&gt;i_lock);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    filp-&gt;private_data = pipe;</span><br><span class="line">    <span class="comment">/* OK, we have a pipe and it&#x27;s pinned down */</span></span><br><span class="line">    __pipe_lock(pipe);</span><br><span class="line">    <span class="comment">/* We can only do regular read/write on fifos */</span></span><br><span class="line">    filp-&gt;f_mode &amp;= (FMODE_READ | FMODE_WRITE);</span><br><span class="line">    <span class="keyword">switch</span> (filp-&gt;f_mode) &#123;</span><br><span class="line">    <span class="keyword">case</span> FMODE_READ:</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     *  O_RDONLY</span></span><br><span class="line"><span class="comment">     *  POSIX.1 says that O_NONBLOCK means return with the FIFO</span></span><br><span class="line"><span class="comment">     *  opened, even when there is no process writing the FIFO.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">        pipe-&gt;r_counter++;</span><br><span class="line">        <span class="keyword">if</span> (pipe-&gt;readers++ == <span class="number">0</span>)</span><br><span class="line">            wake_up_partner(pipe);</span><br><span class="line">        <span class="keyword">if</span> (!is_pipe &amp;&amp; !pipe-&gt;writers) &#123;</span><br><span class="line">            <span class="keyword">if</span> ((filp-&gt;f_flags &amp; O_NONBLOCK)) &#123;</span><br><span class="line">                <span class="comment">/* suppress EPOLLHUP until we have</span></span><br><span class="line"><span class="comment">                 * seen a writer */</span></span><br><span class="line">                filp-&gt;f_version = pipe-&gt;w_counter;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">if</span> (wait_for_partner(pipe, &amp;pipe-&gt;w_counter))</span><br><span class="line">                    <span class="keyword">goto</span> err_rd;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">case</span> FMODE_WRITE:</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     *  O_WRONLY</span></span><br><span class="line"><span class="comment">     *  POSIX.1 says that O_NONBLOCK means return -1 with</span></span><br><span class="line"><span class="comment">     *  errno=ENXIO when there is no process reading the FIFO.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">        ret = -ENXIO;</span><br><span class="line">        <span class="keyword">if</span> (!is_pipe &amp;&amp; (filp-&gt;f_flags &amp; O_NONBLOCK) &amp;&amp; !pipe-&gt;readers)</span><br><span class="line">            <span class="keyword">goto</span> err;</span><br><span class="line">        pipe-&gt;w_counter++;</span><br><span class="line">        <span class="keyword">if</span> (!pipe-&gt;writers++)</span><br><span class="line">            wake_up_partner(pipe);</span><br><span class="line">        <span class="keyword">if</span> (!is_pipe &amp;&amp; !pipe-&gt;readers) &#123;</span><br><span class="line">            <span class="keyword">if</span> (wait_for_partner(pipe, &amp;pipe-&gt;r_counter))</span><br><span class="line">                <span class="keyword">goto</span> err_wr;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">case</span> FMODE_READ | FMODE_WRITE:</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     *  O_RDWR</span></span><br><span class="line"><span class="comment">     *  POSIX.1 leaves this case &quot;undefined&quot; when O_NONBLOCK is set.</span></span><br><span class="line"><span class="comment">     *  This implementation will NEVER block on a O_RDWR open, since</span></span><br><span class="line"><span class="comment">     *  the process can at least talk to itself.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">        pipe-&gt;readers++;</span><br><span class="line">        pipe-&gt;writers++;</span><br><span class="line">        pipe-&gt;r_counter++;</span><br><span class="line">        pipe-&gt;w_counter++;</span><br><span class="line">        <span class="keyword">if</span> (pipe-&gt;readers == <span class="number">1</span> || pipe-&gt;writers == <span class="number">1</span>)</span><br><span class="line">            wake_up_partner(pipe);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        ret = -EINVAL;</span><br><span class="line">        <span class="keyword">goto</span> err;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* Ok! */</span></span><br><span class="line">    __pipe_unlock(pipe);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>无论是匿名管道还是命名管道，在内核都是一个文件。只要是文件就要有一个 inode。在这种特殊的 inode 里面，file_operations 指向管道特殊的 pipefifo_fops，这个 inode 对应内存里面的缓存。当我们用文件的 open 函数打开这个管道设备文件的时候，会调用 pipefifo_fops 里面的方法创建 struct file 结构，他的 inode 指向特殊的 inode，也对应内存里面的缓存，file_operations 也指向管道特殊的 pipefifo_fops。写入一个 pipe 就是从 struct file 结构找到缓存写入，读取一个 pipe 就是从 struct file 结构找到缓存读出。匿名管道和命名管道区别就在于匿名管道会通过dup2()指定输入输出源，完成之后立即释放，而命名管道通过mkfifo创建挂载后，需要手动调用pipe_read()和pipe_write()来完成其功能，表现到用户端即为前面提到的例子。</p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F%E5%BC%80%E5%8F%91/Linux/x86%20Ubuntu%E4%B8%8A%E5%BB%BA%E7%AB%8Baarch64&arm64%20Ubuntu%E7%9A%84%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E9%93%BE/">x86 Ubuntu上建立aarch64/arm64 Ubuntu的交叉编译链</a></div><div class="item" id="next"></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80-%E5%89%8D%E8%A8%80"><span class="toc-text">一. 前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C-%E7%AE%A1%E9%81%93%E7%AE%80%E4%BB%8B"><span class="toc-text">二. 管道简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89-%E5%8C%BF%E5%90%8D%E7%AE%A1%E9%81%93%E5%88%9B%E5%BB%BA"><span class="toc-text">三. 匿名管道创建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B-%E5%8C%BF%E5%90%8D%E7%AE%A1%E9%81%93%E9%80%9A%E4%BF%A1"><span class="toc-text">四. 匿名管道通信</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94-%E6%9C%89%E5%90%8D%E7%AE%A1%E9%81%93"><span class="toc-text">五. 有名管道</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

@@ -1,0 +1,598 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Linux内核看socket底层的本质(IO) - Blog</title>
+
+  
+    <meta name="description" content="1、I&#x2F;O 模型一个输入操作通常包括两个阶段：  等待数据准备好 从内核向进程复制数据  对于一个套接字上的输入操作，第一步通常涉及等待数据从网络中到达。当所等待数据到达时，它被复制到内核中的某个缓冲区。第二步就是把数据从内核缓冲区复制到应用进程缓冲区。 Unix 有五种 I&#x2F;O 模型：  阻塞式 I&#x2F;O 非阻塞式 I&#x2F;O I&#x2F;O 复用（selec">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核看socket底层的本质(IO)">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E7%9C%8Bsocket%E5%BA%95%E5%B1%82%E7%9A%84%E6%9C%AC%E8%B4%A8(IO)/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="1、I&#x2F;O 模型一个输入操作通常包括两个阶段：  等待数据准备好 从内核向进程复制数据  对于一个套接字上的输入操作，第一步通常涉及等待数据从网络中到达。当所等待数据到达时，它被复制到内核中的某个缓冲区。第二步就是把数据从内核缓冲区复制到应用进程缓冲区。 Unix 有五种 I&#x2F;O 模型：  阻塞式 I&#x2F;O 非阻塞式 I&#x2F;O I&#x2F;O 复用（selec">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-5360be48b37f8ff02990e5ba9e691b40_720w.webp">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-06d2b7a4c60fdee4d8c737523457510b_720w.webp">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-c81b85be36389bf6d3c1a3293afe2242_720w.webp">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-6a2d4905b2f02f2ffca3faa0ef70db3d_720w.webp">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-cdb7b4db741402d81752e4651fddf5f1_720w.webp">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-ffb7600b9628204090b41550e4c967b5_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.959Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux开发">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pic1.zhimg.com/80/v2-5360be48b37f8ff02990e5ba9e691b40_720w.webp">
+  
+  
+  
+  <meta name="keywords" content="Linux开发">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux/">linux</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.959Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux内核看socket底层的本质(IO)</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="1、I-O-模型"><a href="#1、I-O-模型" class="headerlink" title="1、I&#x2F;O 模型"></a>1、I&#x2F;O 模型</h2><p><strong>一个输入操作通常包括两个阶段：</strong></p>
+<ul>
+<li>等待数据准备好</li>
+<li>从内核向进程复制数据</li>
+</ul>
+<p>对于一个套接字上的输入操作，第一步通常涉及等待数据从网络中到达。当所等待数据到达时，它被复制到内核中的某个缓冲区。第二步就是把数据从内核缓冲区复制到应用进程缓冲区。</p>
+<p>Unix 有五种 I&#x2F;O 模型：</p>
+<ul>
+<li>阻塞式 I&#x2F;O</li>
+<li>非阻塞式 I&#x2F;O</li>
+<li>I&#x2F;O 复用（select 和 poll）</li>
+<li>信号驱动式 I&#x2F;O（SIGIO）</li>
+<li>异步 I&#x2F;O（AIO）</li>
+</ul>
+<h3 id="1-1阻塞式-I-O"><a href="#1-1阻塞式-I-O" class="headerlink" title="1.1阻塞式 I&#x2F;O"></a>1.1阻塞式 I&#x2F;O</h3><p>应用进程被阻塞，直到数据从内核缓冲区复制到应用进程缓冲区中才返回。</p>
+<p>应该注意到，在阻塞的过程中，其它应用进程还可以执行，因此阻塞不意味着整个操作系统都被阻塞。因为其它应用进程还可以执行，所以不消耗 CPU 时间，这种模型的 CPU 利用率会比较高。</p>
+<p>下图中，recvfrom() 用于接收 Socket 传来的数据，并复制到应用进程的缓冲区 buf 中。这里把 recvfrom() 当成系统调用。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">ssize_t</span> <span class="title">recvfrom</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function"><span class="type">int</span> sockfd, <span class="type">void</span> *buf, </span></span></span><br><span class="line"><span class="params"><span class="function"><span class="type">size_t</span> len, <span class="type">int</span> flags, </span></span></span><br><span class="line"><span class="params"><span class="function"><span class="keyword">struct</span> sockaddr *src_addr, </span></span></span><br><span class="line"><span class="params"><span class="function"><span class="type">socklen_t</span> *addrlen)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic1.zhimg.com/80/v2-5360be48b37f8ff02990e5ba9e691b40_720w.webp" alt="img"></p>
+<h3 id="1-2非阻塞式-I-O"><a href="#1-2非阻塞式-I-O" class="headerlink" title="1.2非阻塞式 I&#x2F;O"></a>1.2非阻塞式 I&#x2F;O</h3><p>应用进程执行系统调用之后，内核返回一个错误码。应用进程可以继续执行，但是需要不断的执行系统调用来获知 I&#x2F;O 是否完成，这种方式称为轮询（polling）。</p>
+<p>由于 CPU 要处理更多的系统调用，因此这种模型的 CPU 利用率比较低。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic4.zhimg.com/80/v2-06d2b7a4c60fdee4d8c737523457510b_720w.webp" alt="img"></p>
+<h3 id="1-3I-O-复用"><a href="#1-3I-O-复用" class="headerlink" title="1.3I&#x2F;O 复用"></a>1.3I&#x2F;O 复用</h3><p>使用 select 或者 poll 等待数据，并且可以等待多个套接字中的任何一个变为可读。这一过程会被阻塞，当某一个套接字可读时返回，之后再使用 recvfrom 把数据从内核复制到进程中。</p>
+<p>它可以让单个进程具有处理多个 I&#x2F;O 事件的能力。又被称为 Event Driven I&#x2F;O，即事件驱动 I&#x2F;O。</p>
+<p>如果一个 Web 服务器没有 I&#x2F;O 复用，那么每一个 Socket 连接都需要创建一个线程去处理。如果同时有几万个连接，那么就需要创建相同数量的线程。相比于多进程和多线程技术，I&#x2F;O 复用不需要进程线程创建和切换的开销，系统开销更小。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic3.zhimg.com/80/v2-c81b85be36389bf6d3c1a3293afe2242_720w.webp" alt="img"></p>
+<h3 id="1-4信号驱动-I-O"><a href="#1-4信号驱动-I-O" class="headerlink" title="1.4信号驱动 I&#x2F;O"></a>1.4信号驱动 I&#x2F;O</h3><p>应用进程使用 sigaction 系统调用，内核立即返回，应用进程可以继续执行，也就是说等待数据阶段应用进程是非阻塞的。内核在数据到达时向应用进程发送 SIGIO 信号，应用进程收到之后在信号处理程序中调用 recvfrom 将数据从内核复制到应用进程中。</p>
+<p>相比于非阻塞式 I&#x2F;O 的轮询方式，信号驱动 I&#x2F;O 的 CPU 利用率更高。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic2.zhimg.com/80/v2-6a2d4905b2f02f2ffca3faa0ef70db3d_720w.webp" alt="img"></p>
+<h3 id="1-5异步-I-O"><a href="#1-5异步-I-O" class="headerlink" title="1.5异步 I&#x2F;O"></a>1.5异步 I&#x2F;O</h3><p>应用进程执行 aio_read 系统调用会立即返回，应用进程可以继续执行，不会被阻塞，内核会在所有操作完成之后向应用进程发送信号。</p>
+<p>异步 I&#x2F;O 与信号驱动 I&#x2F;O 的区别在于，异步 I&#x2F;O 的信号是通知应用进程 I&#x2F;O 完成，而信号驱动 I&#x2F;O 的信号是通知应用进程可以开始 I&#x2F;O。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic2.zhimg.com/80/v2-cdb7b4db741402d81752e4651fddf5f1_720w.webp" alt="img"></p>
+<h3 id="1-6五大-I-O-模型比较"><a href="#1-6五大-I-O-模型比较" class="headerlink" title="1.6五大 I&#x2F;O 模型比较"></a>1.6五大 I&#x2F;O 模型比较</h3><ul>
+<li>同步 I&#x2F;O：将数据从内核缓冲区复制到应用进程缓冲区的阶段（第二阶段），应用进程会阻塞。</li>
+<li>异步 I&#x2F;O：第二阶段应用进程不会阻塞。</li>
+</ul>
+<p>同步 I&#x2F;O 包括阻塞式 I&#x2F;O、非阻塞式 I&#x2F;O、I&#x2F;O 复用和信号驱动 I&#x2F;O ，它们的主要区别在第一个阶段。</p>
+<p>非阻塞式 I&#x2F;O 、信号驱动 I&#x2F;O 和异步 I&#x2F;O 在第一阶段不会阻塞。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic2.zhimg.com/80/v2-ffb7600b9628204090b41550e4c967b5_720w.webp" alt="img"></p>
+<h2 id="2、I-O-复用"><a href="#2、I-O-复用" class="headerlink" title="2、I&#x2F;O 复用"></a>2、I&#x2F;O 复用</h2><p>select&#x2F;poll&#x2F;epoll 都是 I&#x2F;O 多路复用的具体实现，select 出现的最早，之后是 poll，再是 epoll。</p>
+<h3 id="2-1select"><a href="#2-1select" class="headerlink" title="2.1select"></a>2.1select</h3><figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">int select(</span><br><span class="line">int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, </span><br><span class="line">struct timeval *timeout);</span><br></pre></td></tr></table></figure>
+
+<p>select 允许应用程序监视一组文件描述符，等待一个或者多个描述符成为就绪状态，从而完成 I&#x2F;O 操作。</p>
+<ul>
+<li>fd_set 使用数组实现，数组大小使用 FD_SETSIZE 定义，所以只能监听少于 FD_SETSIZE 数量的描述符。有三种类型的描述符类型：readset、writeset、exceptset，分别对应读、写、异常条件的描述符集合。</li>
+<li>timeout 为超时参数，调用 select 会一直阻塞直到有描述符的事件到达或者等待的时间超过 timeout。</li>
+<li>成功调用返回结果大于 0，出错返回结果为 -1，超时返回结果为 0。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">fd_set fd_in, fd_out;</span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">timeval</span> tv;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Reset the sets</span></span><br><span class="line"><span class="built_in">FD_ZERO</span>( &amp;fd_in );</span><br><span class="line"><span class="built_in">FD_ZERO</span>( &amp;fd_out );</span><br><span class="line"></span><br><span class="line"><span class="comment">// Monitor sock1 for input events</span></span><br><span class="line"><span class="built_in">FD_SET</span>( sock1, &amp;fd_in );</span><br><span class="line"></span><br><span class="line"><span class="comment">// Monitor sock2 for output events</span></span><br><span class="line"><span class="built_in">FD_SET</span>( sock2, &amp;fd_out );</span><br><span class="line"></span><br><span class="line"><span class="comment">// Find out which socket has the largest numeric value as select requires it</span></span><br><span class="line"><span class="type">int</span> largest_sock = sock1 &gt; sock2 ? sock1 : sock2;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Wait up to 10 seconds</span></span><br><span class="line">tv.tv_sec = <span class="number">10</span>;</span><br><span class="line">tv.tv_usec = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Call the select</span></span><br><span class="line"><span class="type">int</span> ret = <span class="built_in">select</span>( largest_sock + <span class="number">1</span>, &amp;fd_in, &amp;fd_out, <span class="literal">NULL</span>, &amp;tv );</span><br><span class="line"></span><br><span class="line"><span class="comment">// Check if select actually succeed</span></span><br><span class="line"><span class="keyword">if</span> ( ret == <span class="number">-1</span> )</span><br><span class="line">    <span class="comment">// report error and abort</span></span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> ( ret == <span class="number">0</span> )</span><br><span class="line">    <span class="comment">// timeout; no event detected</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> ( <span class="built_in">FD_ISSET</span>( sock1, &amp;fd_in ) )</span><br><span class="line">        <span class="comment">// input event on sock1</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( <span class="built_in">FD_ISSET</span>( sock2, &amp;fd_out ) )</span><br><span class="line">        <span class="comment">// output event on sock2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2poll"><a href="#2-2poll" class="headerlink" title="2.2poll"></a>2.2poll</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">poll</span><span class="params">(<span class="keyword">struct</span> pollfd *fds, <span class="type">unsigned</span> <span class="type">int</span> nfds, <span class="type">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>poll 的功能与 select 类似，也是等待一组描述符中的一个成为就绪状态。</p>
+<p>poll 中的描述符是 pollfd 类型的数组，pollfd 的定义如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> <span class="title class_">pollfd</span> &#123;</span><br><span class="line">               <span class="type">int</span>   fd;         <span class="comment">/* file descriptor */</span></span><br><span class="line">               <span class="type">short</span> events;     <span class="comment">/* requested events */</span></span><br><span class="line">               <span class="type">short</span> revents;    <span class="comment">/* returned events */</span></span><br><span class="line">           &#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// The structure for two events</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">pollfd</span> fds[<span class="number">2</span>];</span><br><span class="line"></span><br><span class="line"><span class="comment">// Monitor sock1 for input</span></span><br><span class="line">fds[<span class="number">0</span>].fd = sock1;</span><br><span class="line">fds[<span class="number">0</span>].events = POLLIN;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Monitor sock2 for output</span></span><br><span class="line">fds[<span class="number">1</span>].fd = sock2;</span><br><span class="line">fds[<span class="number">1</span>].events = POLLOUT;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Wait 10 seconds</span></span><br><span class="line"><span class="type">int</span> ret = <span class="built_in">poll</span>( &amp;fds, <span class="number">2</span>, <span class="number">10000</span> );</span><br><span class="line"><span class="comment">// Check if poll actually succeed</span></span><br><span class="line"><span class="keyword">if</span> ( ret == <span class="number">-1</span> )</span><br><span class="line">    <span class="comment">// report error and abort</span></span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> ( ret == <span class="number">0</span> )</span><br><span class="line">    <span class="comment">// timeout; no event detected</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// If we detect the event, zero it out so we can reuse the structure</span></span><br><span class="line">    <span class="keyword">if</span> ( fds[<span class="number">0</span>].revents &amp; POLLIN )</span><br><span class="line">        fds[<span class="number">0</span>].revents = <span class="number">0</span>;</span><br><span class="line">        <span class="comment">// input event on sock1</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ( fds[<span class="number">1</span>].revents &amp; POLLOUT )</span><br><span class="line">        fds[<span class="number">1</span>].revents = <span class="number">0</span>;</span><br><span class="line">        <span class="comment">// output event on sock2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-3比较"><a href="#2-3比较" class="headerlink" title="2.3比较"></a>2.3比较</h3><p><strong>1. 功能</strong></p>
+<p>select 和 poll 的功能基本相同，不过在一些实现细节上有所不同。</p>
+<ul>
+<li>select 会修改描述符，而 poll 不会；</li>
+<li>select 的描述符类型使用数组实现，FD_SETSIZE 大小默认为 1024，因此默认只能监听少于 1024 个描述符。如果要监听更多描述符的话，需要修改 FD_SETSIZE 之后重新编译；而 poll 没有描述符数量的限制；</li>
+<li>poll 提供了更多的事件类型，并且对描述符的重复利用上比 select 高。</li>
+<li>如果一个线程对某个描述符调用了 select 或者 poll，另一个线程关闭了该描述符，会导致调用结果不确定。</li>
+</ul>
+<p><strong>2. 速度</strong></p>
+<p>select 和 poll 速度都比较慢，每次调用都需要将全部描述符从应用进程缓冲区复制到内核缓冲区。</p>
+<p><strong>3. 可移植性</strong></p>
+<p>几乎所有的系统都支持 select，但是只有比较新的系统支持 poll。</p>
+<h3 id="2-4epoll"><a href="#2-4epoll" class="headerlink" title="2.4epoll"></a>2.4epoll</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">epoll_create</span><span class="params">(<span class="type">int</span> size)</span></span>;</span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">epoll_ctl</span><span class="params">(<span class="type">int</span> epfd, <span class="type">int</span> op, <span class="type">int</span> fd, <span class="keyword">struct</span> epoll_event *event)</span>；</span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">epoll_wait</span><span class="params">(<span class="type">int</span> epfd, <span class="keyword">struct</span> epoll_event * events, <span class="type">int</span> maxevents, <span class="type">int</span> timeout)</span></span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>epoll_ctl() 用于向内核注册新的描述符或者是改变某个文件描述符的状态。已注册的描述符在内核中会被维护在一棵红黑树上，通过回调函数内核会将 I&#x2F;O 准备好的描述符加入到一个链表中管理，进程调用 epoll_wait() 便可以得到事件完成的描述符。</p>
+<p>从上面的描述可以看出，epoll 只需要将描述符从进程缓冲区向内核缓冲区拷贝一次，并且进程不需要通过轮询来获得事件完成的描述符。</p>
+<p>epoll 仅适用于 Linux OS。</p>
+<p>epoll 比 select 和 poll 更加灵活而且没有描述符数量限制。</p>
+<p>epoll 对多线程编程更有友好，一个线程调用了 epoll_wait() 另一个线程关闭了同一个描述符也不会产生像 select 和 poll 的不确定情况。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Create the epoll descriptor. Only one is needed per app, and is used to monitor all sockets.</span></span><br><span class="line"><span class="comment">// The function argument is ignored (it was not before, but now it is), so put your favorite number here</span></span><br><span class="line"><span class="type">int</span> pollingfd = <span class="built_in">epoll_create</span>( <span class="number">0xCAFE</span> );</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> ( pollingfd &lt; <span class="number">0</span> )</span><br><span class="line"> <span class="comment">// report error</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Initialize the epoll structure in case more members are added in future</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">epoll_event</span> ev = &#123; <span class="number">0</span> &#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Associate the connection class instance with the event. You can associate anything</span></span><br><span class="line"><span class="comment">// you want, epoll does not use this information. We store a connection class pointer, pConnection1</span></span><br><span class="line">ev.data.ptr = pConnection1;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Monitor for input, and do not automatically rearm the descriptor after the event</span></span><br><span class="line">ev.events = EPOLLIN | EPOLLONESHOT;</span><br><span class="line"><span class="comment">// Add the descriptor into the monitoring list. We can do it even if another thread is</span></span><br><span class="line"><span class="comment">// waiting in epoll_wait - the descriptor will be properly added</span></span><br><span class="line"><span class="keyword">if</span> ( <span class="built_in">epoll_ctl</span>( epollfd, EPOLL_CTL_ADD, pConnection1-&gt;<span class="built_in">getSocket</span>(), &amp;ev ) != <span class="number">0</span> )</span><br><span class="line">    <span class="comment">// report error</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// Wait for up to 20 events (assuming we have added maybe 200 sockets before that it may happen)</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">epoll_event</span> pevents[ <span class="number">20</span> ];</span><br><span class="line"></span><br><span class="line"><span class="comment">// Wait for 10 seconds, and retrieve less than 20 epoll_event and store them into epoll_event array</span></span><br><span class="line"><span class="type">int</span> ready = <span class="built_in">epoll_wait</span>( pollingfd, pevents, <span class="number">20</span>, <span class="number">10000</span> );</span><br><span class="line"><span class="comment">// Check if epoll actually succeed</span></span><br><span class="line"><span class="keyword">if</span> ( ret == <span class="number">-1</span> )</span><br><span class="line">    <span class="comment">// report error and abort</span></span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> ( ret == <span class="number">0</span> )</span><br><span class="line">    <span class="comment">// timeout; no event detected</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// Check if any events detected</span></span><br><span class="line">    <span class="keyword">for</span> ( <span class="type">int</span> i = <span class="number">0</span>; i &lt; ready; i++ )</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> ( pevents[i].events &amp; EPOLLIN )</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Get back our connection pointer</span></span><br><span class="line">            Connection * c = (Connection*) pevents[i].data.ptr;</span><br><span class="line">            c-&gt;<span class="built_in">handleReadEvent</span>();</span><br><span class="line">         &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="2-5工作模式"><a href="#2-5工作模式" class="headerlink" title="2.5工作模式"></a>2.5工作模式</h3><p>epoll 的描述符事件有两种触发模式：LT（level trigger）和 ET（edge trigger）。</p>
+<p><strong>1. LT 模式</strong></p>
+<p>当 epoll_wait() 检测到描述符事件到达时，将此事件通知进程，进程可以不立即处理该事件，下次调用 epoll_wait() 会再次通知进程。是默认的一种模式，并且同时支持 Blocking 和 No-Blocking。</p>
+<p><strong>2. ET 模式</strong></p>
+<p>和 LT 模式不同的是，通知之后进程必须立即处理事件，下次再调用 epoll_wait() 时不会再得到事件到达的通知。</p>
+<p>很大程度上减少了 epoll 事件被重复触发的次数，因此效率要比 LT 模式高。只支持 No-Blocking，以避免由于一个文件句柄的阻塞读&#x2F;阻塞写操作把处理多个文件描述符的任务饿死。</p>
+<h3 id="2-6应用场景"><a href="#2-6应用场景" class="headerlink" title="2.6应用场景"></a>2.6应用场景</h3><p>很容易产生一种错觉认为只要用 epoll 就可以了，select 和 poll 都已经过时了，其实它们都有各自的使用场景。</p>
+<p><strong>select 应用场景</strong></p>
+<p>select 的 timeout 参数精度为微秒，而 poll 和 epoll 为毫秒，因此 select 更加适用于实时性要求比较高的场景，比如核反应堆的控制。</p>
+<p>select 可移植性更好，几乎被所有主流平台所支持。</p>
+<p><strong>poll 应用场景</strong></p>
+<p>poll 没有最大描述符数量的限制，如果平台支持并且对实时性要求不高，应该使用 poll 而不是 select。</p>
+<p><strong>epoll 应用场景</strong></p>
+<p>只需要运行在 Linux 平台上，有大量的描述符需要同时轮询，并且这些连接最好是长连接。</p>
+<p>需要同时监控小于 1000 个描述符，就没有必要使用 epoll，因为这个应用场景下并不能体现 epoll 的优势。</p>
+<p>需要监控的描述符状态变化多，而且都是非常短暂的，也没有必要使用 epoll。因为 epoll 中的所有描述符都存储在内核中，造成每次需要对描述符的状态改变都需要通过 epoll_ctl() 进行系统调用，频繁系统调用降低效率。并且 epoll 的描述符存储在内核，不容易调试。</p>
+<hr>
+<p>版权声明：本文为知乎博主「玩转Linux内核」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/477292559">https://zhuanlan.zhihu.com/p/477292559</a></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E6%9E%B6%E6%9E%84%E5%92%8C%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86/">Linux内核架构和工作原理</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8%E7%BC%96%E8%AF%91%E4%B8%8E%E5%BC%80%E5%8F%91/">Linux内核编译与开发</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81I-O-%E6%A8%A1%E5%9E%8B"><span class="toc-text">1、I&#x2F;O 模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1%E9%98%BB%E5%A1%9E%E5%BC%8F-I-O"><span class="toc-text">1.1阻塞式 I&#x2F;O</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2%E9%9D%9E%E9%98%BB%E5%A1%9E%E5%BC%8F-I-O"><span class="toc-text">1.2非阻塞式 I&#x2F;O</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3I-O-%E5%A4%8D%E7%94%A8"><span class="toc-text">1.3I&#x2F;O 复用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-4%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8-I-O"><span class="toc-text">1.4信号驱动 I&#x2F;O</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-5%E5%BC%82%E6%AD%A5-I-O"><span class="toc-text">1.5异步 I&#x2F;O</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-6%E4%BA%94%E5%A4%A7-I-O-%E6%A8%A1%E5%9E%8B%E6%AF%94%E8%BE%83"><span class="toc-text">1.6五大 I&#x2F;O 模型比较</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81I-O-%E5%A4%8D%E7%94%A8"><span class="toc-text">2、I&#x2F;O 复用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1select"><span class="toc-text">2.1select</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2poll"><span class="toc-text">2.2poll</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3%E6%AF%94%E8%BE%83"><span class="toc-text">2.3比较</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4epoll"><span class="toc-text">2.4epoll</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F"><span class="toc-text">2.5工作模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-6%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-text">2.6应用场景</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

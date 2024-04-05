@@ -1,0 +1,567 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Linux内核进程管理之进程ID - Blog</title>
+
+  
+    <meta name="description" content="Linux 内核使用 task_struct 数据结构来关联所有与进程有关的数据和结构，Linux 内核所有涉及到进程和程序的所有算法都是围绕该数据结构建立的，是内核中最重要的数据结构之一。该数据结构在内核文件 include&#x2F;linux&#x2F;sched.h 中定义，在Linux 3.8 的内核中，该数据结构足足有 380 行之多，在这里我不可能逐项去描述其表示的含义，本篇文章只关注该数据结构如何来组">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核进程管理之进程ID">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E4%B9%8B%E8%BF%9B%E7%A8%8BID/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="Linux 内核使用 task_struct 数据结构来关联所有与进程有关的数据和结构，Linux 内核所有涉及到进程和程序的所有算法都是围绕该数据结构建立的，是内核中最重要的数据结构之一。该数据结构在内核文件 include&#x2F;linux&#x2F;sched.h 中定义，在Linux 3.8 的内核中，该数据结构足足有 380 行之多，在这里我不可能逐项去描述其表示的含义，本篇文章只关注该数据结构如何来组">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-9ac007352713d497921ef39e70fcfb02_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.975Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux开发">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pic3.zhimg.com/80/v2-9ac007352713d497921ef39e70fcfb02_720w.webp">
+  
+  
+  
+  <meta name="keywords" content="Linux开发">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux/">linux</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.975Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux内核进程管理之进程ID</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>Linux 内核使用 <code>task_struct</code> 数据结构来关联所有与进程有关的数据和结构，Linux 内核所有涉及到进程和程序的所有算法都是围绕该数据结构建立的，是内核中最重要的数据结构之一。该数据结构在内核文件 <code>include/linux/sched.h</code> 中定义，在Linux 3.8 的内核中，该数据结构足足有 380 行之多，在这里我不可能逐项去描述其表示的含义，本篇文章只关注该数据结构如何来组织和管理进程ID的。</p>
+<h2 id="1、进程ID类型"><a href="#1、进程ID类型" class="headerlink" title="1、进程ID类型"></a>1、<strong>进程ID类型</strong></h2><p>要想了解内核如何来组织和管理进程ID，先要知道进程ID的类型：</p>
+<ul>
+<li><strong>PID</strong>：这是 Linux 中在其命名空间中唯一标识进程而分配给它的一个号码，称做进程ID号，简称PID。在使用 fork 或 clone 系统调用时产生的进程均会由内核分配一个新的唯一的PID值。</li>
+<li><strong>TGID</strong>：在一个进程中，如果以CLONE_THREAD标志来调用clone建立的进程就是该进程的一个线程，它们处于一个线程组，该线程组的ID叫做TGID。处于相同的线程组中的所有进程都有相同的TGID；线程组组长的TGID与其PID相同；一个进程没有使用线程，则其TGID与PID也相同。</li>
+<li><strong>PGID</strong>：另外，独立的进程可以组成进程组（使用setpgrp系统调用），进程组可以简化向所有组内进程发送信号的操作，例如用管道连接的进程处在同一进程组内。进程组ID叫做PGID，进程组内的所有进程都有相同的PGID，等于该组组长的PID。</li>
+<li><strong>SID</strong>：几个进程组可以合并成一个会话组（使用setsid系统调用），可以用于终端程序设计。会话组中所有进程都有相同的SID。</li>
+</ul>
+<h2 id="2、PID-命名空间"><a href="#2、PID-命名空间" class="headerlink" title="2、PID 命名空间"></a>2、<strong>PID 命名空间</strong></h2><p>命名空间是为操作系统层面的虚拟化机制提供支撑，目前实现的有六种不同的命名空间，分别为mount命名空间、UTS命名空间、IPC命名空间、用户命名空间、PID命名空间、网络命名空间。命名空间简单来说提供的是对全局资源的一种抽象，将资源放到不同的容器中（不同的命名空间），各容器彼此隔离。命名空间有的还有层次关系，如PID命名空间，图1 为命名空间的层次关系图。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic3.zhimg.com/80/v2-9ac007352713d497921ef39e70fcfb02_720w.webp" alt="img"></p>
+<p>在上图有四个命名空间，一个父命名空间衍生了两个子命名空间，其中的一个子命名空间又衍生了一个子命名空间。以PID命名空间为例，由于各个命名空间彼此隔离，所以每个命名空间都可以有 PID 号为 1 的进程；但又由于命名空间的层次性，父命名空间是知道子命名空间的存在，因此子命名空间要映射到父命名空间中去，因此上图中 level 1 中两个子命名空间的六个进程分别映射到其父命名空间的PID 号5~10。</p>
+<p>命名空间增大了 PID 管理的复杂性，对于某些进程可能有多个PID——在其自身命名空间的PID以及其父命名空间的PID，凡能看到该进程的命名空间都会为其分配一个PID。因此就有：</p>
+<ul>
+<li><strong>全局ID</strong>：在内核本身和初始命名空间中唯一的ID，在系统启动期间开始的 init 进程即属于该初始命名空间。系统中每个进程都对应了该命名空间的一个PID，叫全局ID，保证在整个系统中唯一。</li>
+<li><strong>局部ID</strong>：对于属于某个特定的命名空间，它在其命名空间内分配的ID为局部ID，该ID也可以出现在其他的命名空间中。</li>
+</ul>
+<h2 id="3、进程ID管理数据结构"><a href="#3、进程ID管理数据结构" class="headerlink" title="3、进程ID管理数据结构"></a>3、<strong>进程ID管理数据结构</strong></h2><p>Linux 内核在设计管理ID的数据结构时，要充分考虑以下因素：</p>
+<ol>
+<li>如何快速地根据进程的 task_struct、ID类型、命名空间找到局部ID</li>
+<li>如何快速地根据局部ID、命名空间、ID类型找到对应进程的 task_struct</li>
+<li>如何快速地给新进程在可见的命名空间内分配一个唯一的 PID</li>
+</ol>
+<p>如果将所有因素考虑到一起，将会很复杂，下面将会由简到繁设计该结构。</p>
+<h3 id="3-1一个PID对应一个task-struct"><a href="#3-1一个PID对应一个task-struct" class="headerlink" title="3.1一个PID对应一个task_struct"></a>3.1<strong>一个PID对应一个task_struct</strong></h3><p>如果先不考虑进程之间的关系，不考虑命名空间，仅仅是一个PID号对应一个task_struct，那么我们可以设计这样的数据结构：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">struct task_struct &#123;</span><br><span class="line">    //...</span><br><span class="line">    struct pid_link pids;</span><br><span class="line">    //...</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct pid_link &#123;</span><br><span class="line">    struct hlist_node node;  </span><br><span class="line">    struct pid *pid;          </span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct pid &#123;</span><br><span class="line">    struct hlist_head tasks;        //指回 pid_link 的 node</span><br><span class="line">    int nr;                       //PID</span><br><span class="line">    struct hlist_node pid_chain;    //pid hash 散列表结点</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>每个进程的 task_struct 结构体中有一个指向 pid 结构体的指针，pid 结构体包含了 PID 号。</p>
+<ul>
+<li><p>pid_hash[]: 这是一个hash表的结构，根据 pid 的 nr 值哈希到其某个表项，若有多个 pid 结构对应到同一个表项，这里解决冲突使用的是散列表法。这样，就能解决开始提出的第2个问题了，根据PID值怎样快速地找到task_struct结构体：</p>
+</li>
+<li><ul>
+<li>首先通过 PID 计算 pid 挂接到哈希表 pid_hash[] 的表项</li>
+<li>遍历该表项，找到 pid 结构体中 nr 值与 PID 值相同的那个 pid</li>
+<li>再通过该 pid 结构体的 tasks 指针找到 node</li>
+<li>最后根据内核的 container_of 机制就能找到 task_struct 结构体</li>
+</ul>
+</li>
+<li><p>pid_map：这是一个位图，用来唯一分配PID值的结构，图中灰色表示已经分配过的值，在新建一个进程时，只需在其中找到一个为分配过的值赋给 pid 结构体的 nr，再将pid_map 中该值设为已分配标志。这也就解决了上面的第3个问题——如何快速地分配一个全局的PID。</p>
+</li>
+</ul>
+<p>至于上面的第1个问题就更加简单，已知 task_struct 结构体，根据其 pid_link 的 pid 指针找到 pid 结构体，取出其 nr 即为 PID 号。</p>
+<h3 id="3-2进程ID有类型之分"><a href="#3-2进程ID有类型之分" class="headerlink" title="3.2进程ID有类型之分"></a>3.2<strong>进程ID有类型之分</strong></h3><p>如果考虑进程之间有复杂的关系，如线程组、进程组、会话组，这些组均有组ID，分别为 TGID、PGID、SID，所以原来的 task_struct 中pid_link 指向一个 pid 结构体需要增加几项，用来指向到其组长的 pid 结构体，相应的 struct pid 原本只需要指回其 PID 所属进程的task_struct，现在要增加几项，用来链接那些以该 pid 为组长的所有进程组内进程。数据结构如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">enum pid_type</span><br><span class="line">&#123;</span><br><span class="line">    PIDTYPE_PID,</span><br><span class="line">    PIDTYPE_PGID,</span><br><span class="line">    PIDTYPE_SID,</span><br><span class="line">    PIDTYPE_MAX</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct task_struct &#123;</span><br><span class="line">    //...</span><br><span class="line">    pid_t pid;     //PID</span><br><span class="line">    pid_t tgid;    //thread group id</span><br><span class="line"></span><br><span class="line">    struct task_struct *group_leader;   // threadgroup leader</span><br><span class="line"></span><br><span class="line">    struct pid_link pids[PIDTYPE_MAX];</span><br><span class="line"></span><br><span class="line">    //...</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct pid_link &#123;</span><br><span class="line">    struct hlist_node node;  </span><br><span class="line">    struct pid *pid;          </span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct pid &#123;</span><br><span class="line">    struct hlist_head tasks[PIDTYPE_MAX];</span><br><span class="line">    int nr;                         //PID</span><br><span class="line">    struct hlist_node pid_chain;    // pid hash 散列表结点</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>上面 ID 的类型 PIDTYPE_MAX 表示 ID 类型数目。之所以不包括线程组ID，是因为内核中已经有指向到线程组的 task_struct 指针 group_leader，线程组 ID 无非就是 group_leader 的PID。</p>
+<p>假如现在有三个进程A、B、C为同一个进程组，进程组长为A</p>
+<h3 id="3-3增加进程PID命名空间"><a href="#3-3增加进程PID命名空间" class="headerlink" title="3.3增加进程PID命名空间"></a>3.3<strong>增加进程PID命名空间</strong></h3><p>若在第二种情形下再增加PID命名空间，一个进程就可能有多个PID值了，因为在每一个可见的命名空间内都会分配一个PID，这样就需要改变 pid 的结构了，如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">struct pid</span><br><span class="line">&#123;</span><br><span class="line">    unsigned int level;  </span><br><span class="line">    /* lists of tasks that use this pid */</span><br><span class="line">    struct hlist_head tasks[PIDTYPE_MAX];</span><br><span class="line">    struct upid numbers[1];</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct upid &#123;</span><br><span class="line">    int nr;</span><br><span class="line">    struct pid_namespace *ns;</span><br><span class="line">    struct hlist_node pid_chain;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在 pid 结构体中增加了一个表示该进程所处的命名空间的层次level，以及一个可扩展的 upid 结构体。对于struct upid，表示在该命名空间所分配的进程的ID，ns指向是该ID所属的命名空间，pid_chain 表示在该命名空间的散列表。</p>
+<h2 id="4、进程ID管理函数"><a href="#4、进程ID管理函数" class="headerlink" title="4、进程ID管理函数"></a>4、<strong>进程ID管理函数</strong></h2><p>有了上面的复杂的数据结构，再加上散列表等数据结构的操作，就可以写出我们前面所提到的三个问题的函数了：</p>
+<h3 id="4-1获得局部ID"><a href="#4-1获得局部ID" class="headerlink" title="4.1获得局部ID"></a>4.1<strong>获得局部ID</strong></h3><p>根据进程的 task_struct、ID类型、命名空间，可以很容易获得其在命名空间内的局部ID：</p>
+<ol>
+<li>获得与task_struct 关联的pid结构体。辅助函数有 task_pid、task_tgid、task_pgrp和task_session，分别用来获取不同类型的ID的pid 实例，如获取 PID 的实例：<br><strong>static<strong><strong>inline</strong></strong>struct</strong> pid <em><strong>task_pid</strong>(<strong>struct</strong> task_struct *<strong><strong>task) { <strong>return</strong> task</strong>-&gt;*<em>pids[PIDTYPE_PID].pid; }<br>获取线程组的ID，前面也说过，TGID不过是线程组组长的PID而已，所以：<br><strong>static</strong></em>*inline</strong>*</em>struct** pid <em><strong>task_tgid</strong>(<strong>struct</strong> task_struct *<strong><strong>task) { <strong>return</strong> task</strong>-&gt;<strong>group_leader</strong>-&gt;*<em>pids[PIDTYPE_PID].pid; }<br>而获得PGID和SID，首先需要找到该线程组组长的task_struct，再获得其相应的 pid：<br><strong>static</strong></em>*inline</strong>*</em>struct** pid <em><strong>task_pgrp</strong>(<strong>struct</strong> task_struct *<strong><strong>task) { <strong>return</strong> task</strong>-&gt;<strong>group_leader</strong>-&gt;*<em>pids[PIDTYPE_PGID].pid; } <strong>static</strong></em>*inline</strong>*</em>struct** pid *<strong>task_session</strong>(<strong>struct</strong> task_struct ***<strong>task) { <strong>return</strong> task</strong>-&gt;<strong>group_leader</strong>-&gt;**pids[PIDTYPE_SID].pid; }</li>
+<li>获得 pid 实例之后，再根据 pid 中的numbers 数组中 uid 信息，获得局部PID。<br><strong>pid_t****pid_nr_ns</strong>(<strong>struct</strong> pid *****pid, <strong>struct</strong> pid_namespace *****ns) { <strong>struct</strong> upid ***<strong>upid; <strong>pid_t</strong> nr <strong>&#x3D;</strong> 0; <strong>if</strong> (pid <strong>&amp;&amp;</strong> ns</strong>-&gt;**level **&lt;&#x3D;** pid**-&gt;*<em>level) { upid <strong>&#x3D;</strong></em>*&amp;<strong>pid</strong>-&gt;<strong>numbers[ns</strong>-&gt;<strong>level]; <strong>if</strong> (upid</strong>-&gt;<strong>ns <strong>&#x3D;&#x3D;</strong> ns) nr <strong>&#x3D;</strong> upid</strong>-&gt;**nr; } <strong>return</strong> nr; }<br>这里值得注意的是，由于PID命名空间的层次性，父命名空间能看到子命名空间的内容，反之则不能，因此，函数中需要确保当前命名空间的level 小于等于产生局部PID的命名空间的level。<br>除了这个函数之外，内核还封装了其他函数用来从 pid 实例获得 PID 值，如 pid_nr、pid_vnr 等。在此不介绍了。</li>
+</ol>
+<p>结合这两步，内核提供了更进一步的封装，提供以下函数：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pid_t task_pid_nr_ns(struct task_struct *tsk, struct pid_namespace *ns);</span><br><span class="line">pid_t task_tgid_nr_ns(struct task_struct *tsk, struct pid_namespace *ns);</span><br><span class="line">pid_t task_pigd_nr_ns(struct task_struct *tsk, struct pid_namespace *ns);</span><br><span class="line">pid_t task_session_nr_ns(struct task_struct *tsk, struct pid_namespace *ns);</span><br></pre></td></tr></table></figure>
+
+<p>从函数名上就能推断函数的功能，其实不外于封装了上面的两步。</p>
+<h3 id="4-2查找进程task-struct"><a href="#4-2查找进程task-struct" class="headerlink" title="4.2查找进程task_struct"></a>4.2<strong>查找进程task_struct</strong></h3><p>根据局部ID、以及命名空间，怎样获得进程的task_struct结构体呢？也是分两步：</p>
+<ol>
+<li>获得 pid 实体。根据局部PID以及命名空间计算在 pid_hash 数组中的索引，然后遍历散列表找到所要的 upid， 再根据内核的 container_of 机制找到 pid 实例。代码如下：<br><strong>struct</strong> pid *<strong>find_pid_ns</strong>(<strong>int</strong> nr, <strong>struct</strong> pid_namespace *****ns) { <strong>struct</strong> hlist_node ****<em>elem; <strong>struct</strong> upid <em><strong><strong>pnr; <em>&#x2F;&#x2F;遍历散列表</em> hlist_for_each_entry_rcu(pnr, elem, <strong>&amp;<strong>pid_hash[pid_hashfn(nr, ns)], pid_chain) <em>&#x2F;&#x2F;pid_hashfn() 获得hash的索引</em></strong>if</strong> (pnr</strong>-&gt;<strong>nr <strong>&#x3D;&#x3D;</strong> nr <strong>&amp;&amp;</strong> pnr</strong>-&gt;<strong>ns <strong>&#x3D;&#x3D;</strong> ns) <em>&#x2F;&#x2F;比较 nr 与 ns 是否都相同</em></strong>return</strong> container_of(pnr, <strong>struct</strong> pid, <em>&#x2F;&#x2F;根据container_of机制取得pid 实体</em> numbers[ns</em></em>-&gt;**level]); <strong>return</strong> NULL; }</li>
+<li>根据ID类型取得task_struct 结构体。<br><strong>struct</strong> task_struct *<strong>pid_task</strong>(<strong>struct</strong> pid *****pid, <strong>enum</strong> pid_type type) { <strong>struct</strong> task_struct *****result <strong>&#x3D;</strong> NULL; <strong>if</strong> (pid) { <strong>struct</strong> hlist_node ***<strong>first; first <strong>&#x3D;</strong> rcu_dereference_check(hlist_first_rcu(</strong>&amp;<strong>pid</strong>-&gt;**tasks[type]), lockdep_tasklist_lock_is_held()); <strong>if</strong> (first) result <strong>&#x3D;</strong> hlist_entry(first, <strong>struct</strong> task_struct, pids[(type)].node); } <strong>return</strong> result; }</li>
+</ol>
+<p>内核还提供其它函数用来实现上面两步：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">struct task_struct *find_task_by_pid_ns(pid_t nr, struct pid_namespace *ns);</span><br><span class="line">struct task_struct *find_task_by_vpid(pid_t vnr);</span><br><span class="line">struct task_struct *find_task_by_pid(pid_t vnr);</span><br></pre></td></tr></table></figure>
+
+<p>具体函数实现的功能也比较简单。</p>
+<h3 id="4-3生成唯一的PID"><a href="#4-3生成唯一的PID" class="headerlink" title="4.3生成唯一的PID"></a>4.3<strong>生成唯一的PID</strong></h3><p>内核中使用下面两个函数来实现分配和回收PID的：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">static int alloc_pidmap(struct pid_namespace *pid_ns);</span><br><span class="line">static void free_pidmap(struct upid *upid);</span><br></pre></td></tr></table></figure>
+
+<p>在这里我们不关注这两个函数的实现，反而应该关注分配的 PID 如何在多个命名空间中可见，这样需要在每个命名空间生成一个局部ID，函数 alloc_pid 为新建的进程分配PID，简化版如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">struct pid *alloc_pid(struct pid_namespace *ns)</span><br><span class="line">&#123;</span><br><span class="line">    struct pid *pid;</span><br><span class="line">    enum pid_type type;</span><br><span class="line">    int i, nr;</span><br><span class="line">    struct pid_namespace *tmp;</span><br><span class="line">    struct upid *upid;</span><br><span class="line"></span><br><span class="line">    tmp = ns;</span><br><span class="line">    pid-&gt;level = ns-&gt;level;</span><br><span class="line">    // 初始化 pid-&gt;numbers[] 结构体</span><br><span class="line">    for (i = ns-&gt;level; i &gt;= 0; i--) &#123;</span><br><span class="line">        nr = alloc_pidmap(tmp);            //分配一个局部ID</span><br><span class="line">        pid-&gt;numbers[i].nr = nr;</span><br><span class="line">        pid-&gt;numbers[i].ns = tmp;</span><br><span class="line">        tmp = tmp-&gt;parent;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 初始化 pid-&gt;task[] 结构体</span><br><span class="line">    for (type = 0; type &lt; PIDTYPE_MAX; ++type)</span><br><span class="line">        INIT_HLIST_HEAD(&amp;pid-&gt;tasks[type]);</span><br><span class="line"></span><br><span class="line">    // 将每个命名空间经过哈希之后加入到散列表中</span><br><span class="line">    upid = pid-&gt;numbers + ns-&gt;level;</span><br><span class="line">    for ( ; upid &gt;= pid-&gt;numbers; --upid) &#123;</span><br><span class="line">        hlist_add_head_rcu(&amp;upid-&gt;pid_chain,</span><br><span class="line">                &amp;pid_hash[pid_hashfn(upid-&gt;nr, upid-&gt;ns)]);</span><br><span class="line">        upid-&gt;ns-&gt;nr_hashed++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return pid;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<p>版权声明：本文为知乎博主「<a target="_blank" rel="noopener" href="https://www.zhihu.com/people/linuxwang-xian-sheng">极致Linux内核</a>」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。</p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/546814252">https://zhuanlan.zhihu.com/p/546814252</a></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%AE%A1%E7%90%86%E4%B8%8E%E8%B0%83%E5%BA%A6/">Linux内核进程的管理与调度</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%87%A0%E7%A7%8DCPU%E8%B0%83%E5%BA%A6%E7%AD%96%E7%95%A5/">Linux内核进程管理几种CPU调度策略</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81%E8%BF%9B%E7%A8%8BID%E7%B1%BB%E5%9E%8B"><span class="toc-text">1、进程ID类型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81PID-%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4"><span class="toc-text">2、PID 命名空间</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E8%BF%9B%E7%A8%8BID%E7%AE%A1%E7%90%86%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="toc-text">3、进程ID管理数据结构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1%E4%B8%80%E4%B8%AAPID%E5%AF%B9%E5%BA%94%E4%B8%80%E4%B8%AAtask-struct"><span class="toc-text">3.1一个PID对应一个task_struct</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2%E8%BF%9B%E7%A8%8BID%E6%9C%89%E7%B1%BB%E5%9E%8B%E4%B9%8B%E5%88%86"><span class="toc-text">3.2进程ID有类型之分</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3%E5%A2%9E%E5%8A%A0%E8%BF%9B%E7%A8%8BPID%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4"><span class="toc-text">3.3增加进程PID命名空间</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%E3%80%81%E8%BF%9B%E7%A8%8BID%E7%AE%A1%E7%90%86%E5%87%BD%E6%95%B0"><span class="toc-text">4、进程ID管理函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1%E8%8E%B7%E5%BE%97%E5%B1%80%E9%83%A8ID"><span class="toc-text">4.1获得局部ID</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2%E6%9F%A5%E6%89%BE%E8%BF%9B%E7%A8%8Btask-struct"><span class="toc-text">4.2查找进程task_struct</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3%E7%94%9F%E6%88%90%E5%94%AF%E4%B8%80%E7%9A%84PID"><span class="toc-text">4.3生成唯一的PID</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

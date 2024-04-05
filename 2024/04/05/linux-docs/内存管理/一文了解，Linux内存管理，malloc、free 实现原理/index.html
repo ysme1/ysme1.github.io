@@ -1,0 +1,558 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Blog</title>
+
+  
+    <meta name="description" content="malloc &#x2F; free 简介12void *malloc(size_t size)void free(void *ptr) malloc 分配指定大小的内存空间，返回一个指向该空间的指针。大小以字节为单位。返回 void* 指针，需要强制类型转换后才能引用其中的值。free 释放一个由 malloc 所分配的内存空间。ptr 指向一个要释放内存的内存块，该指针应当是之前调用 mall">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Blog">
+<meta property="og:url" content="https://vcloud.ysme.top/2024/04/05/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E4%B8%80%E6%96%87%E4%BA%86%E8%A7%A3%EF%BC%8CLinux%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%EF%BC%8Cmalloc%E3%80%81free%20%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="malloc &#x2F; free 简介12void *malloc(size_t size)void free(void *ptr) malloc 分配指定大小的内存空间，返回一个指向该空间的指针。大小以字节为单位。返回 void* 指针，需要强制类型转换后才能引用其中的值。free 释放一个由 malloc 所分配的内存空间。ptr 指向一个要释放内存的内存块，该指针应当是之前调用 mall">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127428499-f85498fd-aa16-4e44-a419-89d1b852978b.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127428664-699d5245-d62f-4c8d-b336-21e60107729f.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127428872-9e4ff1c0-97d4-4e0c-898d-4d157749855f.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127428877-6f7f9133-c6f6-4ec1-81ae-4bfea33e0a00.png">
+<meta property="og:image" content="https://user-images.githubusercontent.com/87457873/127428882-5847bc86-1e21-42c4-b6c2-28ed9d111345.png">
+<meta property="article:published_time" content="2024-04-05T11:10:12.963Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.963Z">
+<meta property="article:author" content="ysme">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://user-images.githubusercontent.com/87457873/127428499-f85498fd-aa16-4e44-a419-89d1b852978b.png">
+  
+  
+  
+  
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-04-05T11:10:12.963Z">2024-04-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.963Z">2024-04-05</time></span></div></div></div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="malloc-free-简介"><a href="#malloc-free-简介" class="headerlink" title="malloc &#x2F; free 简介"></a>malloc &#x2F; free 简介</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> *<span class="title function_">malloc</span><span class="params">(<span class="type">size_t</span> size)</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">free</span><span class="params">(<span class="type">void</span> *ptr)</span></span><br></pre></td></tr></table></figure>
+<p><code>malloc</code> 分配指定大小的内存空间，返回一个指向该空间的指针。大小以字节为单位。返回 <code>void*</code> 指针，需要强制类型转换后才能引用其中的值。<br><code>free</code> 释放一个由 <code>malloc</code> 所分配的内存空间。<code>ptr</code> 指向一个要释放内存的内存块，该指针应当是之前调用 <code>malloc</code> 的返回值。</p>
+<p>使用示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span>* ptr; </span><br><span class="line">ptr = (<span class="type">int</span>*)<span class="built_in">malloc</span>(<span class="number">10</span> * <span class="keyword">sizeof</span>(<span class="type">int</span>)); <span class="comment">/* 进行强制类型转换 */</span> </span><br><span class="line"><span class="built_in">free</span>(ptr);</span><br></pre></td></tr></table></figure>
+
+<h2 id="动态内存分配的系统调用：brk-sbrk"><a href="#动态内存分配的系统调用：brk-sbrk" class="headerlink" title="动态内存分配的系统调用：brk / sbrk"></a>动态内存分配的系统调用：<code>brk / sbrk</code></h2><p>动态分配的内存都在堆中，堆从低地址向高地址增长：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127428499-f85498fd-aa16-4e44-a419-89d1b852978b.png" alt="image"></p>
+<p>Linux 提供了两个系统调用 <code>brk</code> 和 <code>sbrk</code>：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">brk</span><span class="params">(<span class="type">void</span> *addr)</span>;</span><br><span class="line"><span class="type">void</span> *<span class="title function_">sbrk</span><span class="params">(<span class="type">intptr_t</span> increment)</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>brk</code> 用于返回堆的顶部地址；<code>sbrk</code> 用于扩展堆，通过参数 <code>increment</code> 指定要增加的大小，如果扩展成功，返回 <code>brk</code> 的旧值。如果 <code>increment</code> 为零，返回 <code>brk</code> 的当前值。</p>
+<p>我们不会直接通过 <code>brk</code> 或 <code>sbrk</code> 来分配堆内存，而是先通过 <code>sbrk</code> 扩展堆，将这部分空闲内存空间作为缓冲池，然后通过 <code>malloc / free</code> 管理缓冲池中的内存。这是一种池化思想，能够避免频繁的系统调用，提高程序性能。</p>
+<h2 id="malloc-free-实现思路"><a href="#malloc-free-实现思路" class="headerlink" title="malloc &#x2F; free 实现思路"></a>malloc &#x2F; free 实现思路</h2><p><code>malloc</code> 使用空闲链表组织堆中的空闲区块，空闲链表有时也用双向链表实现。每个空闲区块都有一个相同的首部，称为“内存控制块” <code>mem_control_block</code>，其中记录了空闲区块的元信息，比如指向下一个分配块的指针、当前分配块的长度、或者当前区块是否已经被分配出去。这个首部对于程序是不可见的，<code>malloc </code>返回的是紧跟在首部后面的地址，即可用空间的起始地址。</p>
+<p><code>malloc</code> 分配时会搜索空闲链表，根据匹配原则，找到一个大于等于所需空间的空闲区块，然后将其分配出去，返回这部分空间的指针。如果没有这样的内存块，则向操作系统申请扩展堆内存。注意，返回的指针是从可用空间开始的，而不是从首部开始的：</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127428664-699d5245-d62f-4c8d-b336-21e60107729f.png" alt="image"></p>
+<p>malloc 所实际使用的内存匹配算法有很多，执行时间和内存消耗各有不同。到底使用哪个匹配算法，取决于实现。常见的内存匹配算法有：</p>
+<ul>
+<li>最佳适应法</li>
+<li>最差适应法</li>
+<li>首次适应法</li>
+<li>下一个适应法</li>
+</ul>
+<p>free 会将区块重新插入到空闲链表中。free 只接受一个指针，却可以释放恰当大小的内存，这是因为在分配的区域的首部保存了该区域的大小。</p>
+<h2 id="malloc-的实现方式一：显式空闲链表-整块分配"><a href="#malloc-的实现方式一：显式空闲链表-整块分配" class="headerlink" title="malloc 的实现方式一：显式空闲链表 + 整块分配"></a>malloc 的实现方式一：显式空闲链表 + 整块分配</h2><p>malloc 的实现方式有很多种。最简单的方法是使用一个链表来管理所有已分配和未分配的内存块，在每个内存块的首部记录当前块的大小、当前区块是否已经被分配出去。首部对应这样的结构体：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mem_control_block</span> &#123;</span></span><br><span class="line">  <span class="type">int</span> is_available; <span class="comment">// 是否可用（如果还没被分配出去，就是 1）</span></span><br><span class="line">  <span class="type">int</span> size;         <span class="comment">// 实际空间的大小</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>使用首次适应法进行分配：遍历整个链表，找到第一个未被分配、大小合适的内存块；如果没有这样的内存块，则向操作系统申请扩展堆内存。</p>
+<p>下面是这种实现方式的代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> has_initialized = <span class="number">0</span>;     <span class="comment">// 初始化标志</span></span><br><span class="line"><span class="type">void</span> *managed_memory_start;  <span class="comment">// 指向堆底（内存块起始位置）</span></span><br><span class="line"><span class="type">void</span> *last_valid_address;    <span class="comment">// 指向堆顶</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">malloc_init</span><span class="params">()</span> &#123;</span><br><span class="line">  <span class="comment">// 这里不向操作系统申请堆空间，只是为了获取堆的起始地址</span></span><br><span class="line">  last_valid_address = sbrk(<span class="number">0</span>);</span><br><span class="line">  managed_memory_start = last_valid_address;</span><br><span class="line">  has_initialized = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> *<span class="title function_">malloc</span><span class="params">(<span class="type">long</span> numbytes)</span> &#123;</span><br><span class="line">  <span class="type">void</span> *current_location;  <span class="comment">// 当前访问的内存位置</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">mem_control_block</span> *<span class="title">current_location_mcb</span>;</span>  <span class="comment">// 只是作了一个强制类型转换</span></span><br><span class="line">  <span class="type">void</span> *memory_location;  <span class="comment">// 这是要返回的内存位置。初始时设为</span></span><br><span class="line">                          <span class="comment">// 0，表示没有找到合适的位置</span></span><br><span class="line">  <span class="keyword">if</span> (!has_initialized) &#123;</span><br><span class="line">    malloc_init();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 要查找的内存必须包含内存控制块，所以需要调整 numbytes 的大小</span></span><br><span class="line">  numbytes = numbytes + <span class="keyword">sizeof</span>(<span class="keyword">struct</span> mem_control_block);</span><br><span class="line">  <span class="comment">// 初始时设为 0，表示没有找到合适的位置</span></span><br><span class="line">  memory_location = <span class="number">0</span>;</span><br><span class="line">  <span class="comment">/* Begin searching at the start of managed memory */</span></span><br><span class="line">  <span class="comment">// 从被管理内存的起始位置开始搜索</span></span><br><span class="line">  <span class="comment">// managed_memory_start 是在 malloc_init 中通过 sbrk() 函数设置的</span></span><br><span class="line">  current_location = managed_memory_start;</span><br><span class="line">  <span class="keyword">while</span> (current_location != last_valid_address) &#123;</span><br><span class="line">    <span class="comment">// current_location 是一个 void 指针，用来计算地址；</span></span><br><span class="line">    <span class="comment">// current_location_mcb 是一个具体的结构体类型</span></span><br><span class="line">    <span class="comment">// 这两个实际上是一个含义</span></span><br><span class="line">    current_location_mcb = (<span class="keyword">struct</span> mem_control_block *)current_location;</span><br><span class="line">    <span class="keyword">if</span> (current_location_mcb-&gt;is_available) &#123;</span><br><span class="line">      <span class="keyword">if</span> (current_location_mcb-&gt;size &gt;= numbytes) &#123;</span><br><span class="line">        <span class="comment">// 找到一个可用、大小适合的内存块</span></span><br><span class="line">        current_location_mcb-&gt;is_available = <span class="number">0</span>;  <span class="comment">// 设为不可用</span></span><br><span class="line">        memory_location = current_location;      <span class="comment">// 设置内存地址</span></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 否则，当前内存块不可用或过小，移动到下一个内存块</span></span><br><span class="line">    current_location = current_location + current_location_mcb-&gt;size;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 循环结束，没有找到合适的位置，需要向操作系统申请更多内存</span></span><br><span class="line">  <span class="keyword">if</span> (!memory_location) &#123;</span><br><span class="line">    <span class="comment">// 扩展堆</span></span><br><span class="line">    sbrk(numbytes);</span><br><span class="line">    <span class="comment">// 新的内存的起始位置就是 last_valid_address 的旧值</span></span><br><span class="line">    memory_location = last_valid_address;</span><br><span class="line">    <span class="comment">// 将 last_valid_address 后移 numbytes，移动到整个内存的最右边界</span></span><br><span class="line">    last_valid_address = last_valid_address + numbytes;</span><br><span class="line">    <span class="comment">// 初始化内存控制块 mem_control_block</span></span><br><span class="line">    current_location_mcb = memory_location;</span><br><span class="line">    current_location_mcb-&gt;is_available = <span class="number">0</span>;</span><br><span class="line">    current_location_mcb-&gt;size = numbytes;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 最终，memory_location 保存了大小为 numbyte的内存空间，</span></span><br><span class="line">  <span class="comment">// 并且在空间的开始处包含了一个内存控制块，记录了元信息</span></span><br><span class="line">  <span class="comment">// 内存控制块对于用户而言应该是透明的，因此返回指针前，跳过内存分配块</span></span><br><span class="line">  memory_location = memory_location + <span class="keyword">sizeof</span>(<span class="keyword">struct</span> mem_control_block);</span><br><span class="line">  <span class="comment">// 返回内存块的指针</span></span><br><span class="line">  <span class="keyword">return</span> memory_location;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对应的free实现：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">free</span><span class="params">(<span class="type">void</span> *ptr)</span> &#123;  <span class="comment">// ptr 是要回收的空间</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">mem_control_block</span> *<span class="title">free</span>;</span></span><br><span class="line">  <span class="built_in">free</span> = ptr - <span class="keyword">sizeof</span>(<span class="keyword">struct</span> mem_control_block); <span class="comment">// 找到该内存块的控制信息的地址</span></span><br><span class="line">  <span class="built_in">free</span>-&gt;is_available = <span class="number">1</span>;  <span class="comment">// 该空间置为可用</span></span><br><span class="line">  <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这种方法的缺点是：</p>
+<p>1、已分配和未分配的内存块位于同一个链表中，每次分配都需要从头到尾遍历<br><br>2、采用首次适应法，内存块会被整体分配，容易产生较多内部碎片<br></p>
+<h2 id="malloc-的实现方式二：显式空闲链表-按需分配"><a href="#malloc-的实现方式二：显式空闲链表-按需分配" class="headerlink" title="malloc 的实现方式二：显式空闲链表 + 按需分配"></a>malloc 的实现方式二：显式空闲链表 + 按需分配</h2><p>这种实现方式维护一个空闲块链表，只包含未分配的内存块。malloc 分配时会搜索空闲链表，找到第一个大于等于所需空间的空闲区块，然后从该区块的尾部取出所需要的空间，剩余空间还是存在空闲链表中；如果该区块的剩余部分不足以放下首部信息，则直接将其从空闲链表摘除。最后返回这部分空间的指针。<br>下面是这种实现方式的几个示例： </p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127428872-9e4ff1c0-97d4-4e0c-898d-4d157749855f.png" alt="image"></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127428877-6f7f9133-c6f6-4ec1-81ae-4bfea33e0a00.png" alt="image"></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://user-images.githubusercontent.com/87457873/127428882-5847bc86-1e21-42c4-b6c2-28ed9d111345.png" alt="image"></p>
+<p>通过 free 释放内存时，会将内存块加入到空闲链表中，并将前后相邻的空闲内存合并，这时使用双向链表管理空闲链表就很有用了。</p>
+<p>和第一种方式相比，这种方式的优点主要是：<br></p>
+<ul>
+<li>空闲链表中只包含未被分配的内存块，节省遍历开销</li>
+<li>只分配必须大小的空间，避免内存浪费</li>
+</ul>
+<p>这种方式的缺点是：多次调用 malloc 后，空闲内存被切成很多的小内存片段，产生较多外部碎片，会导致用户在申请内存使用时，找不到足够大的内存空间。这时需要进行内存整理，将连续的空闲内存合并，但是这会降低函数性能。</p>
+<p>注意：内存紧凑在这里一般是不可用的，因为这会改变之前 malloc 返回的空间的地址。</p>
+<h2 id="malloc-的实现方式三：分离的空闲链表"><a href="#malloc-的实现方式三：分离的空闲链表" class="headerlink" title="malloc 的实现方式三：分离的空闲链表"></a>malloc 的实现方式三：分离的空闲链表</h2><p>上面的两种分配方法，分配时间都和空闲块的数量成线性关系。</p>
+<p>另一种实现方式是分离存储，即维护多个空闲链表，其中每个链表中的块有大致相等或者相同的大小。一般常见的是根据 2 的幂来划分块大小。分配时，可以直接在某个空闲链表里搜索合适的块。如果没有找到合适的块与之匹配，就搜索下一个链表，以此类推。</p>
+<h3 id="简单分离存储"><a href="#简单分离存储" class="headerlink" title="简单分离存储"></a>简单分离存储</h3><p>每个大小类的空闲链表包含大小相等的块。分配时，从某个空闲链表取下一块，或者向操作系统请求内存片并分割成大小相等的块，形成新的链表。释放时，只需要简单的将块插入到相应空闲链表的前面。<br></p>
+<p>优点一是分配和释放只需要在链表头进行操作，都是常数时间，二是因为每个块大小都是固定的，所以只需要一个 next 指针，不需要额外的控制信息，节省空间。缺点是容易造成内部碎片和外部碎片。内部碎片显而易见，因为每个块都是整体分配的，不会被分割。外部碎片在这样的模式下很容易产生：应用频繁地申请和释放较小大小的内存块，由于这些内存块不会合并，所以系统维护了大量小内存块形成的空闲链表，而没有多余空间来分配大内存块，导致产生外部碎片。</p>
+<h3 id="分离适配"><a href="#分离适配" class="headerlink" title="分离适配"></a>分离适配</h3><p>这种方法同样维护了多个空闲链表，只不过每个链表中的块是大致相等的大小，比如每个链表中的块大小范围可能是：</p>
+<ul>
+<li>1</li>
+<li>2</li>
+<li>3~4</li>
+<li>5~8</li>
+<li>…</li>
+<li>1025~2048</li>
+<li>2049~4096</li>
+<li>4097~∞</li>
+</ul>
+<p>在分配的时候，需要先根据申请内存的大小选择适当的空闲链表，然后遍历该链表，根据匹配算法（如首次适应）寻找合适的块。如果找到一个块，将其分割（可选），并将剩余部分插入到适当的空闲链表中。如果找不到合适的块，则查找下一个更大的大小类的空闲链表，以此类推，直到找到或者向操作系统申请额外的堆内存。在释放一个块时，合并前后相邻的空闲块，并将结果放到相应的空闲链表中。</p>
+<p>分离适配方法是一种常见的选择，C 标准库中提供的 GNU malloc 包就是采用的这种方法。这种方法既快速，对内存的使用也很有效率。由于搜索被限制在堆的某个部分而不是整个堆，所以搜索时间减少了。内存利用率也得到了改善，避免大量内部碎片和外部碎片。</p>
+<h3 id="伙伴系统"><a href="#伙伴系统" class="headerlink" title="伙伴系统"></a>伙伴系统</h3><p>伙伴系统是分离适配的一种特例。它的每个大小类的空闲链表包含大小相等的块，并且大小都是 2 的幂。最开始时，全局只有一个大小为 2m2m 字的空闲块，2m2m 是堆的大小。<br></p>
+<p>假设分配的块的大小都是 2 的幂，为了分配一个大小为 2k2k 的块，需要找到大小恰好是 2k2k 的空闲块。如果找到，则整体分配。如果没有找到，则将刚好比它大的块分割成两块，每个剩下的半块（也叫做伙伴）被放置在相应的空闲链表中，以此类推，直到得到大小恰好是 2k2k 的空闲块。释放一个大小为 2k2k 的块时，将其与空闲的伙伴合并，得到新的更大的块，以此类推，直到伙伴已分配时停止合并。<br></p>
+<p>伙伴系统分配器的主要优点是它的快速搜索和快速合并。主要缺点是要求块大小为 2 的幂可能导致显著的内部碎片。因此，伙伴系统分配器不适合通用目的的工作负载。然而，对于某些特定应用的工作负载，其中块大小预先知道是 2 的幂，伙伴系统分配器就很有吸引力了。</p>
+<h3 id="tcmalloc"><a href="#tcmalloc" class="headerlink" title="tcmalloc"></a>tcmalloc</h3><p>tcmalloc 是 Google 开发的内存分配器，全称 Thread-Caching Malloc，即线程缓存的 malloc，实现了高效的多线程内存管理。<br></p>
+<p>tcmalloc 主要利用了池化思想来管理内存分配。对于每个线程，都有自己的私有缓存池，内部包含若干个不同大小的内存块。对于一些小容量的内存申请，可以使用线程的私有缓存；私有缓存不足或大容量内存申请时再从全局缓存中进行申请。在线程内分配时不需要加锁，因此在多线程的情况下可以大大提高分配效率。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>malloc 使用链表管理内存块。malloc 有多种实现方式，在不同场景下可能会使用不同的匹配算法。</p>
+<p>malloc 分配的空间中包含一个首部来记录控制信息，因此它分配的空间要比实际需要的空间大一些。这个首部对用户而言是透明的，malloc 返回的是紧跟在首部后面的地址，即可用空间的起始地址。</p>
+<p>malloc 分配的函数应该是字对齐的。在 32 位模式中，malloc 返回的块总是 8 的倍数。在 64 位模式中，该地址总是 16 的倍数。最简单的方式是先让堆的起始位置字对齐，然后始终分配字大小倍数的内存。</p>
+<p>malloc 只分配几种固定大小的内存块，可以减少外部碎片，简化对齐实现，降低管理成本。</p>
+<p>free 只需要传递一个指针就可以释放内存，空间大小可以从首部读取。</p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/04/05/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/Linux%E4%B8%AD%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/">2024-04-05</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2024/04/05/linux-docs/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/%E5%85%B6%E4%BB%96%E5%B7%A5%E7%A8%8B%E9%97%AE%E9%A2%98%E4%BB%A5%E5%8F%8A%E8%B0%83%E4%BC%98/">2024-04-05</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#malloc-free-%E7%AE%80%E4%BB%8B"><span class="toc-text">malloc &#x2F; free 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E7%9A%84%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%EF%BC%9Abrk-sbrk"><span class="toc-text">动态内存分配的系统调用：brk &#x2F; sbrk</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#malloc-free-%E5%AE%9E%E7%8E%B0%E6%80%9D%E8%B7%AF"><span class="toc-text">malloc &#x2F; free 实现思路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#malloc-%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%80%EF%BC%9A%E6%98%BE%E5%BC%8F%E7%A9%BA%E9%97%B2%E9%93%BE%E8%A1%A8-%E6%95%B4%E5%9D%97%E5%88%86%E9%85%8D"><span class="toc-text">malloc 的实现方式一：显式空闲链表 + 整块分配</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#malloc-%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%BA%8C%EF%BC%9A%E6%98%BE%E5%BC%8F%E7%A9%BA%E9%97%B2%E9%93%BE%E8%A1%A8-%E6%8C%89%E9%9C%80%E5%88%86%E9%85%8D"><span class="toc-text">malloc 的实现方式二：显式空闲链表 + 按需分配</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#malloc-%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%B8%89%EF%BC%9A%E5%88%86%E7%A6%BB%E7%9A%84%E7%A9%BA%E9%97%B2%E9%93%BE%E8%A1%A8"><span class="toc-text">malloc 的实现方式三：分离的空闲链表</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E5%8D%95%E5%88%86%E7%A6%BB%E5%AD%98%E5%82%A8"><span class="toc-text">简单分离存储</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%86%E7%A6%BB%E9%80%82%E9%85%8D"><span class="toc-text">分离适配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%99%E4%BC%B4%E7%B3%BB%E7%BB%9F"><span class="toc-text">伙伴系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#tcmalloc"><span class="toc-text">tcmalloc</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>

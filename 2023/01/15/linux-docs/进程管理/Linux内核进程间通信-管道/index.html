@@ -1,0 +1,591 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0" theme-name="Stellar" theme-version="1.27.0">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Linux内核进程间通信-管道 - Blog</title>
+
+  
+    <meta name="description" content="1、管道的定义 管道是第一个广泛应用的进程间通信手段。日常在终端执行shell命令时，会大量用到管道。但管道的缺陷在于只能在有亲缘关系（有共同的祖先）的进程之间使用。为了突破这个限制，后来引入了命名管道。    2、管道的用途 管道是最早出现的进程间通信的手段。在shell中执行命令，经常会将上一个命令的输出作为下一个命令的输入，由多个命令配合完成一件事情。而这就是通过管道来实现的。在图9-3中，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux内核进程间通信-管道">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="1、管道的定义 管道是第一个广泛应用的进程间通信手段。日常在终端执行shell命令时，会大量用到管道。但管道的缺陷在于只能在有亲缘关系（有共同的祖先）的进程之间使用。为了突破这个限制，后来引入了命名管道。    2、管道的用途 管道是最早出现的进程间通信的手段。在shell中执行命令，经常会将上一个命令的输出作为下一个命令的输入，由多个命令配合完成一件事情。而这就是通过管道来实现的。在图9-3中，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-13b4a46233ad254912d9bf9ba6bbdb95_720w.webp">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-011bb4b9ebed933a31b219d5599307d8_720w.webp">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-6026b2f409cd9c1afad043993753b3aa_720w.webp">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-e551506e0ee9b917160021358b8b45b7_720w.webp">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-96b1020e08c5ee4afd1da7dd51bf43b6_720w.webp">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-0395cc21e8cf14f00477245e3e5b638e_720w.webp">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-c773670f4666bf0aab36d630d88562eb_720w.webp">
+<meta property="og:image" content="https://pic2.zhimg.com/80/v2-c5b7f0c17357dc449edd3596133e2c49_720w.webp">
+<meta property="og:image" content="https://pic4.zhimg.com/80/v2-afc1997ad3bb948e98ec7e6c38d8793f_720w.webp">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-c08b21beae3b080597b1eb9847e3a5f0_720w.webp">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-0c6714d4c36f7f4a9c14dcea2915fce2_720w.webp">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-05T11:10:12.979Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux开发">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pic2.zhimg.com/80/v2-13b4a46233ad254912d9bf9ba6bbdb95_720w.webp">
+  
+  
+  
+  <meta name="keywords" content="Linux开发">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.27.0">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E5%B9%B6%E5%8F%91%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%8E%9F%E5%AD%90%E6%93%8D%E4%BD%9C/"><span class="title">Linux内核进程管理并发同步与原子操作</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B%E4%BC%98%E5%85%88%E7%BA%A7/"><span class="title">Linux内核进程管理进程优先级</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%BF%B0%E7%AC%A6%E5%92%8C%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81/"><span class="title">Linux内核进程述符和进程状态</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/"><span class="title">Linux内核进程调度O(1)调度算法</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/"><span class="title">Linux内核进程间通信-管道</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/"><span class="title">Linux进程、线程、调度(一)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%89)/"><span class="title">Linux进程、线程、调度(三)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%BA%8C)/"><span class="title">Linux进程、线程、调度(二)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E5%9B%9B)/"><span class="title">Linux进程、线程、调度(四)</span></a><a class="item title" href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E7%8A%B6%E6%80%81%E6%80%BB%E7%BB%93/"><span class="title">Linux进程状态总结</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a><span class="sep"></span><a class="cap breadcrumb-link" href="/categories/linux/">linux</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-01-15T01:13:37.000Z">2023-01-15</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-04-05T11:10:12.979Z">2024-04-05</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Linux内核进程间通信-管道</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="1、管道的定义"><a href="#1、管道的定义" class="headerlink" title="1、管道的定义"></a>1、<strong>管道的定义</strong></h2><ul>
+<li>管道是第一个广泛应用的进程间通信手段。日常在终端执行shell命令时，会大量用到管道。但管道的缺陷在于只能在有亲缘关系（有共同的祖先）的进程之间使用。为了突破这个限制，后来引入了命名管道。</li>
+</ul>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic2.zhimg.com/80/v2-13b4a46233ad254912d9bf9ba6bbdb95_720w.webp" alt="img"></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic1.zhimg.com/80/v2-011bb4b9ebed933a31b219d5599307d8_720w.webp" alt="img"></p>
+<h2 id="2、管道的用途"><a href="#2、管道的用途" class="headerlink" title="2、管道的用途"></a>2、<strong>管道的用途</strong></h2><ul>
+<li>管道是最早出现的进程间通信的手段。在shell中执行命令，经常会将上一个命令的输出作为下一个命令的输入，由多个命令配合完成一件事情。而这就是通过管道来实现的。<br>在图9-3中，进程who的标准输出，通过管道传递给下游的wc进程作为标准输入，从而通过相互配合完成了一件任务。</li>
+</ul>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic3.zhimg.com/80/v2-6026b2f409cd9c1afad043993753b3aa_720w.webp" alt="img"></p>
+<h2 id="3、管道的操作"><a href="#3、管道的操作" class="headerlink" title="3、管道的操作"></a>3、<strong>管道的操作</strong></h2><ul>
+<li>管道的作用是在具有亲缘关系的进程之间传递消息，所谓有亲缘关系，是指有同一个祖先。<strong>所以管道并不是只可以用于父子进程通信，也可以在兄弟进程之间还可以用在祖孙之间等，反正只要共同的祖先调用了pipe函数，打开的管道文件就会在fork之后，被各个后代所共享</strong>。</li>
+<li>不过由于管道是字节流通信，没有消息边界，多个进程同时发送的字节流混在一起，则无法分辨消息，所有管道一般用于2个进程之间通信，另外管道的内容读完后不会保存，管道是单向的，一边要么读，一边要么写，不可以又读又写，想要一边读一边写，那就创建2个管道，如下图</li>
+</ul>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic4.zhimg.com/80/v2-e551506e0ee9b917160021358b8b45b7_720w.webp" alt="img"></p>
+<ul>
+<li>管道是一种文件，可以调用read、write和close等操作文件的接口来操作管道。<strong>另一方面管道又不是一种普通的文件，它属于一种独特的文件系统：pipefs。管道的本质是内核维护了一块缓冲区与管道文件相关联，对管道文件的操作，被内核转换成对这块缓冲区内存的操作</strong>。下面我们来看一下如何使用管道。</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#include&lt;unistd.h&gt;</span><br><span class="line">int pipe(int fd[2])</span><br></pre></td></tr></table></figure>
+
+<p>如果成功，则返回值是0，如果失败，则返回值是-1，并且设置errno。<br>成功调用pipe函数之后，会返回两个打开的文件描述符，<strong>一个是管道的读取端描述符pipefd[0]，另一个是管道的写入端描述符pipefd[1]。管道没有文件名与之关联，因此程序没有选择，只能通过文件描述符来访问管道，只有那些能看到这两个文件描述符的进程才能够使用管道</strong>。<em>那么谁能看到进程打开的文件描述符呢？只有该进程及该进程的子孙进程才能看到。这就限制了管道的使用范围</em>。</p>
+<ul>
+<li>成功调用pipe函数之后，可以对写入端描述符pipefd[1]调用write，向管道里面写入数据，代码如下所示：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">write(pipefd[1],wbuf,count);</span><br></pre></td></tr></table></figure>
+
+<p>一旦向管道的写入端写入数据后，就可以对读取端描述符pipefd[0]调用read，读出管道里面的内容。如下所示，管道上的read调用返回的字节数等于请求字节数和管道中当前存在的字节数的最小值。如果当前管道为空，那么read调用会阻塞（如果没有设置O_NONBLOCK标志位的话）。</p>
+<h2 id="4、管道非法read与write内核实现解析"><a href="#4、管道非法read与write内核实现解析" class="headerlink" title="4、管道非法read与write内核实现解析"></a>4、<strong>管道非法read与write内核实现解析</strong></h2><p>调用pipe函数返回的两个文件描述符中，读取端pipefd[0]支持的文件操作定义在read_pipefifo_fops，写入端pipefd[1]支持的文件操作定义在write_pipefifo_fops，其定义如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">const struct file_operations read_pipefifo_fops = &#123; //读端相关操作</span><br><span class="line"> .llseek = no_llseek,</span><br><span class="line"> .read = do_sync_read,</span><br><span class="line"> .aio_read = pipe_read,</span><br><span class="line"> .write = bad_pipe_w, //一旦写，将调用bad_pipe_w</span><br><span class="line"> .poll = pipe_poll,</span><br><span class="line"> .unlocked_ioctl = pipe_ioctl,</span><br><span class="line"> .open = pipe_read_open,</span><br><span class="line"> .release = pipe_read_release,</span><br><span class="line"> .fasync = pipe_read_fasync,</span><br><span class="line">&#125;;</span><br><span class="line">const struct file_operations write_pipefifo_fops = &#123;//写端相关操作</span><br><span class="line"> .llseek = no_llseek,</span><br><span class="line"> .read = bad_pipe_r, //一旦读，将调用bad_pipe_r</span><br><span class="line"> .write = do_sync_write,</span><br><span class="line"> .aio_write = pipe_write,</span><br><span class="line"> .poll = pipe_poll,</span><br><span class="line"> .unlocked_ioctl = pipe_ioctl,</span><br><span class="line"> .open = pipe_write_open,</span><br><span class="line"> .release = pipe_write_release,</span><br><span class="line"> .fasync = pipe_write_fasync,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到，<strong>对读取端描述符执行write操作，内核就会执行bad_pipe_w函数；对写入端描述符执行read操作，内核就会执行bad_pipe_r函数。这两个函数比较简单，都是直接返回-EBADF。因此对应的read和write调用都会失败，返回-1，并置errno为EBADF</strong>。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">static ssize_t </span><br><span class="line">bad_pipe_r(struct file filp, char __user buf, size_t count, loff_t ppos) </span><br><span class="line">&#123; </span><br><span class="line">return -EBADF; //返回错误 </span><br><span class="line">&#125; </span><br><span class="line">static ssize_t </span><br><span class="line">bad_pipe_w(struct file filp, const char __user buf, size_t count,loff_t ppos) </span><br><span class="line">&#123; </span><br><span class="line">return -EBADF; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="5、管道通信原理及其亲戚通信解析"><a href="#5、管道通信原理及其亲戚通信解析" class="headerlink" title="5、管道通信原理及其亲戚通信解析"></a>5、<strong>管道通信原理及其亲戚通信解析</strong></h2><h3 id="5-1父子进程通信解析"><a href="#5-1父子进程通信解析" class="headerlink" title="5.1父子进程通信解析"></a>5.1<strong>父子进程通信解析</strong></h3><p><strong>我们只介绍了pipe函数接口，至今尚看不出来该如何使用pipe函数进行进程间通信。调用pipe之后，进程发生了什么呢？请看图9-5</strong>。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic3.zhimg.com/80/v2-96b1020e08c5ee4afd1da7dd51bf43b6_720w.webp" alt="img"></p>
+<p>可以看到，调用pipe函数之后，系统给进程分配了两个文件描述符，即pipe函数返回的两个描述符。该进程既可以往写入端描述符写入信息，也可以从读取端描述符读出信息。可是一个进程管道，起不到任何通信的作用。这不是通信，而是自言自语。<br>如果调用pipe函数的进程随后调用fork函数，创建了子进程，情况就不一样了。fork以后，子进程复制了父进程打开的文件描述符（如图9-6所示），两条通信的通道就建立起来了。此时，可以是父进程往管道里写，子进程从管道里面读；也可以是子进程往管道里写，父进程从管道里面读。这两条通路都是可选的，但是不能都选。<strong>原因前面介绍过，管道里面是字节流，父子进程都写、都读，就会导致内容混在一起，对于读管道的一方，解析起来就比较困难</strong>。常规的使用方法是父子进程一方只能写入，另一方只能读出，管道变成一个单向的通道，以方便使用。如图9-7所示，父进程放弃读，子进程放弃写，变成父进程写入，子进程读出，成为一个通信的通道…</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic3.zhimg.com/80/v2-0395cc21e8cf14f00477245e3e5b638e_720w.webp" alt="img"></p>
+<ul>
+<li><strong>父进程如何放弃读，子进程又如何放弃写</strong>？其实很简单，父进程把读端口pipefd[0]这个文件描述符关闭掉，子进程把写端口pipefd[1]这个文件描述符关闭掉就可以了，示例代码如下：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">int pipefd[2]; </span><br><span class="line">pipe(pipefd); </span><br><span class="line">switch(fork()) </span><br><span class="line">&#123; </span><br><span class="line">case -1: </span><br><span class="line">/fork failed, error handler here/ </span><br><span class="line">case 0: /子进程/ </span><br><span class="line">close(pipefd[1]) ; /关闭掉写入端对应的文件描述符/ </span><br><span class="line">/子进程可以对pipefd[0]调用read/ </span><br><span class="line">break； </span><br><span class="line">default: /父进程/ </span><br><span class="line">close(pipefd[0]); /父进程关闭掉读取端对应的文件描述符/ </span><br><span class="line">/父进程可以对pipefd[1]调用write, 写入想告知子进程的内容/ </span><br><span class="line">break </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic4.zhimg.com/80/v2-c773670f4666bf0aab36d630d88562eb_720w.webp" alt="img"></p>
+<h3 id="5-2亲缘关系的进程管道通信解析"><a href="#5-2亲缘关系的进程管道通信解析" class="headerlink" title="5.2亲缘关系的进程管道通信解析"></a>5.2<strong>亲缘关系的进程管道通信解析</strong></h3><ul>
+<li>图9-8也讲述了如何在兄弟进程之间通过管道通信。如图9-8所示，父进程再次创建一个子进程B，子进程B就持有管道写入端，这时候两个子进程之间就可以通过管道通信了。父进程为了不干扰两个子进程通信，很自觉地关闭了自己的写入端。从此管道成为了两个子进程之间的单向的通信通道。在shell中执行管道命令就是这种情景，只是略有特殊之处，其特殊的地方是管道描述符占用了标准输入和标准输出两个文件描述符</li>
+</ul>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic2.zhimg.com/80/v2-c5b7f0c17357dc449edd3596133e2c49_720w.webp" alt="img"></p>
+<h2 id="6、管道的注意事项及其性质"><a href="#6、管道的注意事项及其性质" class="headerlink" title="6、管道的注意事项及其性质"></a>6、<strong>管道的注意事项及其性质</strong></h2><h3 id="6-1管道有以下三条性质"><a href="#6-1管道有以下三条性质" class="headerlink" title="6.1管道有以下三条性质"></a>6.1<strong>管道有以下三条性质</strong></h3><ul>
+<li>只有当所有的写入端描述符都已经关闭了，而且管道中的数据都被读出，对读取描述符调用read函数才返回0（及读到EOF标志）。</li>
+<li>如果所有的读取端描述符都已经关闭了，此时进程再次往管道里面写入数据，写操作将会失败，并且内核会像进程发送一个SIGPIPE信号(默认杀死进程)。</li>
+<li>当所有的读端与写端都已经关闭时，管道才会关闭.</li>
+<li><strong>就因为有这些特性，我们要即使关闭没用的管道文件描述符</strong></li>
+</ul>
+<h3 id="6-2shell管道的实现"><a href="#6-2shell管道的实现" class="headerlink" title="6.2shell管道的实现"></a>6.2<strong>shell管道的实现</strong></h3><ul>
+<li>shell编程会大量使用管道，我们经常看到前一个命令的标准输出作为后一个命令的标准输入，来协作完成任务，如图9-9所示。管道是如何做到的呢？<br>兄弟进程可以通过管道来传递消息，这并不稀奇，前面已经图示了做法。<strong>关键是如何使得一个程序的标准输出被重定向到管道中，而另一个程序的标准输入从管道中读取呢？</strong></li>
+</ul>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic4.zhimg.com/80/v2-afc1997ad3bb948e98ec7e6c38d8793f_720w.webp" alt="img"></p>
+<p><strong>答案就是复制文件描述符。</strong><br>对于第一个子进程，执行dup2之后，标准输出对应的文件描述符1，也成为了管道的写入端。这时候，管道就有了两个写入端，按照前面的建议，需要关闭不相干的写入端，使读取端可以顺利地读到EOF，所以应将刚开始分配的管道写入端的文件描述符pipefd[1]关闭掉。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if(pipefd[1] != STDOUT_FILENO)</span><br><span class="line">&#123;</span><br><span class="line">dup2(pipefd[1],STDOUT_FILENO);</span><br><span class="line">close(pipefd[1]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>同样的道理,对于第二个子进程,如法炮制:</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">if(pipefd[0] != STDIN_FILENO)</span><br><span class="line">&#123;</span><br><span class="line">dup2(pipefd[0],STDIN_FILENO);</span><br><span class="line">close(pipefd[0]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>简单来说，就是第一个子进程的标准输出被绑定到了管道的写入端，于是第一个命令的输出，写入了管道，而第二个子进程管道将其标准输入绑定到管道的读取端，只要管道里面有了内容，这些内容就成了标准输入。</li>
+<li>两个示例代码，为什么要判断管道的文件描述符是否等于标准输入和标准输出呢？原因是，在调用pipe时，进程很可能已经关闭了标准输入和标准输出，调用pipe函数时，内核会分配最小的文件描述符，所以pipe的文件描述符可能等于0或1。在这种情况下，如果没有if判断加以保护，代码就变成了：</li>
+</ul>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dup2(1,1);</span><br><span class="line">close(1);</span><br></pre></td></tr></table></figure>
+
+<p>这样的话，第一行代码什么也没做，第二行代码就把管道的写入端给关闭了，于是便无法传递信息了</p>
+<h3 id="6-3与shell命令进行通信"><a href="#6-3与shell命令进行通信" class="headerlink" title="6.3与shell命令进行通信"></a>6.3<strong>与shell命令进行通信</strong></h3><p>道的一个重要作用是和外部命令进行通信。在日常编程中，经常会需要调用一个外部命令，并且要获取命令的输出。而有些时候，需要给外部命令提供一些内容，让外部命令处理这些输入。Linux提供了popen接口来帮助程序员做这些事情。<br>就像system函数，即使没有system函数，我们通过fork、exec及wait家族函数一样也可以实现system的功能。但终归是不方便，system函数为我们提供了一些便利。同样的道理，只用pipe函数及dup2等函数，也能完成popen要完成的工作，但popen接口给我们提供了便利。<br>popen接口定义如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">FILE *popen(const char *command, const char *type);</span><br><span class="line">int pclose(FILE *stream);</span><br></pre></td></tr></table></figure>
+
+<p>popen函数会创建一个管道，并且创建一个子进程来执行shell，shell会创建一个子进程来执行command。根据type值的不同，分成以下两种情况。<br>如果type是r：command执行的标准输出，就会写入管道，从而被调用popen的进程读到。通过对popen返回的FILE类型指针执行read或fgets等操作，就可以读取到command的标准输出，如图9-10所示。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic1.zhimg.com/80/v2-c08b21beae3b080597b1eb9847e3a5f0_720w.webp" alt="img"></p>
+<p>如果type是w：调用popen的进程，可以通过对FILE类型的指针fp执行write、fputs等操作，负责往管道里面写入，写入的内容经过管道传给执行command的进程，作为命令的输入，如图9-11所示</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://pic3.zhimg.com/80/v2-0c6714d4c36f7f4a9c14dcea2915fce2_720w.webp" alt="img"></p>
+<p>popen函数成功时，会返回stdio库封装的FILE类型的指针，失败时会返回NULL，并且设置errno。常见的失败有fork失败，pipe失败，或者分配内存失败。</p>
+<p>I&#x2F;O结束了以后，可以调用pclose函数来关闭管道，并且等待子进程的退出。尽管popen函数返回的是FILE类型的指针，也不应调用fclose函数来关闭popen函数打开的文件流指针，因为fclose不会等待子进程的退出。pclose函数成功时会返回子进程中shell的终止状态。popen函数和system函数类似，如果command对应的命令无法执行，就如同执行了exit（127）一样。如果发生其他错误，pclose函数则返回-1。可以从errno中获取到失败的原因。</p>
+<p>下面给出一个简单的例子，来示范下popen的用法：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line">#include&lt;stdio.h&gt;</span><br><span class="line">#include&lt;stdlib.h&gt;</span><br><span class="line">#include&lt;unistd.h&gt;</span><br><span class="line">#include&lt;string.h&gt;</span><br><span class="line">#include&lt;errno.h&gt;</span><br><span class="line">#include&lt;sys/wait.h&gt;</span><br><span class="line">#include&lt;signal.h&gt;</span><br><span class="line">#define MAX_LINE_SIZE 8192</span><br><span class="line">void print_wait_exit(int status)</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;status = %d\n&quot;,status);</span><br><span class="line">    if(WIFEXITED(status))</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;normal termination,exit status = %d\n&quot;,WEXITSTATUS(status));</span><br><span class="line">    &#125;</span><br><span class="line">    else if(WIFSIGNALED(status))</span><br><span class="line">    &#123;</span><br><span class="line">        printf(&quot;abnormal termination,signal number =%d%s\n&quot;,</span><br><span class="line">                WTERMSIG(status),</span><br><span class="line">#ifdef WCOREDUMP</span><br><span class="line">                WCOREDUMP(status)?&quot;core file generated&quot; : &quot;&quot;);</span><br><span class="line">#else</span><br><span class="line">        &quot;&quot;);</span><br><span class="line">#endif</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">int main(int argc ,char* argv[])</span><br><span class="line">&#123;</span><br><span class="line">    FILE *fp = NULL ;</span><br><span class="line">    char command[MAX_LINE_SIZE],buffer[MAX_LINE_SIZE];</span><br><span class="line">    if(argc != 2 )</span><br><span class="line">    &#123;</span><br><span class="line">        fprintf(stderr,&quot;Usage: %s filename \n&quot;,argv[0]);</span><br><span class="line">        exit(1);</span><br><span class="line">    &#125;</span><br><span class="line">       snprintf(command,sizeof(command),&quot;cat %s&quot;,argv[1]);</span><br><span class="line">    fp = popen(command,&quot;r&quot;);</span><br><span class="line">    if(fp == NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        fprintf(stderr,&quot;popen failed (%s)&quot;,strerror(errno));</span><br><span class="line">        exit(2);</span><br><span class="line">    &#125;</span><br><span class="line">    while(fgets(buffer,MAX_LINE_SIZE,fp) != NULL)</span><br><span class="line">    &#123;</span><br><span class="line">        fprintf(stdout,&quot;%s&quot;,buffer);</span><br><span class="line">    &#125;</span><br><span class="line">    int ret = pclose(fp);</span><br><span class="line">    if(ret == 127 )</span><br><span class="line">    &#123;</span><br><span class="line">        fprintf(stderr,&quot;bad command : %s\n&quot;,command);</span><br><span class="line">        exit(3);</span><br><span class="line">    &#125;</span><br><span class="line">    else if(ret == -1)</span><br><span class="line">    &#123;</span><br><span class="line">        fprintf(stderr,&quot;failed to get child status (%s)\n&quot;,</span><br><span class="line">strerror(errno));</span><br><span class="line">        exit(4);</span><br><span class="line">    &#125;</span><br><span class="line">    else</span><br><span class="line">    &#123;</span><br><span class="line">        print_wait_exit(ret);</span><br><span class="line">    &#125;</span><br><span class="line">    exit(0);</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>将文件名作为参数传递给程序，执行cat filename的命令。popen创建子进程来负责执行cat filename的命令，子进程的标准输出通过管道传给父进程，父进程可以通过fgets来读取command的标准输出。</li>
+</ul>
+<h3 id="6-4system函数与popen函数区别"><a href="#6-4system函数与popen函数区别" class="headerlink" title="6.4system函数与popen函数区别"></a>6.4<strong>system函数与popen函数区别</strong></h3><ul>
+<li>popen函数和system有很多相似的地方，但是也有显著的不同。调用system函数时，shell命令的执行被封装在了函数内部，所以若system函数不返回，调用system的进程就不再继续执行。但是popen函数不同，一旦调用popen函数，调用进程和执行command的进程便处于并行状态。然后pclose函数才会关闭管道，等待执行command的进程退出。换句话说，在popen之后，pclose之前，调用popen的进程和执行command的进程是并行的，这种差异带来了两种显著的不同：</li>
+<li>在并行期间，调用popen的进程可能会创建其他子进程，所以标准规定popen不能阻塞SIGCHLD信号.这也意味着，popen创建的子进程可能被提前执行的等待操作所捕获。若发生这种情况，调用pclose函数时，已经无法等待command子进程的退出，这种情况下，将返回-1，并且errno为ECHILD。</li>
+<li>调用进程和command子进程是并行的，所以标准要求popen不能忽略SIGINT和SIGQUIT信号。如果是从键盘产生的上述信号，那么，调用进程和command子进程都会收到信号。</li>
+</ul>
+<hr>
+<p>版权声明：本文为知乎博主「<a target="_blank" rel="noopener" href="https://www.zhihu.com/people/linuxwang-xian-sheng">极致Linux内核</a>」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。</p>
+<p>原文链接：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/548003903">https://zhuanlan.zhihu.com/p/548003903</a></p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E5%86%85%E6%A0%B8%E8%BF%9B%E7%A8%8B%E8%B0%83%E5%BA%A6O(1)%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95/">Linux内核进程调度O(1)调度算法</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/15/linux-docs/%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86/Linux%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E8%B0%83%E5%BA%A6(%E4%B8%80)/">Linux进程、线程、调度(一)</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">ysme</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.27.0">Stellar 1.27.0</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1%E3%80%81%E7%AE%A1%E9%81%93%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="toc-text">1、管道的定义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2%E3%80%81%E7%AE%A1%E9%81%93%E7%9A%84%E7%94%A8%E9%80%94"><span class="toc-text">2、管道的用途</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3%E3%80%81%E7%AE%A1%E9%81%93%E7%9A%84%E6%93%8D%E4%BD%9C"><span class="toc-text">3、管道的操作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4%E3%80%81%E7%AE%A1%E9%81%93%E9%9D%9E%E6%B3%95read%E4%B8%8Ewrite%E5%86%85%E6%A0%B8%E5%AE%9E%E7%8E%B0%E8%A7%A3%E6%9E%90"><span class="toc-text">4、管道非法read与write内核实现解析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5%E3%80%81%E7%AE%A1%E9%81%93%E9%80%9A%E4%BF%A1%E5%8E%9F%E7%90%86%E5%8F%8A%E5%85%B6%E4%BA%B2%E6%88%9A%E9%80%9A%E4%BF%A1%E8%A7%A3%E6%9E%90"><span class="toc-text">5、管道通信原理及其亲戚通信解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1%E7%88%B6%E5%AD%90%E8%BF%9B%E7%A8%8B%E9%80%9A%E4%BF%A1%E8%A7%A3%E6%9E%90"><span class="toc-text">5.1父子进程通信解析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2%E4%BA%B2%E7%BC%98%E5%85%B3%E7%B3%BB%E7%9A%84%E8%BF%9B%E7%A8%8B%E7%AE%A1%E9%81%93%E9%80%9A%E4%BF%A1%E8%A7%A3%E6%9E%90"><span class="toc-text">5.2亲缘关系的进程管道通信解析</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6%E3%80%81%E7%AE%A1%E9%81%93%E7%9A%84%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9%E5%8F%8A%E5%85%B6%E6%80%A7%E8%B4%A8"><span class="toc-text">6、管道的注意事项及其性质</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1%E7%AE%A1%E9%81%93%E6%9C%89%E4%BB%A5%E4%B8%8B%E4%B8%89%E6%9D%A1%E6%80%A7%E8%B4%A8"><span class="toc-text">6.1管道有以下三条性质</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2shell%E7%AE%A1%E9%81%93%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-text">6.2shell管道的实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3%E4%B8%8Eshell%E5%91%BD%E4%BB%A4%E8%BF%9B%E8%A1%8C%E9%80%9A%E4%BF%A1"><span class="toc-text">6.3与shell命令进行通信</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4system%E5%87%BD%E6%95%B0%E4%B8%8Epopen%E5%87%BD%E6%95%B0%E5%8C%BA%E5%88%AB"><span class="toc-text">6.4system函数与popen函数区别</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js`,
+    marked: `https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.27.0" async></script>
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"></script><script defer src="https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css`,
+    js: `https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || null
+        }
+      });
+    })
+  }
+</script><script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          loop: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script><script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
