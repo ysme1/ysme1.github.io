@@ -1,0 +1,327 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Linux 常用查看系统信息命令 | Blog</title><meta name="author" content="ysme"><meta name="copyright" content="ysme"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="常用命令12345678910111213141516171819202122232425262728293031323334353637uname -a # 查看内核&#x2F;操作系统&#x2F;CPU信息head -n 1 &#x2F;etc&#x2F;issue # 查看操作系统版本 cat &#x2F;proc&#x2F;cpuinfo # 查看CPU信息 hostname # 查看计算机名 lspci -tv # 列出所有PCI设备 lsusb">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 常用查看系统信息命令">
+<meta property="og:url" content="https://vcloud.ysme.top/2023/01/15/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux%E5%BC%80%E5%8F%91/Linux-%E5%B8%B8%E7%94%A8%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9F%E4%BF%A1%E6%81%AF%E5%91%BD%E4%BB%A4/index.html">
+<meta property="og:site_name" content="Blog">
+<meta property="og:description" content="常用命令12345678910111213141516171819202122232425262728293031323334353637uname -a # 查看内核&#x2F;操作系统&#x2F;CPU信息head -n 1 &#x2F;etc&#x2F;issue # 查看操作系统版本 cat &#x2F;proc&#x2F;cpuinfo # 查看CPU信息 hostname # 查看计算机名 lspci -tv # 列出所有PCI设备 lsusb">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://api.yimian.xyz/img?type=moe">
+<meta property="article:published_time" content="2023-01-15T01:13:37.000Z">
+<meta property="article:modified_time" content="2024-04-06T02:15:42.634Z">
+<meta property="article:author" content="ysme">
+<meta property="article:tag" content="Linux常用命令">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://api.yimian.xyz/img?type=moe"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://vcloud.ysme.top/2023/01/15/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux%E5%BC%80%E5%8F%91/Linux-%E5%B8%B8%E7%94%A8%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9F%E4%BF%A1%E6%81%AF%E5%91%BD%E4%BB%A4/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":200},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Linux 常用查看系统信息命令',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-06 10:15:42'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.1.1"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('https://api.yimian.xyz/img?type=moe')"><nav id="nav"><span id="blog-info"><a href="/" title="Blog"><span class="site-name">Blog</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> Link</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Linux 常用查看系统信息命令</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-06T02:15:42.634Z" title="更新于 2024-04-06 10:15:42">2024-04-06</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/">嵌入式</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux%E5%BC%80%E5%8F%91/">linux开发</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Linux 常用查看系统信息命令"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">uname</span> -a <span class="comment"># 查看内核/操作系统/CPU信息</span></span><br><span class="line"><span class="built_in">head</span> -n 1 /etc/issue <span class="comment"># 查看操作系统版本 </span></span><br><span class="line"><span class="built_in">cat</span> /proc/cpuinfo <span class="comment"># 查看CPU信息 </span></span><br><span class="line">hostname <span class="comment"># 查看计算机名 </span></span><br><span class="line">lspci -tv <span class="comment"># 列出所有PCI设备 </span></span><br><span class="line">lsusb -tv <span class="comment"># 列出所有USB设备 </span></span><br><span class="line">lsmod <span class="comment"># 列出加载的内核模块 </span></span><br><span class="line"><span class="built_in">env</span> <span class="comment"># 查看环境变量资源 </span></span><br><span class="line">free -m <span class="comment"># 查看内存使用量和交换区使用量 </span></span><br><span class="line"><span class="built_in">df</span> -h <span class="comment"># 查看各分区使用情况 </span></span><br><span class="line"><span class="built_in">du</span> -sh &lt;目录名&gt; <span class="comment"># 查看指定目录的大小 </span></span><br><span class="line">grep MemTotal /proc/meminfo <span class="comment"># 查看内存总量 </span></span><br><span class="line">grep MemFree /proc/meminfo <span class="comment"># 查看空闲内存量 </span></span><br><span class="line"><span class="built_in">uptime</span> <span class="comment"># 查看系统运行时间、用户数、负载 </span></span><br><span class="line"><span class="built_in">cat</span> /proc/loadavg <span class="comment"># 查看系统负载磁盘和分区 </span></span><br><span class="line">mount | column -t <span class="comment"># 查看挂接的分区状态 </span></span><br><span class="line">fdisk -l <span class="comment"># 查看所有分区 </span></span><br><span class="line">swapon -s <span class="comment"># 查看所有交换分区 </span></span><br><span class="line">hdparm -i /dev/hda <span class="comment"># 查看磁盘参数(仅适用于IDE设备) </span></span><br><span class="line">dmesg | grep IDE <span class="comment"># 查看启动时IDE设备检测状况网络 </span></span><br><span class="line">ifconfig <span class="comment"># 查看所有网络接口的属性 </span></span><br><span class="line">iptables -L <span class="comment"># 查看防火墙设置 </span></span><br><span class="line">route -n <span class="comment"># 查看路由表 </span></span><br><span class="line">netstat -lntp <span class="comment"># 查看所有监听端口 </span></span><br><span class="line">netstat -antp <span class="comment"># 查看所有已经建立的连接 </span></span><br><span class="line">netstat -s <span class="comment"># 查看网络统计信息进程 </span></span><br><span class="line">ps -ef <span class="comment"># 查看所有进程 </span></span><br><span class="line">top <span class="comment"># 实时显示进程状态用户 </span></span><br><span class="line">w <span class="comment"># 查看活动用户 </span></span><br><span class="line"><span class="built_in">id</span> &lt;用户名&gt; <span class="comment"># 查看指定用户信息 </span></span><br><span class="line">last <span class="comment"># 查看用户登录日志 </span></span><br><span class="line"><span class="built_in">cut</span> -d: -f1 /etc/passwd <span class="comment"># 查看系统所有用户 </span></span><br><span class="line"><span class="built_in">cut</span> -d: -f1 /etc/group <span class="comment"># 查看系统所有组 </span></span><br><span class="line">crontab -l <span class="comment"># 查看当前用户的计划任务服务 </span></span><br><span class="line">chkconfig –list <span class="comment"># 列出所有系统服务 </span></span><br><span class="line">chkconfig –list | grep on <span class="comment"># 列出所有启动的系统服务程序 </span></span><br><span class="line">rpm -qa <span class="comment"># 查看所有安装的软件包</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="查看linux系统版本信息（Oracle-Linux、Centos-Linux、Redhat-Linux、Debian、Ubuntu）"><a href="#查看linux系统版本信息（Oracle-Linux、Centos-Linux、Redhat-Linux、Debian、Ubuntu）" class="headerlink" title="查看linux系统版本信息（Oracle Linux、Centos Linux、Redhat Linux、Debian、Ubuntu）"></a>查看linux系统版本信息（Oracle Linux、Centos Linux、Redhat Linux、Debian、Ubuntu）</h4><p>一、查看Linux系统版本的命令（3种方法）</p>
+<p>1、此命令也适用于所有的Linux发行版：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/issue</span><br></pre></td></tr></table></figure>
+<p>2、这种方法只适合Redhat系的Linux：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/redhat-release</span><br></pre></td></tr></table></figure>
+<p> 3、列出所有版本信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsb_release -a</span><br></pre></td></tr></table></figure>
+
+<p> 二、查看Linux内核版本命令（两种方法）：</p>
+<p>1、此命令也适用于所有的Linux发行版：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/version</span><br></pre></td></tr></table></figure>
+<p>2、此命令也适用于所有的Linux发行版：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">uname</span> -a</span><br></pre></td></tr></table></figure>
+
+<p>一、linux CPU大小</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/cpuinfo |grep <span class="string">&quot;model name&quot;</span> &amp;&amp; <span class="built_in">cat</span> /proc/cpuinfo |grep <span class="string">&quot;physical id&quot;</span></span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>说明：Linux下可以在&#x2F;proc&#x2F;cpuinfo中看到每个cpu的详细信息。但是对于双核的cpu，在cpuinfo中会看到两个cpu。常常会让人误以为是两个单核的cpu。<br>其实应该通过Physical Processor ID来区分单核和双核。而Physical Processor ID可以从cpuinfo或者dmesg中找到. flags 如果有 ht 说明支持超线程技术 判断物理CPU的个数可以查看physical id 的值</p>
+</blockquote>
+<p>二、内存大小</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/meminfo |grep MemTotal</span><br></pre></td></tr></table></figure>
+
+<p>三、硬盘大小</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fdisk -l |grep Disk</span><br></pre></td></tr></table></figure>
+
+<p>四、查看内核&#x2F;操作系统&#x2F;CPU信息的linux系统信息命令 </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">uname</span> -a </span><br></pre></td></tr></table></figure>
+
+<p>五、查看操作系统版本，是数字1不是字母L</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">head</span> -n 1 /etc/issue </span><br></pre></td></tr></table></figure>
+
+<p>六、查看CPU信息的linux系统信息命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/cpuinfo </span><br></pre></td></tr></table></figure>
+
+<p>七、查看计算机名的linux系统信息命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hostname</span><br></pre></td></tr></table></figure>
+
+<p>八、列出所有PCI设备</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lspci -tv </span><br></pre></td></tr></table></figure>
+
+<p>九、列出所有USB设备的linux系统信息命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsusb -tv </span><br></pre></td></tr></table></figure>
+
+<p>十、列出加载的内核模块</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsmod </span><br></pre></td></tr></table></figure>
+
+<p>十一、查看环境变量资源</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">env</span></span><br></pre></td></tr></table></figure>
+
+<p>十二、查看内存使用量和交换区使用量</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">free -m</span><br></pre></td></tr></table></figure>
+
+<p>十三、查看各分区使用情况</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">df</span> -h</span><br></pre></td></tr></table></figure>
+
+<p>十四、查看指定目录的大小</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">du</span> -sh</span><br></pre></td></tr></table></figure>
+
+<p>十五、查看内存总量</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep MemTotal /proc/meminfo</span><br></pre></td></tr></table></figure>
+
+<p>十六、查看空闲内存量</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">grep MemFree /proc/meminfo </span><br></pre></td></tr></table></figure>
+
+<p>十七、查看系统运行时间、用户数、负载</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">uptime</span></span><br></pre></td></tr></table></figure>
+
+<p>十八、查看系统负载磁盘和分区</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/loadavg</span><br></pre></td></tr></table></figure>
+
+<p>十九、查看挂接的分区状态</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount | column -t</span><br></pre></td></tr></table></figure>
+
+<p>二十、查看所有分区</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fdisk -l</span><br></pre></td></tr></table></figure>
+
+<p>二十一、查看所有交换分区</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">swapon -s</span><br></pre></td></tr></table></figure>
+
+<p>二十二、查看磁盘参数(仅适用于IDE设备)</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hdparm -i /dev/hda</span><br></pre></td></tr></table></figure>
+
+<p>二十三、查看启动时IDE设备检测状况网络</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep IDE</span><br></pre></td></tr></table></figure>
+
+<p>二十四、查看所有网络接口的属性</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ifconfig</span><br></pre></td></tr></table></figure>
+
+<p>二十五、查看防火墙设置</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">iptables -L</span><br></pre></td></tr></table></figure>
+
+<p>二十六、查看路由表</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">route -n</span><br></pre></td></tr></table></figure>
+
+<p>二十七、查看所有监听端口</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -lntp </span><br></pre></td></tr></table></figure>
+
+<p>二十八、查看所有已经建立的连接</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -antp</span><br></pre></td></tr></table></figure>
+
+<p>二十九、查看网络统计信息进程</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -s</span><br></pre></td></tr></table></figure>
+
+<p>三十、查看所有进程</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps -ef</span><br></pre></td></tr></table></figure>
+
+<p>三十一、实时显示进程状态用户</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">top</span><br></pre></td></tr></table></figure>
+
+<p>三十二、查看活动用户</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">w </span><br></pre></td></tr></table></figure>
+
+<p>三十三、查看指定用户信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">id</span> </span><br></pre></td></tr></table></figure>
+
+<p>三十四、查看用户登录日志</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">last</span><br></pre></td></tr></table></figure>
+
+<p>三十五、查看系统所有用户</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cut</span> -d: -f1 /etc/passwd</span><br></pre></td></tr></table></figure>
+
+<p>三十六、查看系统所有组</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cut</span> -d: -f1 /etc/group</span><br></pre></td></tr></table></figure>
+
+<p>三十七、查看当前用户的计划任务服务</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">crontab -l </span><br></pre></td></tr></table></figure>
+
+<p>三十七、列出所有系统服务</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chkconfig –list</span><br></pre></td></tr></table></figure>
+
+<p>三十八、列出所有启动的系统服务程序</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chkconfig –list | grep on</span><br></pre></td></tr></table></figure>
+
+<p>三十九、查看所有安装的软件包</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rpm -qa</span><br></pre></td></tr></table></figure>
+
+<p>四十、查看CPU相关参数的linux系统命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/cpuinfo</span><br></pre></td></tr></table></figure>
+
+<p>四十一、查看linux硬盘和分区信息的系统信息命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/partitions</span><br></pre></td></tr></table></figure>
+
+<p>四十二、查看linux系统内存信息的linux系统命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/meminfo</span><br></pre></td></tr></table></figure>
+
+<p>四十三、查看版本，类似uname -r</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/version</span><br></pre></td></tr></table></figure>
+
+<p>四十四、查看设备io端口</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/ioports</span><br></pre></td></tr></table></figure>
+
+<p>四十五、查看中断</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/interrupts </span><br></pre></td></tr></table></figure>
+
+<p>四十六、查看pci设备的信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/pci</span><br></pre></td></tr></table></figure>
+
+<p>四十七、查看所有swap分区的信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/swaps</span><br></pre></td></tr></table></figure>
+
+<p>系统	发行版本	–	内核版本、位数<br>RedHat	</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/issue	<span class="built_in">cat</span> /etc/redhat-release	lsb_release -a</span><br></pre></td></tr></table></figure>
+<p>CentOS	</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/issue	<span class="built_in">cat</span> /etc/centos-release	<span class="built_in">cat</span> /proc/version</span><br></pre></td></tr></table></figure>
+<p>Debian	</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/issue	<span class="built_in">cat</span> /etc/debian_version	<span class="built_in">cat</span> /proc/version</span><br></pre></td></tr></table></figure>
+<p>Ubuntu	</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/issue	<span class="built_in">cat</span> /etc/lsb_release	<span class="built_in">cat</span> /proc/version</span><br></pre></td></tr></table></figure>
+<p>Oracle	</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /etc/issue	<span class="built_in">cat</span> /etc/oracle-release	lsb_release -a</span><br></pre></td></tr></table></figure></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top">ysme</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://vcloud.ysme.top/2023/01/15/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux%E5%BC%80%E5%8F%91/Linux-%E5%B8%B8%E7%94%A8%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9F%E4%BF%A1%E6%81%AF%E5%91%BD%E4%BB%A4/">https://vcloud.ysme.top/2023/01/15/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux%E5%BC%80%E5%8F%91/Linux-%E5%B8%B8%E7%94%A8%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9F%E4%BF%A1%E6%81%AF%E5%91%BD%E4%BB%A4/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://vcloud.ysme.top" target="_blank">Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Linux%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">Linux常用命令</a></div><div class="post_share"><div class="social-share" data-image="https://api.yimian.xyz/img?type=moe" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/01/15/linux-docs/%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8/Linux%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AD%A6%E4%B9%A0%E4%B9%8B%E5%AD%97%E7%AC%A6%E8%AE%BE%E5%A4%87/" title="Linux操作系统学习之字符设备"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Linux操作系统学习之字符设备</div></div></a></div><div class="next-post pull-right"><a href="/2023/01/15/%E5%B5%8C%E5%85%A5%E5%BC%8F/linux%E5%BC%80%E5%8F%91/x86%20Ubuntu%E4%B8%8A%E5%BB%BA%E7%AB%8Baarch64&amp;arm64%20Ubuntu%E7%9A%84%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91%E9%93%BE/" title="x86 Ubuntu上建立aarch64/arm64 Ubuntu的交叉编译链"><img class="cover" src="https://api.yimian.xyz/img?type=moe" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">x86 Ubuntu上建立aarch64/arm64 Ubuntu的交叉编译链</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">ysme</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">130</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/ysme1"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/ysme1" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:zys1395740068@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-number">1.</span> <span class="toc-text">常用命令</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8Blinux%E7%B3%BB%E7%BB%9F%E7%89%88%E6%9C%AC%E4%BF%A1%E6%81%AF%EF%BC%88Oracle-Linux%E3%80%81Centos-Linux%E3%80%81Redhat-Linux%E3%80%81Debian%E3%80%81Ubuntu%EF%BC%89"><span class="toc-number">1.0.1.</span> <span class="toc-text">查看linux系统版本信息（Oracle Linux、Centos Linux、Redhat Linux、Debian、Ubuntu）</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/03/22/%E5%B7%A5%E5%85%B7/git/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南"><img src="https://api.yimian.xyz/img?type=moe" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Git 快速入门指南"/></a><div class="content"><a class="title" href="/2023/03/22/%E5%B7%A5%E5%85%B7/git/git%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8/" title="Git 快速入门指南">Git 快速入门指南</a><time datetime="2023-03-22T01:13:37.000Z" title="发表于 2023-03-22 09:13:37">2023-03-22</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核"><img src="https://pic2.zhimg.com/80/v2-99c76217f4575d98a9001a4fd8c1681d_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux 30分钟学会编译linux内核"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/30%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E7%BC%96%E8%AF%91linux%E5%86%85%E6%A0%B8/" title="Linux 30分钟学会编译linux内核">Linux 30分钟学会编译linux内核</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型"><img src="https://user-images.githubusercontent.com/87457873/127649604-761ead2e-8c72-4876-a52f-8310f3c3b49c.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux IO 之 IO与网络模型"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20IO%20%E4%B9%8B%20IO%E4%B8%8E%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="Linux IO 之 IO与网络模型">Linux IO 之 IO与网络模型</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)"><img src="https://pic2.zhimg.com/80/v2-93cd0f1a4abbdfeb4af71202535fe4f9_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux Kernel内核整体架构(图文详解)"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%20Kernel%E5%86%85%E6%A0%B8%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84(%E5%9B%BE%E6%96%87%E8%AF%A6%E8%A7%A3)/" title="Linux Kernel内核整体架构(图文详解)">Linux Kernel内核整体架构(图文详解)</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理"><img src="https://pic4.zhimg.com/80/v2-55215e20944d5e1a161253e73eddaa07_720w.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Linux内核Coding Style整理"/></a><div class="content"><a class="title" href="/2023/01/15/linux-docs/Linux%E5%86%85%E6%A0%B8Coding%20Style%E6%95%B4%E7%90%86/" title="Linux内核Coding Style整理">Linux内核Coding Style整理</a><time datetime="2023-01-15T01:13:37.000Z" title="发表于 2023-01-15 09:13:37">2023-01-15</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By ysme</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text"><a target="_blank" rel="noopener" href="https://beian.miit.gov.cn/#/Integrated/recordQuery"><img class="icp-icon" src=https://beian.mps.gov.cn/img/logo01.dd7ff50e.png><span>浙ICP备2021036292号</span></a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
