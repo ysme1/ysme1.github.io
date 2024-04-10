@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+</head>
+
+<body>
+  <div id="imageContainer"></div>
+
+  <script>
+    var d = new Date()
+    var year = d.getFullYear()
+    var month = d.getMonth() + 1
+    var day = d.getDay()
+    if (month < 10)
+      month = '0' + month
+    var img = document.createElement("img")
+
+
+    function generateImg () {
+      var tryCnt
+      for (tryCnt = 0; tryCnt < 15; tryCnt++) {
+
+        var num = parseInt(Math.random() * day) + 1
+        if (num < 10)
+          num = '0' + num
+        img.src = `https://raw.githubusercontent.com/ysme1/BingWallpapers/main/wallpapers/${year}/${month}/${year}${month}${num}.jpg`
+
+        img.onload = function () {
+          imageContainer.innerHTML = ""
+          imageContainer.appendChild(img)
+          return true
+        }
+        img.onerror = function () {
+          console.log(tryCnt)
+        }
+      }
+      return false
+    }
+
+    generateImg()
+  </script>
+
+
+  <script>
+    img.addEventListener('click', function () {
+      generateImg()
+    })
+  </script>
+</body>
+
+</html>
