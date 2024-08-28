@@ -2,37 +2,35 @@
 <html lang="zh-CN">
 
 <head>
-    <meta charset="utf-8">
-    <title></title>
+  <meta charset="utf-8">
+  <title></title>
 </head>
 
 <body>
-    <script>
-        var d = new Date()
-        var year = d.getFullYear()
-        var month = d.getMonth() + 1
-        var day = d.getDay()
-        if (month < 10)
-            month = '0' + month
-        var img = document.createElement("img")
-        var num = 1, numPrv = 2;
+  <script>
+    var d = new Date()
+    var year = d.getFullYear()
+    var month = d.getMonth() + 1
+    var day = d.getDay()
+    if (month < 10)
+      month = '0' + month
+    var img = document.createElement("img")
+    var num = 1, numPrv = 2
 
-        function generateImg() {
-            while (num == numPrv) {
-                num = parseInt(Math.random() * date) + 1
-            }
-            numPrv = num;
+    function generateImg () {
+      while (num == numPrv) {
+        num = parseInt(Math.random() * date) + 1
+      }
+      numPrv = num
 
-            console.log(num)
-            if (num < 10)
-                num = '0' + num
-            img.src = `https://raw.githubusercontent.com/ysme1/BingWallpapers/main/wallpapers/${year}/${month}/${year}${month}${num}.jpg`
+      console.log(num)
+      if (num < 10)
+        num = '0' + num
+      img.src = `https://raw.githubusercontent.com/ysme1/BingWallpapers/main/wallpapers/${year}/${month}/${year}${month}${num}.jpg`
+    }
 
-            window.location.href = img.src
-        }
-
-        generateImg()
-    </script>
+    generateImg()
+  </script>
 </body>
 
 </html>
