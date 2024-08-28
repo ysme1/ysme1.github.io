@@ -6,31 +6,36 @@
   <title></title>
 </head>
 
-<body>
-  <script>
-    var d = new Date()
-    var year = d.getFullYear()
-    var month = d.getMonth() + 1
-    var day = d.getDay()
-    if (month < 10)
-      month = '0' + month
-    var img = document.createElement("img")
-    var num = 1, numPrv = 2
 
-    function generateImg () {
-      while (num == numPrv) {
-        num = parseInt(Math.random() * date) + 1
-      }
-      numPrv = num
+<script>
+  var d = new Date()
+  var year = d.getFullYear()
+  var month = d.getMonth()
+  var date = d.getDate()
+  var day = d.getDay()
+  if (month < 10)
+    month = '0' + month
+  var num = 1, numPrv = 1
 
-      console.log(num)
-      if (num < 10)
-        num = '0' + num
-      img.src = `https://raw.githubusercontent.com/ysme1/BingWallpapers/main/wallpapers/${year}/${month}/${year}${month}${num}.jpg`
+  function generateImg () {
+    while (num == numPrv) {
+      num = parseInt(Math.random() * date) + 1
+
     }
+    numPrv = num
 
-    generateImg()
-  </script>
+    if (num < 10)
+      num = '0' + num
+    randomImage = `https://raw.githubusercontent.com/ysme1/BingWallpapers/main/wallpapers/${year}/${month}/${year}${month}${num}.jpg`
+
+    document.getElementById('random-image').src = randomImage
+  }
+
+
+</script>
+
+<body onload="generateImg()">
+  <img id="random-image" alt="Random Image" />
 </body>
 
 </html>
